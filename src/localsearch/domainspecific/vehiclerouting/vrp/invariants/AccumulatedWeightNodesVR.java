@@ -20,12 +20,12 @@ import localsearch.domainspecific.vehiclerouting.vrp.entities.Point;
 
 public class AccumulatedWeightNodesVR implements InvariantVR {
 
-	private VarRoutesVR XR;
-	private VRManager mgr;
-	private NodeWeightsManager nwm;
+	protected VarRoutesVR XR;
+	protected VRManager mgr;
+	protected NodeWeightsManager nwm;
 	
-	private double[] sumWeights;
-	private HashMap<Point, Integer> map;
+	protected double[] sumWeights;
+	protected HashMap<Point, Integer> map;
 	
 	public AccumulatedWeightNodesVR(VarRoutesVR XR, NodeWeightsManager nwm){
 		this.nwm = nwm;
@@ -44,7 +44,7 @@ public class AccumulatedWeightNodesVR implements InvariantVR {
 		mgr.post(this);
 	}
 	
-	private int getIndex(Point p) {
+	protected int getIndex(Point p) {
 		//if(p == null) System.out.println(name() + "::getIndex(" + null + ")");
 		return map.get(p);
 	}
@@ -72,7 +72,7 @@ public class AccumulatedWeightNodesVR implements InvariantVR {
 		nwm.setWeight(sp, w);		
 	}
 	// update sumWeight of points of route k
-    private void update(int k) {
+    protected void update(int k) {
     	Point sp = XR.getStartingPointOfRoute(k);
         Point tp = XR.getTerminatingPointOfRoute(k);
         sumWeights[getIndex(sp)] = nwm.getWeight(sp);
