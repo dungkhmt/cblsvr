@@ -58,6 +58,15 @@ public class LexMultiValues {
 		}
 		return false;
 	}
+	public boolean lt(double v){
+		for(int i = 0; i < values.size(); i++){
+			double x = values.get(i);
+			if (!CBLSVR.equal(x, v)) {
+				return x < v; 
+			}
+		}
+		return false;
+	}
 	
 	public boolean leq(LexMultiValues V){
 		for(int i = 0; i < values.size(); i++){

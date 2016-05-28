@@ -22,11 +22,17 @@ public class GreedyOrOptMove2Explorer implements INeighborhoodExplorer {
 	private ISearch search;
 	private LexMultiFunctions F;
 	private LexMultiValues bestValue;
-	
+	private boolean firstImprovement = true;
 	public GreedyOrOptMove2Explorer(VarRoutesVR XR, LexMultiFunctions F) {
 		this.XR = XR;
 		this.F = F;
 		this.mgr = XR.getVRManager();
+	}
+	public GreedyOrOptMove2Explorer(VarRoutesVR XR, LexMultiFunctions F, boolean firstImprovement) {
+		this.XR = XR;
+		this.F = F;
+		this.mgr = XR.getVRManager();
+		this.firstImprovement = firstImprovement;
 	}
 	
 	public GreedyOrOptMove2Explorer(ISearch search, VRManager mgr, LexMultiFunctions F){
@@ -36,9 +42,17 @@ public class GreedyOrOptMove2Explorer implements INeighborhoodExplorer {
 		this.F = F;
 		this.bestValue = search.getIncumbentValue();
 	}
-	
+
+	public String name(){
+		return "GreedyOrOptMove2Explorer";
+	}
 	public void exploreNeighborhood(Neighborhood N, LexMultiValues bestEval) {
 		// TODO Auto-generated method stub
+		if(firstImprovement && N.hasImprovement()){
+			System.out.println(name() + "::exploreNeighborhood, has improvement --> RETURN");
+			return;
+		}
+
 		for (int i = 1; i <= XR.getNbRoutes(); i++) {
 			for (int j = 1; j <= XR.getNbRoutes(); j++) {
 				if (i != j) {
@@ -53,6 +67,9 @@ public class GreedyOrOptMove2Explorer implements INeighborhoodExplorer {
 										bestEval.set(eval);
 									} else if (eval.eq(bestEval)) {
 										N.add(new OrOptMove2(mgr, eval, x1, x2, y));
+									}
+									if(firstImprovement){
+										if(eval.lt(0)) return;
 									}
 								}
 							}

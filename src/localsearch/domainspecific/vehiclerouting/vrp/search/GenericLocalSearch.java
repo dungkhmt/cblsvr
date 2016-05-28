@@ -53,6 +53,22 @@ public class GenericLocalSearch implements ISearch {
 		this.XR = mgr.getVarRoutesVR();
 		this.maxStable = 100;
 	}
+	public void perturbNeighborhoodExplorer(){
+		INeighborhoodExplorer[] a = new INeighborhoodExplorer[neighborhoodExplorer.size()];
+		for(int i = 0;i < neighborhoodExplorer.size(); i++)
+			a[i] = neighborhoodExplorer.get(i);
+		for(int step = 0; step < a.length; step++){
+			int i = R.nextInt(a.length);
+			int j = R.nextInt(a.length);
+			INeighborhoodExplorer tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+		}
+		neighborhoodExplorer.clear();
+		mN2ID.clear();
+		for(int i = 0; i < a.length; i++){
+			neighborhoodExplorer.add(a[i]);
+			mN2ID.put(a[i], i);
+		}
+	}
 	public void setObjectiveFunction(LexMultiFunctions F){
 		this.F = F;
 	}
@@ -109,6 +125,8 @@ public class GenericLocalSearch implements ISearch {
 			LexMultiValues bestEval = new LexMultiValues();
 			//bestEval.fill(F.size(), CBLSVR.MAX_INT);
 			bestEval.fill(F.size(), 0);
+			
+			perturbNeighborhoodExplorer();
 			
 			for(INeighborhoodExplorer NI: neighborhoodExplorer){
 				NI.exploreNeighborhood(N, bestEval);

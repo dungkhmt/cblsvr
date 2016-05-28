@@ -22,11 +22,17 @@ public class GreedyOnePointMoveExplorer implements INeighborhoodExplorer {
 	private ISearch search;
 	private LexMultiFunctions F;
 	private LexMultiValues bestValue;
-	
+	private boolean firstImprovement = true;
 	public GreedyOnePointMoveExplorer(VarRoutesVR XR, LexMultiFunctions F) {
 		this.XR = XR;
 		this.F = F;
 		this.mgr = XR.getVRManager();
+	}
+	public GreedyOnePointMoveExplorer(VarRoutesVR XR, LexMultiFunctions F, boolean firstImprovement) {
+		this.XR = XR;
+		this.F = F;
+		this.mgr = XR.getVRManager();
+		this.firstImprovement = firstImprovement;
 	}
 	
 	public GreedyOnePointMoveExplorer(ISearch search, VRManager mgr, LexMultiFunctions F){
@@ -39,6 +45,12 @@ public class GreedyOnePointMoveExplorer implements INeighborhoodExplorer {
 	
 	public void exploreNeighborhood(Neighborhood N, LexMultiValues bestEval) {
 		// TODO Auto-generated method stub
+		
+		if(firstImprovement && N.hasImprovement()){
+			System.out.println(name() + "::exploreNeighborhood, has improvement --> RETURN");
+			return;
+		}
+
 		for (Point x : XR.getClientPoints()) {
 			for (Point y : XR.getAllPoints()) {
 				//System.out.println(name() + "::exploreNeighborhood, consider (" + x.ID + "," + y.ID + " of route " + XR.route(y) + ", index " + XR.index(y) + ")");
@@ -52,6 +64,9 @@ public class GreedyOnePointMoveExplorer implements INeighborhoodExplorer {
 						bestEval.set(eval);
 					} else if (eval.eq(bestEval)) {
 						N.add(new OnePointMove(mgr, eval, x, y, this));
+					}
+					if(firstImprovement){
+						if(eval.lt(0)) return;
 					}
 				}
 			}

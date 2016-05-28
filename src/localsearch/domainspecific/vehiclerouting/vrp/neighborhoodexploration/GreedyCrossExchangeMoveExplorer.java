@@ -7,7 +7,6 @@
 package localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration;
 
 import localsearch.domainspecific.vehiclerouting.vrp.VRManager;
-
 import localsearch.domainspecific.vehiclerouting.vrp.VarRoutesVR;
 import localsearch.domainspecific.vehiclerouting.vrp.entities.LexMultiValues;
 import localsearch.domainspecific.vehiclerouting.vrp.entities.Point;
@@ -23,11 +22,17 @@ public class GreedyCrossExchangeMoveExplorer implements INeighborhoodExplorer {
 	private ISearch search;
 	private LexMultiFunctions F;
 	private LexMultiValues bestValue;
-	
+	private boolean firstImprovement = true;
 	public GreedyCrossExchangeMoveExplorer(VarRoutesVR XR, LexMultiFunctions F) {
 		this.XR = XR;
 		this.F = F;
 		this.mgr = XR.getVRManager();
+	}
+	public GreedyCrossExchangeMoveExplorer(VarRoutesVR XR, LexMultiFunctions F, boolean firstImprovement) {
+		this.XR = XR;
+		this.F = F;
+		this.mgr = XR.getVRManager();
+		this.firstImprovement = firstImprovement;
 	}
 	
 	public GreedyCrossExchangeMoveExplorer(ISearch search, VRManager mgr, LexMultiFunctions F){
@@ -39,6 +44,11 @@ public class GreedyCrossExchangeMoveExplorer implements INeighborhoodExplorer {
 	}
 	
 	public void exploreNeighborhood(Neighborhood N, LexMultiValues bestEval) {
+		if(firstImprovement && N.hasImprovement()){
+			System.out.println(name() + "::exploreNeighborhood, has improvement --> RETURN");
+			return;
+		}
+
 		// TODO Auto-generated method stub
 		for (int i = 1; i < XR.getNbRoutes(); i++) {
 			for (int j = i + 1; j < XR.getNbRoutes(); j++) {
@@ -54,6 +64,9 @@ public class GreedyCrossExchangeMoveExplorer implements INeighborhoodExplorer {
 										bestEval.set(eval);
 									} else if (eval.eq(bestEval)) {
 										N.add(new CrossExchangeMove(mgr, eval, x1, y1, x2, y2));
+									}
+									if(firstImprovement){
+										if(eval.lt(0)) return;
 									}
 								}
 							}

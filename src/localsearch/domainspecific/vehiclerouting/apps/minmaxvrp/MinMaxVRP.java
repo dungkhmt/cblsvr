@@ -24,9 +24,13 @@ import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.Gre
 import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.GreedyOrOptMove1Explorer;
 import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.GreedyOrOptMove2Explorer;
 import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.GreedyThreeOptMove1Explorer;
+import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.GreedyThreeOptMove2Explorer;
 import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.GreedyThreeOptMove3Explorer;
+import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.GreedyThreeOptMove4Explorer;
 import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.GreedyThreeOptMove5Explorer;
+import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.GreedyThreeOptMove6Explorer;
 import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.GreedyThreeOptMove7Explorer;
+import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.GreedyThreeOptMove8Explorer;
 import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.GreedyTwoOptMove1Explorer;
 import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.GreedyTwoOptMove2Explorer;
 import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.GreedyTwoOptMove3Explorer;
@@ -426,10 +430,14 @@ public class MinMaxVRP {
 		NE.add(new GreedyOnePointMoveExplorer(XR, F));
 		NE.add(new GreedyOrOptMove1Explorer(XR, F));
 		NE.add(new GreedyOrOptMove2Explorer(XR, F));
-		// NE.add(new GreedyThreeOptMove1Explorer(XR, F));
-		// NE.add(new GreedyThreeOptMove3Explorer(XR, F));
-		// NE.add(new GreedyThreeOptMove5Explorer(XR, F));
-		// NE.add(new GreedyThreeOptMove7Explorer(XR, F));
+		NE.add(new GreedyThreeOptMove1Explorer(XR, F));
+		NE.add(new GreedyThreeOptMove2Explorer(XR, F));
+		NE.add(new GreedyThreeOptMove3Explorer(XR, F));
+		NE.add(new GreedyThreeOptMove4Explorer(XR, F));
+		NE.add(new GreedyThreeOptMove5Explorer(XR, F));
+		NE.add(new GreedyThreeOptMove6Explorer(XR, F));
+		NE.add(new GreedyThreeOptMove7Explorer(XR, F));
+		NE.add(new GreedyThreeOptMove8Explorer(XR, F));
 		NE.add(new GreedyTwoOptMove1Explorer(XR, F));
 		NE.add(new GreedyTwoOptMove2Explorer(XR, F));
 		NE.add(new GreedyTwoOptMove3Explorer(XR, F));
@@ -457,8 +465,8 @@ public class MinMaxVRP {
 		MinMaxVRP A = new MinMaxVRP();
 		A.readData("data\\MinMaxVRP\\whizzkids96.txt");
 		A.stateModel();
-		//A.search();
-		A.searchFirstImprovement();
+		A.search();
+		//A.searchFirstImprovement();
 		// A.initBestSolution("output\\MinMaxVRP\\best-sol-whizzkids96.txt");
 	}
 
