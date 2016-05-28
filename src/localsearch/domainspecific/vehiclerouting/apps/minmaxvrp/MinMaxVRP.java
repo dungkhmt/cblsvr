@@ -463,7 +463,7 @@ public class MinMaxVRP {
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		MinMaxVRP A = new MinMaxVRP();
-		A.readData("data\\MinMaxVRP\\whizzkids96.txt");
+		A.readData("data/MinMaxVRP/whizzkids96.txt");
 		A.stateModel();
 		A.search();
 		//A.searchFirstImprovement();
