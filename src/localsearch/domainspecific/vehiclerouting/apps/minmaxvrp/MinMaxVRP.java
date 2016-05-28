@@ -465,8 +465,8 @@ public class MinMaxVRP {
 		MinMaxVRP A = new MinMaxVRP();
 		A.readData("data/MinMaxVRP/whizzkids96.txt");
 		A.stateModel();
-		A.search();
-		//A.searchFirstImprovement();
+		//A.search();
+		A.searchFirstImprovement();
 		// A.initBestSolution("output\\MinMaxVRP\\best-sol-whizzkids96.txt");
 	}
 
