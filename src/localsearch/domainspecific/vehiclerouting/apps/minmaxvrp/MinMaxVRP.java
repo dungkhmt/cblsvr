@@ -2,12 +2,16 @@ package localsearch.domainspecific.vehiclerouting.apps.minmaxvrp;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Random;
 import java.util.Scanner;
 
+import localsearch.domainspecific.vehiclerouting.vrp.CBLSVR;
 import localsearch.domainspecific.vehiclerouting.vrp.IFunctionVR;
 import localsearch.domainspecific.vehiclerouting.vrp.VRManager;
 import localsearch.domainspecific.vehiclerouting.vrp.VarRoutesVR;
 import localsearch.domainspecific.vehiclerouting.vrp.entities.ArcWeightsManager;
+import localsearch.domainspecific.vehiclerouting.vrp.entities.LexMultiValues;
 import localsearch.domainspecific.vehiclerouting.vrp.entities.Point;
 import localsearch.domainspecific.vehiclerouting.vrp.functions.AccumulatedEdgeWeightsOnPathVR;
 import localsearch.domainspecific.vehiclerouting.vrp.functions.LexMultiFunctions;
@@ -24,10 +28,150 @@ import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.Gre
 import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.GreedyThreeOptMove5Explorer;
 import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.GreedyThreeOptMove7Explorer;
 import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.GreedyTwoOptMove1Explorer;
+import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.GreedyTwoOptMove2Explorer;
+import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.GreedyTwoOptMove3Explorer;
+import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.GreedyTwoOptMove4Explorer;
 import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.GreedyTwoOptMove5Explorer;
+import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.GreedyTwoOptMove6Explorer;
+import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.GreedyTwoOptMove7Explorer;
+import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.GreedyTwoOptMove8Explorer;
 import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.GreedyTwoPointsMoveExplorer;
 import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.INeighborhoodExplorer;
 import localsearch.domainspecific.vehiclerouting.vrp.search.GenericLocalSearch;
+/*
+import localsearch.domainspecific.vehiclerouting.vrp.search.firstimprovement.FirstImprovementCrossExchangeMoveExplorer;
+import localsearch.domainspecific.vehiclerouting.vrp.search.firstimprovement.FirstImprovementKPointsMoveExplorer;
+import localsearch.domainspecific.vehiclerouting.vrp.search.firstimprovement.FirstImprovementOnePointMoveExplorer;
+import localsearch.domainspecific.vehiclerouting.vrp.search.firstimprovement.FirstImprovementOrOptMove1Explorer;
+import localsearch.domainspecific.vehiclerouting.vrp.search.firstimprovement.FirstImprovementOrOptMove2Explorer;
+import localsearch.domainspecific.vehiclerouting.vrp.search.firstimprovement.FirstImprovementThreeOptMove1Explorer;
+import localsearch.domainspecific.vehiclerouting.vrp.search.firstimprovement.FirstImprovementThreeOptMove3Explorer;
+import localsearch.domainspecific.vehiclerouting.vrp.search.firstimprovement.FirstImprovementThreeOptMove5Explorer;
+import localsearch.domainspecific.vehiclerouting.vrp.search.firstimprovement.FirstImprovementThreeOptMove7Explorer;
+import localsearch.domainspecific.vehiclerouting.vrp.search.firstimprovement.FirstImprovementTwoOptMove1Explorer;
+import localsearch.domainspecific.vehiclerouting.vrp.search.firstimprovement.FirstImprovementTwoOptMove2Explorer;
+import localsearch.domainspecific.vehiclerouting.vrp.search.firstimprovement.FirstImprovementTwoOptMove3Explorer;
+import localsearch.domainspecific.vehiclerouting.vrp.search.firstimprovement.FirstImprovementTwoOptMove4Explorer;
+import localsearch.domainspecific.vehiclerouting.vrp.search.firstimprovement.FirstImprovementTwoOptMove5Explorer;
+import localsearch.domainspecific.vehiclerouting.vrp.search.firstimprovement.FirstImprovementTwoOptMove6Explorer;
+import localsearch.domainspecific.vehiclerouting.vrp.search.firstimprovement.FirstImprovementTwoOptMove7Explorer;
+import localsearch.domainspecific.vehiclerouting.vrp.search.firstimprovement.FirstImprovementTwoOptMove8Explorer;
+*/
+
+import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.FirstImprovementCrossExchangeMoveExplorer;
+import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.FirstImprovementKPointsMoveExplorer;
+import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.FirstImprovementOnePointMoveExplorer;
+import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.FirstImprovementOrOptMove1Explorer;
+import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.FirstImprovementOrOptMove2Explorer;
+import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.FirstImprovementThreeOptMove1Explorer;
+import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.FirstImprovementThreeOptMove3Explorer;
+import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.FirstImprovementThreeOptMove5Explorer;
+import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.FirstImprovementThreeOptMove7Explorer;
+import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.FirstImprovementTwoOptMove1Explorer;
+import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.FirstImprovementTwoOptMove2Explorer;
+import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.FirstImprovementTwoOptMove3Explorer;
+import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.FirstImprovementTwoOptMove4Explorer;
+import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.FirstImprovementTwoOptMove5Explorer;
+import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.FirstImprovementTwoOptMove6Explorer;
+import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.FirstImprovementTwoOptMove7Explorer;
+import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.FirstImprovementTwoOptMove8Explorer;
+
+
+class PairPoints{
+	public Point x;
+	public Point y;
+	public PairPoints(Point x, Point y){
+		this.x = x; this.y = y;
+	}
+}
+class MMSearch extends GenericLocalSearch {
+	private Random R;
+	MMSearch(VRManager mgr) {
+		super(mgr);
+		R = new Random();
+		maxStable = 20;
+	}
+
+	public void print() {
+		System.out.println(XR.toString());
+		// for(int k = 1; k <= XR.getNbRoutes(); k++)
+		// System.out.println("cost[" + k + "] = " + costRoute[k-1].getValue());
+		System.out.println("Cost = " + F.getValues().toString());
+	}
+	public void restart(){
+		System.out.println("RESTART----------------------------------------");
+		generateInitialSolution();
+		System.out.println("RESTART----------------------------------------F = " + F.getValues().toString());
+		if(F.getValues().lt(bestValue)){
+			updateBest();
+		}
+		nic = 0;
+	}
+	public void generateInitialSolutionOld() {
+		for (Point p : XR.getClientPoints()) {
+			ArrayList<Point> L = XR.collectCurrentClientAndStartPointsOnRoute();
+			LexMultiValues bestEval = new LexMultiValues();
+			bestEval.fill(1, CBLSVR.MAX_INT);
+			Point sel_q = null;
+			for (Point q : L) {
+				LexMultiValues D = F.evaluateAddOnePoint(p, q);
+				if (D.lt(bestEval)) {
+					sel_q = q;
+					bestEval = D;
+				}
+			}
+			mgr.performAddOnePoint(p, sel_q);
+			// print();
+
+		}
+		System.out.println("generateInitialSolution finished, cost = "
+				+ F.getValues().toString());
+		print();
+	}
+
+	
+	public void generateInitialSolution() {
+		mgr.performRemoveAllClientPoints();
+		System.out.println("After removing all client points, XR = " + XR.toString());
+		HashSet<Point> S = new HashSet<Point>();
+		for (Point p : XR.getClientPoints()) {
+			S.add(p);
+		}
+		while (S.size() > 0) {
+			LexMultiValues eval = new LexMultiValues();
+			eval.fill(1, CBLSVR.MAX_INT);
+			Point sel_q = null;
+			Point sel_p = null;
+			ArrayList<PairPoints> Cand = new ArrayList<PairPoints>();
+			for (Point p : S) {
+				ArrayList<Point> L = XR
+						.collectCurrentClientAndStartPointsOnRoute();
+				for (Point q : L) {
+					LexMultiValues e = F.evaluateAddOnePoint(p, q);
+					if (e.lt(eval)) {
+						Cand.clear();
+						Cand.add(new PairPoints(p,q));
+						eval = e;
+					}else if(e.eq(eval)){
+						Cand.add(new PairPoints(p,q));
+					}
+				}
+				
+			}
+			PairPoints PP = Cand.get(R.nextInt(Cand.size()));
+			sel_p = PP.x; sel_q = PP.y;
+			mgr.performAddOnePoint(sel_p, sel_q);
+			S.remove(sel_p);
+		}
+		System.out.println("generateInitialSolution finished, cost = "
+				+ F.getValues().toString());
+		print();
+		
+		//mgr.performRemoveAllClientPoints();
+		//System.exit(-1);
+	}
+
+}
 
 public class MinMaxVRP {
 
@@ -39,19 +183,20 @@ public class MinMaxVRP {
 	private ArrayList<Point> clientPoints;
 	private ArrayList<Point> allPoints;
 	private IFunctionVR[] costRoute;
-	private IFunctionVR   cost;
+	private IFunctionVR cost;
 	private LexMultiFunctions F;
-	
-	public void readData(String fn){
-		try{
+
+	public void readData(String fn) {
+		try {
 			Scanner in = new Scanner(new File(fn));
 			int K;// number of vehicles
 			K = in.nextInt();
 			ArrayList<Integer> x = new ArrayList<Integer>();
 			ArrayList<Integer> y = new ArrayList<Integer>();
-			while(true){
+			while (true) {
 				int id = in.nextInt();
-				if(id == -1) break;
+				if (id == -1)
+					break;
 				int cx = in.nextInt();
 				int cy = in.nextInt();
 				x.add(cx);
@@ -62,14 +207,14 @@ public class MinMaxVRP {
 			startPoints = new ArrayList<Point>();
 			endPoints = new ArrayList<Point>();
 			allPoints = new ArrayList<Point>();
-			
-			for(int i = 1; i < x.size(); i++){
+
+			for (int i = 1; i < x.size(); i++) {
 				Point p = new Point(i);
 				clientPoints.add(p);
 				allPoints.add(p);
 			}
-			int id = x.size()-1;
-			for(int k = 0; k < K; k++){
+			int id = x.size() - 1;
+			for (int k = 0; k < K; k++) {
 				id++;
 				Point s = new Point(id);
 				startPoints.add(s);
@@ -79,149 +224,242 @@ public class MinMaxVRP {
 				endPoints.add(t);
 				allPoints.add(t);
 			}
-			
+
 			awm = new ArcWeightsManager(allPoints);
-			
-			for(int i = 0; i < clientPoints.size(); i++){
+
+			for (int i = 0; i < clientPoints.size(); i++) {
 				Point pi = clientPoints.get(i);
-				int xi = x.get(i+1);
-				int yi = y.get(i+1);
-				for(int j = 0; j < clientPoints.size(); j++){
+				int xi = x.get(i + 1);
+				int yi = y.get(i + 1);
+				for (int j = 0; j < clientPoints.size(); j++) {
 					Point pj = clientPoints.get(j);
-					int xj = x.get(j+1);
-					int yj = y.get(j+1);
-					int w = Math.abs(xi-xj) + Math.abs(yi-yj); 
+					int xj = x.get(j + 1);
+					int yj = y.get(j + 1);
+					int w = Math.abs(xi - xj) + Math.abs(yi - yj);
 					awm.setWeight(pi, pj, w);
 				}
 			}
-			
-			for(int i = 0; i < clientPoints.size(); i++){
-				int xi = x.get(i+1);
-				int yi = y.get(i+1);
+
+			for (int i = 0; i < clientPoints.size(); i++) {
+				int xi = x.get(i + 1);
+				int yi = y.get(i + 1);
 				Point p = clientPoints.get(i);
-				
-				for(int k = 0; k < startPoints.size(); k++){
+
+				for (int k = 0; k < startPoints.size(); k++) {
 					Point s = startPoints.get(k);
 					Point t = endPoints.get(k);
 					int xk = x.get(0);
 					int yk = y.get(0);
-					int w = Math.abs(xi-xk) + Math.abs(yi-yk);
+					int w = Math.abs(xi - xk) + Math.abs(yi - yk);
 					awm.setWeight(p, s, w);
 					awm.setWeight(p, t, 0);
 					awm.setWeight(s, p, w);
 					awm.setWeight(t, p, 0);
 				}
 			}
-		}catch(Exception ex){
+		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 	}
-	public void stateModel(){
+
+	public void stateModel() {
 		mgr = new VRManager();
 		XR = new VarRoutesVR(mgr);
-		for(int k = 0; k < startPoints.size(); k++){
+		for (int k = 0; k < startPoints.size(); k++) {
 			XR.addRoute(startPoints.get(k), endPoints.get(k));
 		}
-		for(Point p : clientPoints){
+		for (Point p : clientPoints) {
 			XR.addClientPoint(p);
 		}
-		
+
 		AccumulatedWeightEdgesVR awe = new AccumulatedWeightEdgesVR(XR, awm);
 		costRoute = new IFunctionVR[startPoints.size()];
-		for(int k = 0; k < XR.getNbRoutes(); k++){
-			costRoute[k] = new AccumulatedEdgeWeightsOnPathVR(awe, XR.endPoint(k+1));
+		for (int k = 0; k < XR.getNbRoutes(); k++) {
+			costRoute[k] = new AccumulatedEdgeWeightsOnPathVR(awe,
+					XR.endPoint(k + 1));
 		}
 		cost = new MaxVR(costRoute);
 		F = new LexMultiFunctions();
 		F.add(cost);
-		
+
 		mgr.close();
-		
+
 		System.out.println("stateModel, XR = " + XR.toString());
 	}
-	public void print(){
+
+	public void print() {
 		System.out.println(XR.toString());
-		for(int k = 1; k <= XR.getNbRoutes(); k++)
-			System.out.println("cost[" + k + "] = " + costRoute[k-1].getValue());
+		for (int k = 1; k <= XR.getNbRoutes(); k++)
+			System.out.println("cost[" + k + "] = "
+					+ costRoute[k - 1].getValue());
 		System.out.println("Cost = " + cost.getValue());
 	}
-	public void initSolution(){
+
+	public void initGreedy() {
+		MMSearch S = new MMSearch(mgr);
+		ArrayList<INeighborhoodExplorer> NE = new ArrayList<INeighborhoodExplorer>();
+		NE.add(new GreedyAddOnePointMoveExplorer(XR, F));
+		S.setNeighborhoodExplorer(NE);
+		S.setObjectiveFunction(F);
+
+		S.search(10000, 60000);
+
+		print();
+		System.exit(-1);
+	}
+
+	public void initSolution() {
 		java.util.Random R = new java.util.Random();
-		for(Point p: clientPoints){
+		for (Point p : clientPoints) {
 			ArrayList<Point> L = XR.collectCurrentClientAndStartPointsOnRoute();
 			Point q = L.get(R.nextInt(L.size()));
 			mgr.performAddOnePoint(p, q);
 		}
 	}
-	public void initBestSolution(String fn){
-		try{
+
+	public void initSolutionGreedy() {
+		HashSet<Point> S = new HashSet<Point>();
+		for (Point p : XR.getClientPoints()) {
+			S.add(p);
+		}
+		while (S.size() > 0) {
+			LexMultiValues eval = new LexMultiValues();
+			eval.fill(1, CBLSVR.MAX_INT);
+			Point sel_q = null;
+			Point sel_p = null;
+			for (Point p : S) {
+				ArrayList<Point> L = XR
+						.collectCurrentClientAndStartPointsOnRoute();
+				for (Point q : L) {
+					LexMultiValues e = F.evaluateAddOnePoint(p, q);
+					if (e.lt(eval)) {
+						sel_q = q;
+						sel_p = p;
+						eval = e;
+					}
+				}
+				
+			}
+			mgr.performAddOnePoint(sel_p, sel_q);
+			S.remove(sel_p);
+		}
+	}
+
+	public void initBestSolution(String fn) {
+		try {
 			Scanner in = new Scanner(new File(fn));
 			int K = in.nextInt();
-			for(int k = 0; k < K; k++){
+			for (int k = 0; k < K; k++) {
 				ArrayList<Integer> S = new ArrayList<Integer>();
-				while(true){
+				while (true) {
 					int v = in.nextInt();
-					if(v == -1) break;
+					if (v == -1)
+						break;
 					S.add(v);
 				}
-				Point s = XR.startPoint(k+1);
+				Point s = XR.startPoint(k + 1);
 				Point p = clientPoints.get(S.get(0) - 1);
 				mgr.performAddOnePoint(p, s);
-				for(int i = 1; i < S.size(); i++){
+				for (int i = 1; i < S.size(); i++) {
 					Point q = clientPoints.get(S.get(i) - 1);
 					mgr.performAddOnePoint(q, p);
 					p = q;
 				}
-				
+
 				int d = 0;
-				for(Point x = XR.startPoint(k+1); x != XR.endPoint(k+1); x = XR.next(x)){
+				for (Point x = XR.startPoint(k + 1); x != XR.endPoint(k + 1); x = XR
+						.next(x)) {
 					Point nx = XR.next(x);
 					double dx = awm.getDistance(x, nx);
 					d += dx;
-					System.out.println("d[" + x.ID + "," + nx.ID + "] = " + dx + ", total d = " + d);
+					System.out.println("d[" + x.ID + "," + nx.ID + "] = " + dx
+							+ ", total d = " + d);
 				}
 				System.out.println("------------------------------");
 			}
-			
+
 			print();
-			
+
 			System.exit(-1);
 			in.close();
-		}catch(Exception ex){
+		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 	}
-	public void search(){
+
+	public void searchFirstImprovement() {
+		HashSet<Point> S = new HashSet<Point>();
+		for(Point p: XR.getClientPoints()) S.add(p);
+		
+		ArrayList<INeighborhoodExplorer> NE = new ArrayList<INeighborhoodExplorer>();
+		NE.add(new FirstImprovementOnePointMoveExplorer(XR, F));
+		NE.add(new FirstImprovementOrOptMove1Explorer(XR, F));
+		NE.add(new FirstImprovementOrOptMove2Explorer(XR, F));
+		NE.add(new FirstImprovementThreeOptMove1Explorer(XR, F));
+		NE.add(new FirstImprovementThreeOptMove3Explorer(XR, F));
+		NE.add(new FirstImprovementThreeOptMove5Explorer(XR, F));
+		NE.add(new FirstImprovementThreeOptMove7Explorer(XR, F));
+		NE.add(new FirstImprovementTwoOptMove1Explorer(XR, F));
+		NE.add(new FirstImprovementTwoOptMove2Explorer(XR, F));
+		NE.add(new FirstImprovementTwoOptMove3Explorer(XR, F));
+		NE.add(new FirstImprovementTwoOptMove4Explorer(XR, F));
+		NE.add(new FirstImprovementTwoOptMove5Explorer(XR, F));
+		NE.add(new FirstImprovementTwoOptMove6Explorer(XR, F));
+		NE.add(new FirstImprovementTwoOptMove7Explorer(XR, F));
+		NE.add(new FirstImprovementTwoOptMove8Explorer(XR, F));
+		// NE.add(new GreedyTwoPointsMoveExplorer(XR, F));
+		NE.add(new FirstImprovementCrossExchangeMoveExplorer(XR, F));
+		// NE.add(new GreedyAddOnePointMoveExplorer(XR, F));
+		//NE.add(new FirstImprovementKPointsMoveExplorer(XR, F, 2, S));
+		
+		MMSearch se = new MMSearch(mgr);
+		se.setNeighborhoodExplorer(NE);
+		se.setObjectiveFunction(F);
+		se.setMaxStable(50);
+
+		se.search(100000, 30000000);
+		print();
+	}
+
+	public void search() {
 		ArrayList<INeighborhoodExplorer> NE = new ArrayList<INeighborhoodExplorer>();
 		NE.add(new GreedyOnePointMoveExplorer(XR, F));
 		NE.add(new GreedyOrOptMove1Explorer(XR, F));
 		NE.add(new GreedyOrOptMove2Explorer(XR, F));
-		NE.add(new GreedyThreeOptMove1Explorer(XR, F));
-		NE.add(new GreedyThreeOptMove3Explorer(XR, F));
-		NE.add(new GreedyThreeOptMove5Explorer(XR, F));
-		NE.add(new GreedyThreeOptMove7Explorer(XR, F));
+		// NE.add(new GreedyThreeOptMove1Explorer(XR, F));
+		// NE.add(new GreedyThreeOptMove3Explorer(XR, F));
+		// NE.add(new GreedyThreeOptMove5Explorer(XR, F));
+		// NE.add(new GreedyThreeOptMove7Explorer(XR, F));
 		NE.add(new GreedyTwoOptMove1Explorer(XR, F));
+		NE.add(new GreedyTwoOptMove2Explorer(XR, F));
+		NE.add(new GreedyTwoOptMove3Explorer(XR, F));
+		NE.add(new GreedyTwoOptMove4Explorer(XR, F));
 		NE.add(new GreedyTwoOptMove5Explorer(XR, F));
-		NE.add(new GreedyTwoPointsMoveExplorer(XR, F));
+		NE.add(new GreedyTwoOptMove6Explorer(XR, F));
+		NE.add(new GreedyTwoOptMove7Explorer(XR, F));
+		NE.add(new GreedyTwoOptMove8Explorer(XR, F));
+		// NE.add(new GreedyTwoPointsMoveExplorer(XR, F));
 		NE.add(new GreedyCrossExchangeMoveExplorer(XR, F));
-		NE.add(new GreedyAddOnePointMoveExplorer(XR, F));
-		
-		GenericLocalSearch se = new GenericLocalSearch(mgr,F,NE);
-		
-		initSolution();
-		System.out.println("Init Search, XR,setRandom = " + XR.toString());
+		// NE.add(new GreedyAddOnePointMoveExplorer(XR, F));
+
+		MMSearch se = new MMSearch(mgr);
+		se.setNeighborhoodExplorer(NE);
+		se.setObjectiveFunction(F);
+		se.setMaxStable(50);
+
+		se.search(100000, 3000000);
 		print();
-		se.search(100000, 600000);
-		print();
-		
+
 	}
+
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		MinMaxVRP A = new MinMaxVRP();
 		A.readData("data\\MinMaxVRP\\whizzkids96.txt");
 		A.stateModel();
-		A.search();
-		//A.initBestSolution("output\\MinMaxVRP\\best-sol-whizzkids96.txt");
+		//A.search();
+		A.searchFirstImprovement();
+		// A.initBestSolution("output\\MinMaxVRP\\best-sol-whizzkids96.txt");
 	}
 
 }

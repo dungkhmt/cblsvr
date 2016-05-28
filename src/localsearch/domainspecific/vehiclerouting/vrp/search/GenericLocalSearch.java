@@ -21,16 +21,16 @@ import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.INe
 
 public class GenericLocalSearch implements ISearch {
 
-	private VRManager mgr;
-	private VarRoutesVR XR;
-	private LexMultiValues bestValue;
-	private ValueRoutesVR bestSolution;
-	private int currentIter;
-	private LexMultiFunctions F;
-	private ArrayList<INeighborhoodExplorer> neighborhoodExplorer;
-	private int maxStable;
-	private int nic;
-	private HashMap<INeighborhoodExplorer, Integer> mN2ID;
+	protected VRManager mgr;
+	protected VarRoutesVR XR;
+	protected LexMultiValues bestValue;
+	protected ValueRoutesVR bestSolution;
+	protected int currentIter;
+	protected LexMultiFunctions F;
+	protected ArrayList<INeighborhoodExplorer> neighborhoodExplorer;
+	protected int maxStable;
+	protected int nic;
+	protected HashMap<INeighborhoodExplorer, Integer> mN2ID;
 	
 	private Random R = new Random();
 	public GenericLocalSearch(VRManager mgr, LexMultiFunctions F, ArrayList<INeighborhoodExplorer> neighborhoodExplorer){
@@ -48,31 +48,54 @@ public class GenericLocalSearch implements ISearch {
 		
 		
 	}
-	
-	private void updateBest() {
+	public GenericLocalSearch(VRManager mgr){
+		this.mgr = mgr;
+		this.XR = mgr.getVarRoutesVR();
+		this.maxStable = 100;
+	}
+	public void setObjectiveFunction(LexMultiFunctions F){
+		this.F = F;
+	}
+	public void setNeighborhoodExplorer(ArrayList<INeighborhoodExplorer> NE){
+		this.neighborhoodExplorer = NE;
+		mN2ID = new HashMap<INeighborhoodExplorer, Integer>();
+		
+		for(int i = 0; i < neighborhoodExplorer.size(); i++){
+			INeighborhoodExplorer in = neighborhoodExplorer.get(i);
+			mN2ID.put(in, i);
+		}
+	}
+	public void updateBest() {
 		bestValue.set(F.getValues());
 		bestSolution.store();
+		nic = 0;
 	}
 
 	public void setMaxStable(int maxStable){
 		this.maxStable = maxStable;
 	}
-	private void restart(){
+	public void restart(){
 		System.out.println(name() + "::restart............");
-		XR.setRandom();
+		//XR.setRandom();
+		//generateInitialSolution();
+		perturb(XR.getNbClients());
 		if(F.getValues().lt(bestValue)){
 			updateBest();
 		}
 		nic = 0;
 	}
 	 
+	public void generateInitialSolution(){
+		XR.setRandom();
+	}
 	public void search(int maxIter, int timeLimit){
 		bestSolution = new ValueRoutesVR(XR);
 		currentIter = 0;
-		XR.setRandom();
+		generateInitialSolution();
 		nic = 0;
 		Neighborhood N = new Neighborhood(mgr);
 		bestValue = new LexMultiValues(F.getValues());
+		updateBest();
 		double t0 = System.currentTimeMillis();
 		System.out.println(name() + "::search, init bestValue = " + bestValue.toString());
 		//System.exit(-1);
@@ -84,8 +107,8 @@ public class GenericLocalSearch implements ISearch {
 			N.clear();
 			
 			LexMultiValues bestEval = new LexMultiValues();
-			bestEval.fill(F.size(), CBLSVR.MAX_INT);
-			
+			//bestEval.fill(F.size(), CBLSVR.MAX_INT);
+			bestEval.fill(F.size(), 0);
 			
 			for(INeighborhoodExplorer NI: neighborhoodExplorer){
 				NI.exploreNeighborhood(N, bestEval);
@@ -95,7 +118,8 @@ public class GenericLocalSearch implements ISearch {
 				IVRMove m = N.getAMove();
 				m.move();
 				
-				System.out.println(name() + "::search, step " + currentIter + ", F = " + F.getValues().toString() + ", best = " + bestValue.toString());
+				System.out.println(name() + "::search, step " + currentIter + ", F = " + F.getValues().toString() + 
+						", best = " + bestValue.toString() + ", nic/maxStable = " + nic + "/" + maxStable);
 				if(F.getValues().lt(bestValue)){
 					updateBest();
 				}else{
@@ -107,7 +131,8 @@ public class GenericLocalSearch implements ISearch {
 			} else {
 				System.out.println(name()
 						+ "::search --> no move available, break");
-				break;
+				//break;
+				restart();
 			}
 			// System.out.println(obj.toString());
 
@@ -129,7 +154,7 @@ public class GenericLocalSearch implements ISearch {
 					Point x = P.get(R.nextInt(P.size()));
 					Point y = P.get(R.nextInt(P.size()));
 					
-					if(x != y){
+					if(x != y && XR.checkPerformOnePointMove(x, y)){
 						mgr.performOnePointMove(x, y);
 						break;
 					}
