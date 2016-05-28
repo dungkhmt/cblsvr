@@ -1800,6 +1800,7 @@ public class VarRoutesVR{
     	}
     }
     
+    
     public ArrayList<Point> collectClientPointsOnRoutes(){
     	ArrayList<Point> L = new ArrayList<Point>();
     	for(Point p: clientPoints){
