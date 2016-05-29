@@ -72,7 +72,7 @@ public class NiceOSARP {
 	private VREuclideanTimeDistanceManager TDM;
 	private TimeHorizon T;
 	private int timehorizon;
-	private double speed = 1.0/60;//km per second 
+	private double speed = 1.0 / 60;// km per second
 	private int dT = 10;
 	private int maxNbClientsPerRoute = 5;
 	private ArrayList<DARPRequest> requests;
@@ -84,7 +84,7 @@ public class NiceOSARP {
 
 	private double bestEval;
 	private double[] costovertime;
-	
+
 	public NiceOSARP() {
 		try {
 			log = new PrintWriter(new File("OSARP-log.txt"));
@@ -93,11 +93,12 @@ public class NiceOSARP {
 		}
 	}
 
-	public void genData(String fn, int W, int H, int minDT, int maxDT, int TimeHorizon){
-		try{
+	public void genData(String fn, int W, int H, int minDT, int maxDT,
+			int TimeHorizon) {
+		try {
 			PrintWriter out = new PrintWriter(fn);
 			java.util.Random R = new java.util.Random();
-			
+
 			out.println("depot (x,y)");
 			out.println("0 0");
 			out.println("time horizon");
@@ -105,24 +106,28 @@ public class NiceOSARP {
 			out.println("#id x(pickup) y(pickup) x(delivery) y(delivery) arrival_time people (0) or parcel (1)");
 			int id = 0;
 			int t = 0;
-			while(true){
-				int DT = R.nextInt(maxDT-minDT+1) + minDT;
+			while (true) {
+				int DT = R.nextInt(maxDT - minDT + 1) + minDT;
 				t = t + DT;
-				if(t > TimeHorizon) break;
+				if (t > TimeHorizon)
+					break;
 				int reqType = R.nextInt(2);// 0 = people, 1 = parcel
 				int x_pickup = R.nextInt(W);
 				int y_pickup = R.nextInt(H);
 				int x_delivery = R.nextInt(W);
 				int y_delivery = R.nextInt(H);
-				out.println(id + " " + x_pickup + " " + y_pickup + " " + x_delivery + " " + y_delivery + " " + t + " " + reqType);
+				out.println(id + " " + x_pickup + " " + y_pickup + " "
+						+ x_delivery + " " + y_delivery + " " + t + " "
+						+ reqType);
 				id++;
 			}
 			out.println(-1);
 			out.close();
-		}catch(Exception ex){
+		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 	}
+
 	public void loadRequests(String fn) {
 		try {
 			requests = new ArrayList<DARPRequest>();
@@ -153,9 +158,9 @@ public class NiceOSARP {
 				int type = in.nextInt();
 				if (id > 0) {
 					idPoint++;
-					Point pickup = new Point(idPoint,pickup_x, pickup_y);
+					Point pickup = new Point(idPoint, pickup_x, pickup_y);
 					idPoint++;
-					Point delivery = new Point(idPoint,delivery_x, delivery_y);
+					Point delivery = new Point(idPoint, delivery_x, delivery_y);
 					DARPRequest req = null;
 					if (type == 0)
 						req = new DARPRequest(id, time, pickup, delivery,
@@ -199,10 +204,9 @@ public class NiceOSARP {
 	}
 
 	public void update(int t) {
-		//TDM.updateWhenReachingTimePoint(t);
+		// TDM.updateWhenReachingTimePoint(t);
 		mgr.update(t);
 	}
-
 
 	public void stateModel() {
 		mgr = new VRManagerOnline();
@@ -211,7 +215,8 @@ public class NiceOSARP {
 		TDM = new VREuclideanTimeDistanceManager(XR);
 		oae = new OAccumulatedWeightEdges(XR, TDM);
 		oae.setLog(log);
-		cost = new OSumVR(mgr);// new ArrayList<OAccumulatedEdgeWeightsOnPath>();
+		cost = new OSumVR(mgr);// new
+								// ArrayList<OAccumulatedEdgeWeightsOnPath>();
 		T = new TimeHorizon(0, timehorizon, timehorizon);
 		requestQueue = new RequestsQueue();
 		mPoint2Req = new HashMap<Point, DARPRequest>();
@@ -257,16 +262,20 @@ public class NiceOSARP {
 	private void exploreTwoPointsMove(Neighborhood N) {
 		for (int k = 1; k <= XR.getNbRoutes(); k++) {
 			Point s = getFirstParcelPoint(k);
-			if (s == null) continue;
+			if (s == null)
+				continue;
 			for (Point x = s; x != XR.endPoint(k); x = XR.next(x)) {
 				for (Point y = XR.next(x); y != XR.endPoint(k); y = XR.next(y)) {
-						if(mPoint2Req.get(x) == mPoint2Req.get(y)) {
+					if (mPoint2Req.get(x) == mPoint2Req.get(y)) {
 						for (int k1 = 1; k1 <= XR.getNbRoutes(); k1++) {
 							Point s1 = getLastPeoplePoint(k1);
-							if (s1 == null)	s1 = XR.startPoint(k1);
-							for (Point x1 = s1; x1 != XR.endPoint(k1); x1 = XR.next(x1)) {
-								for (Point y1 = x1; y1 != XR.endPoint(k1); y1 = XR.next(y1)) {
-											if(x != x1 && x != y1 && y != y1
+							if (s1 == null)
+								s1 = XR.startPoint(k1);
+							for (Point x1 = s1; x1 != XR.endPoint(k1); x1 = XR
+									.next(x1)) {
+								for (Point y1 = x1; y1 != XR.endPoint(k1); y1 = XR
+										.next(y1)) {
+									if (x != x1 && x != y1 && y != y1
 											&& y != x1 && x1 != XR.prev(x)
 											&& y1 != XR.prev(y)) {
 										double eval = cost
@@ -290,6 +299,7 @@ public class NiceOSARP {
 			}
 		}
 	}
+
 	private void exploreTwoPointsMoveOld(Neighborhood N) {
 		// move one request to another position
 
@@ -343,17 +353,18 @@ public class NiceOSARP {
 		double t0 = System.currentTimeMillis();
 		while (true) {
 			double t = System.currentTimeMillis() - t0;
-			if(t > maxTime) break;
+			if (t > maxTime)
+				break;
 			bestEval = CBLSVR.MAX_INT;
 			N.clear();
 			exploreTwoPointsMove(N);
 			if (N.hasMove()) {
 				IVRMove m = N.getAMove();
-				//System.out.println("ODARP::reoptimize, move eval = "
-				//		+ m.evaluation());
+				// System.out.println("ODARP::reoptimize, move eval = "
+				// + m.evaluation());
 				m.move();
 			} else {
-				//System.out.println("ODARP, no move BREAK");
+				// System.out.println("ODARP, no move BREAK");
 				break;
 			}
 		}
@@ -391,16 +402,17 @@ public class NiceOSARP {
 
 	}
 
-	private void init(){
-		//System.out.println(name() + "::simulate1 start....");
+	private void init() {
+		// System.out.println(name() + "::simulate1 start....");
 		T = new TimeHorizon(0, timehorizon, timehorizon);
 		requestQueue = new RequestsQueue();
 		mPoint2Req = new HashMap<Point, DARPRequest>();
-		
+
 		costovertime = new double[timehorizon];
-		Arrays.fill(costovertime,-1);
+		Arrays.fill(costovertime, -1);
 	}
-	private int insertPeople(DARPRequest r){
+
+	private int insertPeople(DARPRequest r) {
 		int sel_r = findNearestRoute(r);
 		if (sel_r == -1) {
 			sel_r = createNewRoute();
@@ -409,31 +421,33 @@ public class NiceOSARP {
 			if (p.distance(r.pickup) > depot.distance(r.pickup))
 				sel_r = createNewRoute();
 		}
-		
-		mgr.performAddOnePoint(r.pickup,
-				XR.startPoint(sel_r));
+
+		mgr.performAddOnePoint(r.pickup, XR.startPoint(sel_r));
 		mgr.performAddOnePoint(r.delivery, r.pickup);
 		return sel_r;
 	}
-	private int insertRequestOneOne(DARPRequest r){
+
+	private int insertRequestOneOne(DARPRequest r) {
 		int sel_r = createNewRoute();
 		mgr.performAddOnePoint(r.pickup, XR.startingPoint(sel_r));
 		mgr.performAddOnePoint(r.delivery, r.pickup);
 		return sel_r;
 	}
-	private int findShortestRoute(){
+
+	private int findShortestRoute() {
 		int sel_r = -1;
 		double minD = CBLSVR.MAX_INT;
-		for(int k = 1; k <= XR.getNbRoutes(); k++){
-			if(minD > mCost.get(k).getValue()){
+		for (int k = 1; k <= XR.getNbRoutes(); k++) {
+			if (minD > mCost.get(k).getValue()) {
 				minD = mCost.get(k).getValue();
 				sel_r = k;
 			}
 		}
-			
+
 		return sel_r;
 	}
-	private void improveInsertionParcel(DARPRequest r){
+
+	private void improveInsertionParcel(DARPRequest r) {
 		double minDelta = CBLSVR.MAX_INT;
 		Point sel_x = null;
 		Point sel_y = null;
@@ -444,10 +458,10 @@ public class NiceOSARP {
 
 			for (Point x = v; x != XR.endPoint(k); x = XR.next(x)) {
 				for (Point y = x; y != XR.endPoint(k); y = XR.next(y)) {
-					if (r.pickup != x && r.pickup != y
-							&& r.delivery != x && r.delivery != y) {
-						double d = cost.evaluateTwoPointsMove(
-								r.pickup, r.delivery, x, y);
+					if (r.pickup != x && r.pickup != y && r.delivery != x
+							&& r.delivery != y) {
+						double d = cost.evaluateTwoPointsMove(r.pickup,
+								r.delivery, x, y);
 						if (d < minDelta) {
 							minDelta = d;
 							sel_x = x;
@@ -458,34 +472,42 @@ public class NiceOSARP {
 			}
 		}
 		mgr.performTwoPointsMove(r.pickup, r.delivery, sel_x, sel_y);
-		
+
 	}
-	private int insertParcel(DARPRequest r){
+
+	private int insertParcel(DARPRequest r) {
 		int sel_r = findShortestRoute();
-		if(sel_r == -1)
+		if (sel_r == -1)
 			sel_r = createNewRoute();
 		Point p = XR.prev(XR.endPoint(sel_r));
 		mgr.performAddOnePoint(r.pickup, p);
 		mgr.performAddOnePoint(r.delivery, r.pickup);
-		
-		//System.out.println("OSAR::insertParcel, before improving, cost = " + cost.getValue());
-		//improveInsertionParcel(r);
-		//System.out.println("OSAR::insertParcel, after improving, cost = " + cost.getValue());
+
+		// System.out.println("OSAR::insertParcel, before improving, cost = " +
+		// cost.getValue());
+		// improveInsertionParcel(r);
+		// System.out.println("OSAR::insertParcel, after improving, cost = " +
+		// cost.getValue());
 		return sel_r;
 	}
-	
-	private boolean finishExecute(){
-		if(requests.size() != 0) return false; 
-		if(requestQueue.size() != 0) return false;
-		for(int k = 1; k < XR.getNbRoutes(); k++)
-			if(XR.isMoving(k)) return false;
+
+	private boolean finishExecute() {
+		if (requests.size() != 0)
+			return false;
+		if (requestQueue.size() != 0)
+			return false;
+		for (int k = 1; k < XR.getNbRoutes(); k++)
+			if (XR.isMoving(k))
+				return false;
 		return true;
 	}
+
 	public void execute(boolean reoptimize, boolean oneone) {
 		init();
 		receiveRequests();
 		while (!T.finished()) {
-			if(finishExecute()) break;
+			if (finishExecute())
+				break;
 			mgr.update(T.currentTimePoint + dT);
 			while (requestQueue.size() > 0) {
 				System.out.println("Remains requets.sz = " + requests.size());
@@ -494,20 +516,20 @@ public class NiceOSARP {
 				mgr.engage(r.delivery);
 				mPoint2Req.put(r.pickup, r);
 				mPoint2Req.put(r.delivery, r);
-				
+
 				int sel_r = -1;
 				if (r.type == RequestType.PEOPLE_REQUEST) {
-					if(oneone)
+					if (oneone)
 						sel_r = insertRequestOneOne(r);
 					else
 						sel_r = insertPeople(r);
-					
+
 				} else {
-					if(oneone)
+					if (oneone)
 						sel_r = insertRequestOneOne(r);
 					else
 						sel_r = insertParcel(r);
-					
+
 				}
 
 				if (TDM.getDepartureTime(XR.startPoint(sel_r)) < 0)
@@ -516,19 +538,25 @@ public class NiceOSARP {
 				XR.setMoving(sel_r, true);
 				TDM.updateArrivalDepartureTimes();
 
-				System.out.println("NiceOSARP::execute, before optimize, cost = " + cost.getValue());
+				System.out
+						.println("NiceOSARP::execute, before optimize, cost = "
+								+ cost.getValue());
 				// local search performed here
-				if(reoptimize){
-					reoptimize(5); 
+				if (reoptimize) {
+					reoptimize(5);
 					TDM.updateArrivalDepartureTimes();
-					System.out.println("NiceOSARP::execute, after optimize, cost = " + cost.getValue());
+					System.out
+							.println("NiceOSARP::execute, after optimize, cost = "
+									+ cost.getValue());
 				}
 			}
-			System.out.println("NiceOSARP::execute, current time point write cost = " + T.currentTimePoint);
+			System.out
+					.println("NiceOSARP::execute, current time point write cost = "
+							+ T.currentTimePoint);
 			costovertime[T.currentTimePoint] = cost.getValue();
 			T.move(dT);
 			receiveRequests();
-			
+
 		}
 
 		double totalCost = 0;
@@ -543,51 +571,74 @@ public class NiceOSARP {
 				.println("totalCost = " + totalCost + " = " + cost.getValue());
 	}
 
-	public void writeCostOverTimeToLog(String fn){
-		try{
+	public void writeCostOverTimeToLog(String fn) {
+		try {
 			PrintWriter out = new PrintWriter(fn);
-			int i = costovertime.length-1;
-			while(costovertime[i] < 0) i--;
-			for(int t = 0; t <= i+1; t = t + dT){
+			int i = costovertime.length - 1;
+			while (costovertime[i] < 0)
+				i--;
+			for (int t = 0; t <= i + 1; t = t + dT) {
 				out.println(t + "\t" + costovertime[t]);
 			}
 			out.close();
-		}catch(Exception ex){
+		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 	}
-	public void finalize(){
+
+	public void finalize() {
 		log.close();
 	}
-	public void printResultRoutes(){
+
+	public void printResultRoutes() {
 		log.print(XR.toStringFull());
 	}
+
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-		NiceOSARP sim = new NiceOSARP();
-		
+
 		int W = 20;// km
 		int H = 20;// km
-		int minDT = 120;// seconds
-		int maxDT = 300;// seconds: the internal time between two consecutive request time points are random of [minDT, maxDT]
+		int[] minDT = new int[] { 120, 300 };// seconds
+		int[] maxDT = new int[] { 300, 900 };// seconds: the internal time
+												// between two consecutive
+												// request time points are
+												// random of [minDT, maxDT]
 		int TimeHorizon = 72000;// 10h
-		String dir = "C:\\DungPQ\\research\\projects\\cblsvr\\output\\osar\\";
-		//String ins = "example.txt";
-		String ins = "osar-W" + W + "-H" + H + "-minDT" + minDT + "-maxDT" + maxDT + "-Horizon" + TimeHorizon + ".ins1.txt";
-		//sim.genData("data\\Dial-A-Ride\\" + ins, W, H, minDT, maxDT, TimeHorizon);
-		//if(true) return;
-		
-		sim.loadRequests("data\\osar\\" + ins);
-		//sim.loadRequests("data\\Dial-A-Ride\\example.txt");
-		sim.stateModel();
-		// sim.simulate();
-		boolean reoptimize = false;
-		boolean oneone = false;
-		sim.execute(reoptimize,oneone);
-		sim.printResultRoutes();
-		sim.writeCostOverTimeToLog(dir + ins + "-costovertime-reoptimize-" + reoptimize + "-one-one-" + oneone + ".txt");
-		
-		sim.finalize();
+		// String dir =
+		// "C:\\DungPQ\\research\\projects\\cblsvr\\output\\osar\\";
+		String dir = "output/osar/";
+		// String ins = "example.txt";
+
+		for (int i = 0; i <= 1; i++) {
+			for (int j = 1; j <= 5; j++) {
+
+				String ins = "osar-W" + W + "-H" + H + "-minDT" + minDT[i]
+						+ "-maxDT" + maxDT[i] + "-Horizon" + TimeHorizon
+						+ ".ins" + j + ".txt";
+				//System.out.println(ins); if(true)continue;
+				
+				// sim.genData("data\\Dial-A-Ride\\" + ins, W, H, minDT, maxDT,
+				// TimeHorizon);
+				// if(true) return;
+
+				NiceOSARP sim = new NiceOSARP();
+
+				sim.loadRequests("data/osar/" + ins);
+				// sim.loadRequests("data\\Dial-A-Ride\\example.txt");
+				sim.stateModel();
+				// sim.simulate();
+				boolean reoptimize = true;// false;
+				boolean oneone = true;
+				sim.execute(reoptimize, oneone);
+				sim.printResultRoutes();
+				sim.writeCostOverTimeToLog(dir + ins
+						+ "-costovertime-reoptimize-" + reoptimize
+						+ "-one-one-" + oneone + ".txt");
+
+				sim.finalize();
+			}
+		}
 	}
 
 }

@@ -6,6 +6,7 @@ package localsearch.domainspecific.vehiclerouting.vrp.functions;
 
 import java.util.*;
 
+import localsearch.domainspecific.vehiclerouting.vrp.IConstraintVR;
 import localsearch.domainspecific.vehiclerouting.vrp.IFunctionVR;
 import localsearch.domainspecific.vehiclerouting.vrp.IFunctionVR;
 import localsearch.domainspecific.vehiclerouting.vrp.entities.LexMultiValues;
@@ -19,7 +20,9 @@ public class LexMultiFunctions {
 	public void add(IFunctionVR f){
 		functions.add(f);
 	}
-	
+	public void add(IConstraintVR c){
+		functions.add(new ConstraintViolationsVR(c));
+	}
 	public LexMultiValues evaluateKPointsMove(ArrayList<Point> x, ArrayList<Point> y){
 		LexMultiValues eval = new LexMultiValues();
 		for(int i = 0; i < functions.size(); i++)
