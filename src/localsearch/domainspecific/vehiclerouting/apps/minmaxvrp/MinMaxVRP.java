@@ -391,7 +391,7 @@ public class MinMaxVRP {
 		}
 	}
 
-	public void searchFirstImprovement() {
+	public void searchFirstImprovement(int timeLimit) {
 		HashSet<Point> S = new HashSet<Point>();
 		for(Point p: XR.getClientPoints()) S.add(p);
 		
@@ -411,7 +411,7 @@ public class MinMaxVRP {
 		NE.add(new FirstImprovementTwoOptMove6Explorer(XR, F));
 		NE.add(new FirstImprovementTwoOptMove7Explorer(XR, F));
 		NE.add(new FirstImprovementTwoOptMove8Explorer(XR, F));
-		// NE.add(new GreedyTwoPointsMoveExplorer(XR, F));
+		NE.add(new GreedyTwoPointsMoveExplorer(XR, F));
 		NE.add(new FirstImprovementCrossExchangeMoveExplorer(XR, F));
 		// NE.add(new GreedyAddOnePointMoveExplorer(XR, F));
 		//NE.add(new FirstImprovementKPointsMoveExplorer(XR, F, 2, S));
@@ -421,11 +421,11 @@ public class MinMaxVRP {
 		se.setObjectiveFunction(F);
 		se.setMaxStable(50);
 
-		se.search(100000, 3600);
+		se.search(100000, timeLimit);
 		print();
 	}
 
-	public void search() {
+	public void search(int timeLimit) {
 		ArrayList<INeighborhoodExplorer> NE = new ArrayList<INeighborhoodExplorer>();
 		NE.add(new GreedyOnePointMoveExplorer(XR, F));
 		NE.add(new GreedyOrOptMove1Explorer(XR, F));
@@ -455,18 +455,40 @@ public class MinMaxVRP {
 		se.setObjectiveFunction(F);
 		se.setMaxStable(50);
 
-		se.search(100000, 3600);
+		se.search(100000, timeLimit);
 		print();
 
 	}
 
+	public void runBatch(int nbRuns, int timeLimit){
+		double[] best = new double[nbRuns];
+		double min = CBLSVR.MAX_INT;
+		double max = 1-min;
+		double avg = 0;
+		
+		for(int run = 0; run < nbRuns; run++){
+			searchFirstImprovement(timeLimit);
+			best[run] = cost.getValue();
+			avg += best[run];
+			min = min < best[run] ? min : best[run];
+			max = max > best[run] ? max : best[run];
+		}
+		for(int run = 0; run < nbRuns; run++){
+			System.out.println("Run " + run + ", cost = " + best[run]);
+		}
+		avg = avg * 1.0/nbRuns;
+		
+		System.out.println("min = " + min + ", max = " + max + ", avg = " + avg);
+	}
+	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		MinMaxVRP A = new MinMaxVRP();
 		A.readData("data/MinMaxVRP/whizzkids96.txt");
 		A.stateModel();
+		A.runBatch(20,3600);
 		//A.search();
-		A.searchFirstImprovement();
+		//A.searchFirstImprovement();
 		// A.initBestSolution("output\\MinMaxVRP\\best-sol-whizzkids96.txt");
 	}
 
