@@ -32,7 +32,7 @@ public class GenericLocalSearch implements ISearch {
 	protected int nic;
 	protected HashMap<INeighborhoodExplorer, Integer> mN2ID;
 	protected double time_to_best;
-	
+	protected double time;
 	private Random R = new Random();
 	public GenericLocalSearch(VRManager mgr, LexMultiFunctions F, ArrayList<INeighborhoodExplorer> neighborhoodExplorer){
 		this.mgr = mgr;
@@ -119,6 +119,7 @@ public class GenericLocalSearch implements ISearch {
 		System.out.println(XR.toString());
 		while (currentIter < maxIter) {
 			double t = System.currentTimeMillis() - t0;
+			t = t * 0.001;
 			if (t  > timeLimit)
 				break;
 			N.clear();
@@ -137,7 +138,7 @@ public class GenericLocalSearch implements ISearch {
 				IVRMove m = N.getAMove();
 				m.move();
 				
-				System.out.println(name() + "::search, step " + currentIter + ", F = " + F.getValues().toString() + 
+				System.out.println(name() + "::search, step " + currentIter + ", time " + t + ", F = " + F.getValues().toString() + 
 						", best = " + bestValue.toString() + ", time_to_best = " + time_to_best + 
 						", nic/maxStable = " + nic + "/" + maxStable);
 				if(F.getValues().lt(bestValue)){

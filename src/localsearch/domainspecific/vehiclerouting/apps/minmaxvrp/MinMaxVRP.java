@@ -421,7 +421,7 @@ public class MinMaxVRP {
 		se.setObjectiveFunction(F);
 		se.setMaxStable(50);
 
-		se.search(100000, 30000000);
+		se.search(100000, 3600);
 		print();
 	}
 
@@ -455,7 +455,7 @@ public class MinMaxVRP {
 		se.setObjectiveFunction(F);
 		se.setMaxStable(50);
 
-		se.search(100000, 3000000);
+		se.search(100000, 3600);
 		print();
 
 	}
