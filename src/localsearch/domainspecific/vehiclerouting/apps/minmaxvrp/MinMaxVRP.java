@@ -190,6 +190,7 @@ public class MinMaxVRP {
 	private IFunctionVR cost;
 	private LexMultiFunctions F;
 
+	private MMSearch se;
 	public void readData(String fn) {
 		try {
 			Scanner in = new Scanner(new File(fn));
@@ -416,7 +417,7 @@ public class MinMaxVRP {
 		// NE.add(new GreedyAddOnePointMoveExplorer(XR, F));
 		//NE.add(new FirstImprovementKPointsMoveExplorer(XR, F, 2, S));
 		
-		MMSearch se = new MMSearch(mgr);
+		se = new MMSearch(mgr);
 		se.setNeighborhoodExplorer(NE);
 		se.setObjectiveFunction(F);
 		se.setMaxStable(50);
@@ -462,23 +463,26 @@ public class MinMaxVRP {
 
 	public void runBatch(int nbRuns, int timeLimit){
 		double[] best = new double[nbRuns];
+		double[] t = new double[nbRuns];
 		double min = CBLSVR.MAX_INT;
 		double max = 1-min;
 		double avg = 0;
-		
+		double avg_t = 0;
 		for(int run = 0; run < nbRuns; run++){
 			searchFirstImprovement(timeLimit);
 			best[run] = cost.getValue();
+			t[run] = se.getTimeToBest();
 			avg += best[run];
+			avg_t += t[run];
 			min = min < best[run] ? min : best[run];
 			max = max > best[run] ? max : best[run];
 		}
 		for(int run = 0; run < nbRuns; run++){
-			System.out.println("Run " + run + ", cost = " + best[run]);
+			System.out.println("Run " + run + ", cost = " + best[run] + ", time = " + t[run]);
 		}
 		avg = avg * 1.0/nbRuns;
-		
-		System.out.println("min = " + min + ", max = " + max + ", avg = " + avg);
+		avg_t = avg_t*1.0/nbRuns;
+		System.out.println("min = " + min + ", max = " + max + ", avg = " + avg + ", avg_time = " + avg_t);
 	}
 	
 	public static void main(String[] args) {
@@ -486,7 +490,7 @@ public class MinMaxVRP {
 		MinMaxVRP A = new MinMaxVRP();
 		A.readData("data/MinMaxVRP/whizzkids96.txt");
 		A.stateModel();
-		A.runBatch(20,3600);
+		A.runBatch(10,3600);
 		//A.search();
 		//A.searchFirstImprovement();
 		// A.initBestSolution("output\\MinMaxVRP\\best-sol-whizzkids96.txt");

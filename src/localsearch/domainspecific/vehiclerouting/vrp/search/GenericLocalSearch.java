@@ -91,6 +91,9 @@ public class GenericLocalSearch implements ISearch {
 	public void setMaxStable(int maxStable){
 		this.maxStable = maxStable;
 	}
+	public double getTimeToBest(){
+		return time_to_best;
+	}
 	public void restart(){
 		System.out.println(name() + "::restart............");
 		//XR.setRandom();
