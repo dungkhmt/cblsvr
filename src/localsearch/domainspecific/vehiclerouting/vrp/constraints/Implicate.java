@@ -214,8 +214,8 @@ public class Implicate implements IConstraintVR {
 	@Override
 	public int evaluateOnePointMove(Point x, Point y) {
 		// TODO Auto-generated method stub
-		int v1 = c1.evaluateAddOnePoint(x, y) + c1.violations();
-		int v2 = c2.evaluateAddOnePoint(x, y) + c2.violations();
+		int v1 = c1.evaluateOnePointMove(x, y) + c1.violations();
+		int v2 = c2.evaluateOnePointMove(x, y) + c2.violations();
 		int v = v1 > 0 ? 0 : v2;
 		return v - violations;
 	}
