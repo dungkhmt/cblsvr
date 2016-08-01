@@ -176,6 +176,10 @@ public class VarRoutesVR{
 			}
 			route[x] = val.route(p);
 		}	
+		for(int k= 1; k <= getNbRoutes(); k++){
+			update(k);
+		}
+		
 		mgr.initPropagation();
 	}
 	
