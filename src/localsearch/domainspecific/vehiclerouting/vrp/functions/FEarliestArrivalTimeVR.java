@@ -5,12 +5,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
+import localsearch.domainspecific.vehiclerouting.vrp.CBLSVR;
 import localsearch.domainspecific.vehiclerouting.vrp.IFunctionVR;
 import localsearch.domainspecific.vehiclerouting.vrp.VRManager;
 import localsearch.domainspecific.vehiclerouting.vrp.VarRoutesVR;
 import localsearch.domainspecific.vehiclerouting.vrp.entities.ArcWeightsManager;
 import localsearch.domainspecific.vehiclerouting.vrp.entities.Point;
-import localsearch.domainspecific.vehiclerouting.vrp.invariants.EarliestArrivalTime;
 import localsearch.domainspecific.vehiclerouting.vrp.invariants.EarliestArrivalTimeVR;
 
 public class FEarliestArrivalTimeVR implements IFunctionVR {
@@ -259,7 +259,6 @@ public class FEarliestArrivalTimeVR implements IFunctionVR {
 				at = eat.getEarliestAllowedArrivalTime(nv);
 			if(nv==calPoint)
 				return at - earliestArrivalTime;
-			//System.out.println(vio.get(nv)+"  -   "+computeViolations(nv,at));
 			dt = at + eat.getServiceDuration(nv);
 			v = nv;
 		}
@@ -279,7 +278,7 @@ public class FEarliestArrivalTimeVR implements IFunctionVR {
 		if(kx==ky)
 		{
 			Point v,nv;
-			if (XR.index(x) < XR.index(y)) {
+			if (XR.getIndex(x) < XR.getIndex(y)) {
 				v = XR.prev(x);
 				nv = XR.next(x);
 				t_next.put(v,nv);
@@ -373,11 +372,43 @@ public class FEarliestArrivalTimeVR implements IFunctionVR {
 			
 		}
 	}
-
+	// move of type b [Groer et al., 2010]
+    // x and y are on the same route and are not the depots, y locates before x on the route
+    // remove (prev[x],x) and (x,next[x]) and (prev[y], y) and (y, next(y)
+    // insert (x,prev[y]) and (next[y],x) and (next[x],y) and (y, prev[x])
 	@Override
 	public double evaluateTwoPointsMove(Point x, Point y) {
-		// TODO Auto-generated method stub
-		return 0;
+		int kx = XR.route(x);
+		int ky = XR.route(y);
+		int kv = XR.route(calPoint);
+		if(kv!=kx || kv != ky)
+			return 0;
+		if(XR.index(x) > XR.index(y))
+		{
+			Point tmp = x;
+			x = y;
+			y = tmp;
+		}
+		if(XR.next(x) == y)
+		{
+			t_next.put(y, x);
+			t_next.put(x, XR.next(y));
+			getSegment(XR.next(y), XR.endPoint(kx));
+			return calDeltaSegment(y, XR.endPoint(kx));
+		}
+		else{
+			Point px = XR.prev(x);
+			Point nx = XR.next(x);
+			Point py = XR.prev(y);
+			Point ny = XR.next(y);
+			t_next.put(px, y);
+			t_next.put(y, nx);
+			t_next.put(py, x);
+			t_next.put(x, ny);
+			getSegment(nx, py);
+			getSegment(ny, XR.endPoint(kx));
+			return calDeltaSegment(px, XR.endPoint(kx));
+		}
 	}
 
 	// move of type c [Groer et al., 2010]
@@ -995,27 +1026,19 @@ public class FEarliestArrivalTimeVR implements IFunctionVR {
 		
 		return calDeltaSegment(px, XR.getTerminatingPointOfRoute(k));
 	}
-
-	@Override
-	public double evaluateAddRemovePoints(Point x, Point y, Point z) {
-		// TODO Auto-generated method stub
-		return 0;
-	}
+	
 	@Override
 	public void propagateKPointsMove(ArrayList<Point> x, ArrayList<Point> y) {
 		// TODO Auto-generated method stub
 		earliestArrivalTime = eat.getEarliestArrivalTime(calPoint);
 	}
-	private int evaluateDeltaRoute(int k,Set<Point>out,ArrayList<Point>in,ArrayList<Point>preIn)
+	private double evaluateDeltaRoute(int k,Set<Point>out,ArrayList<Point>in,ArrayList<Point>preIn)
 	{
-		int delta = 0;
 		Point s = XR.getStartingPointOfRoute(k);
 		Point pre = s;
-		delta -= vio.get(s);
 		while(!XR.isTerminatingPoint(s))
 		{
 			Point ns = XR.next(s);
-			delta -= vio.get(ns);
 			if(!out.contains(ns))
 			{
 				t_next.put(pre, ns);
@@ -1039,18 +1062,24 @@ public class FEarliestArrivalTimeVR implements IFunctionVR {
 			//System.out.println(v);
 			Point nv = t_next.get(v);
 			double at = dt + eat.getTravelTime(v,nv);
-			//delta = delta - vio.get(nv);
-			delta = delta + computeViolations(nv, at);
 			dt = (at < eat.getEarliestAllowedArrivalTime(nv) ? eat
 					.getEarliestAllowedArrivalTime(nv) : at )
 					+ eat.getServiceDuration(nv);
+			if(nv == calPoint )
+				return dt - earliestArrivalTime;
 			v = nv;
 		}
-		return delta;
+		return 0;
 	}
 	@Override
-	public int evaluateKPointsMove(ArrayList<Point> x, ArrayList<Point> y) {
+	public double evaluateKPointsMove(ArrayList<Point> x, ArrayList<Point> y) {
 		// TODO Auto-generated method stub
+		for(int i = 0; i < x.size(); ++i)
+		{
+			if(x.get(i) == calPoint)
+				if(y.get(i)==CBLSVR.NULL_POINT)
+					return -earliestArrivalTime;
+		}
 		HashMap<Integer,Set<Point>> mout= new HashMap<Integer,Set<Point>>();
 		HashMap<Integer,ArrayList<Point>> min = new HashMap<Integer,ArrayList<Point>>();
 		HashMap<Integer,ArrayList<Point>> mPrein = new HashMap<Integer,ArrayList<Point>>();
@@ -1106,10 +1135,61 @@ public class FEarliestArrivalTimeVR implements IFunctionVR {
 				in = min.get(k);
 				prein = mPrein.get(k);
 			}
-			delta += evaluateVioRoute(k, out, in, prein);
+			delta += evaluateDeltaRoute(k, out, in, prein);
 		}
-		//System.out.println(delta);
 		return delta;
+	}
+	@Override
+	public double evaluateAddRemovePoints(Point x, Point y, Point z) {
+		// TODO Auto-generated method stub
+		int kx = XR.route(x);
+		int kz = XR.route(z);
+		int kv = XR.route(calPoint);
+		if(kx!=kv&&kz!=kv)
+			return 0;
+		if(kx!=kz)
+		{
+			if(kx==kv)
+			{
+				Point px = XR.prev(x);
+				t_next.put(px, XR.next(x));
+				getSegment(XR.next(x), XR.endPoint(kx));
+				return calDeltaSegment(px, XR.endPoint(kx));
+			}
+			else{
+				t_next.put(z, y);
+				Point nz = XR.next(z);
+				t_next.put(y, nz);
+				getSegment(nz, XR.endPoint(XR.route(z)));
+				return calDeltaSegment(z, XR.endPoint(kz));
+			}
+		}
+		else{
+			if(XR.getIndex(x) < XR.getIndex(z))
+			{
+				Point px = XR.prev(x);
+				t_next.put(px, XR.next(x));
+				getSegment(XR.next(x), XR.endPoint(kx));
+
+				t_next.put(z, y);
+				Point nz = XR.next(z);
+				t_next.put(y, nz);
+				getSegment(nz, XR.endPoint(XR.route(z)));
+				return calDeltaSegment(px, XR.endPoint(kx));
+			}
+			else{
+				
+
+				t_next.put(z, y);
+				Point nz = XR.next(z);
+				t_next.put(y, nz);
+				getSegment(nz, XR.endPoint(XR.route(z)));
+				Point px = XR.prev(x);
+				t_next.put(px, XR.next(x));
+				getSegment(XR.next(x), XR.endPoint(kx));
+				return calDeltaSegment(z, XR.endPoint(kx));
+			}
+		}
 	}
 
 }
