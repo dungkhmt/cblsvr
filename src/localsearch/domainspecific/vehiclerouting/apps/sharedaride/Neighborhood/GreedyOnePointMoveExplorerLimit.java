@@ -27,7 +27,9 @@ public class GreedyOnePointMoveExplorerLimit implements INeighborhoodExplorer {
 		this.K = K;
 	}
 	
-	
+	public String name(){
+		return "GreedyOnePointMoveExplorerLimit";
+	}
 	@Override
 	public void exploreNeighborhood(Neighborhood N, LexMultiValues bestEval) {
 		// TODO Auto-generated method stub

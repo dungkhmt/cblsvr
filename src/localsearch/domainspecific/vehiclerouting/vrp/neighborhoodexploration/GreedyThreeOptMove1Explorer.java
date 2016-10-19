@@ -49,7 +49,7 @@ public class GreedyThreeOptMove1Explorer implements INeighborhoodExplorer {
 	public void exploreNeighborhood(Neighborhood N, LexMultiValues bestEval) {
 		// TODO Auto-generated method stub
 		if(firstImprovement && N.hasImprovement()){
-			System.out.println(name() + "::exploreNeighborhood, has improvement --> RETURN");
+			//System.out.println(name() + "::exploreNeighborhood, has improvement --> RETURN");
 			return;
 		}
 

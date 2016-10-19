@@ -196,6 +196,14 @@ public class VarRoutesVR{
 		}
 		return s;
 	}
+	public String routeString(int k){
+		String s = "";
+		for(Point p = startPoint(k); p != endPoint(k); p = next(p)){
+			s += p.ID + " -> ";
+		}
+		s += endPoint(k).ID;
+		return s;
+	}
 	// return the number of points
 	public int getTotalNbPoints(){
 		return N;

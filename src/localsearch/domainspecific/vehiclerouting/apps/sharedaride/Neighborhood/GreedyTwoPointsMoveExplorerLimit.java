@@ -27,7 +27,9 @@ public class GreedyTwoPointsMoveExplorerLimit implements INeighborhoodExplorer {
 		this.mgr = XR.getVRManager();
 		this.K = K;
 	}
-	
+	public String name(){
+		return "GreedyTwoPointsMoveExplorerLimit";
+	}
 	
 	@Override
 	public void exploreNeighborhood(Neighborhood N, LexMultiValues bestEval) {

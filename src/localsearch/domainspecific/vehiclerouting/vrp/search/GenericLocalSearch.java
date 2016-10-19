@@ -24,37 +24,53 @@ public class GenericLocalSearch implements ISearch {
 	protected VRManager mgr;
 	protected VarRoutesVR XR;
 	protected LexMultiValues bestValue;
+	protected LexMultiValues knownOptimal = null;
 	protected ValueRoutesVR bestSolution;
 	protected int currentIter;
 	protected LexMultiFunctions F;
-	protected ArrayList<INeighborhoodExplorer> neighborhoodExplorer;
+	//protected ArrayList<INeighborhoodExplorer> neighborhoodExplorer;
+	protected NeighbohoodExplorerManager NEM;
 	protected int maxStable;
 	protected int nic;
-	protected HashMap<INeighborhoodExplorer, Integer> mN2ID;
+	//protected HashMap<INeighborhoodExplorer, Integer> mN2ID;
 	protected double time_to_best;
 	protected double time;
 	private Random R = new Random();
+	
+	// parameters
+	public boolean noMoveBreak = false;
+	public boolean verbose = true;
+	
 	public GenericLocalSearch(VRManager mgr, LexMultiFunctions F, ArrayList<INeighborhoodExplorer> neighborhoodExplorer){
 		this.mgr = mgr;
 		this.XR = mgr.getVarRoutesVR();
 		this.F = F;
-		this.neighborhoodExplorer = neighborhoodExplorer;
+		//this.neighborhoodExplorer = neighborhoodExplorer;
+		NEM = new NeighbohoodExplorerManager(neighborhoodExplorer);
 		this.maxStable = 100;
-		mN2ID = new HashMap<INeighborhoodExplorer, Integer>();
 		
+		/*
+		mN2ID = new HashMap<INeighborhoodExplorer, Integer>();
 		for(int i = 0; i < neighborhoodExplorer.size(); i++){
 			INeighborhoodExplorer in = neighborhoodExplorer.get(i);
 			mN2ID.put(in, i);
 		}
-		
+		*/
 		
 	}
 	public GenericLocalSearch(VRManager mgr){
 		this.mgr = mgr;
 		this.XR = mgr.getVarRoutesVR();
 		this.maxStable = 100;
+		NEM = new NeighbohoodExplorerManager();
 	}
+	public void setKnownOptimal(LexMultiValues o){
+		this.knownOptimal = o;
+	}
+	
 	public void perturbNeighborhoodExplorer(){
+		NEM.perturb();
+		/*
 		INeighborhoodExplorer[] a = new INeighborhoodExplorer[neighborhoodExplorer.size()];
 		for(int i = 0;i < neighborhoodExplorer.size(); i++)
 			a[i] = neighborhoodExplorer.get(i);
@@ -69,18 +85,22 @@ public class GenericLocalSearch implements ISearch {
 			neighborhoodExplorer.add(a[i]);
 			mN2ID.put(a[i], i);
 		}
+		*/
 	}
 	public void setObjectiveFunction(LexMultiFunctions F){
 		this.F = F;
 	}
 	public void setNeighborhoodExplorer(ArrayList<INeighborhoodExplorer> NE){
+		NEM.setNeighborhoodExplorers(NE);
+		/*
 		this.neighborhoodExplorer = NE;
-		mN2ID = new HashMap<INeighborhoodExplorer, Integer>();
 		
+		mN2ID = new HashMap<INeighborhoodExplorer, Integer>();
 		for(int i = 0; i < neighborhoodExplorer.size(); i++){
 			INeighborhoodExplorer in = neighborhoodExplorer.get(i);
 			mN2ID.put(in, i);
 		}
+		*/
 	}
 	public void updateBest() {
 		bestValue.set(F.getValues());
@@ -95,7 +115,7 @@ public class GenericLocalSearch implements ISearch {
 		return time_to_best;
 	}
 	public void restart(){
-		System.out.println(name() + "::restart............");
+		if(verbose) System.out.println(name() + "::restart............");
 		//XR.setRandom();
 		//generateInitialSolution();
 		perturb(XR.getNbClients());
@@ -103,6 +123,7 @@ public class GenericLocalSearch implements ISearch {
 			updateBest();
 		}
 		nic = 0;
+		NEM.restart();
 	}
 	 
 	public void generateInitialSolution(){
@@ -117,9 +138,9 @@ public class GenericLocalSearch implements ISearch {
 		bestValue = new LexMultiValues(F.getValues());
 		updateBest();
 		double t0 = System.currentTimeMillis();
-		System.out.println(name() + "::search, init bestValue = " + bestValue.toString());
+		if(verbose) System.out.println(name() + "::search, init bestValue = " + bestValue.toString());
 		//System.exit(-1);
-		System.out.println(XR.toString());
+		if(verbose) System.out.println(XR.toString());
 		while (currentIter < maxIter) {
 			double t = System.currentTimeMillis() - t0;
 			t = t * 0.001;
@@ -132,22 +153,34 @@ public class GenericLocalSearch implements ISearch {
 			bestEval.fill(F.size(), 0);
 			
 			perturbNeighborhoodExplorer();
-			
+			NEM.exploreNeighborhoodsFirstImprovement(N, bestEval);
+			/*
 			for(INeighborhoodExplorer NI: neighborhoodExplorer){
 				NI.exploreNeighborhood(N, bestEval);
 			}
+			*/
+			NEM.adaptNeighborhoods(10);
 			
 			if (N.hasMove()) {
 				IVRMove m = N.getAMove();
 				m.move();
 				
-				System.out.println(name() + "::search, step " + currentIter + ", time " + t + ", F = " + F.getValues().toString() + 
+				if(verbose) System.out.println(name() + "::search, step " + currentIter + ", time " + t + ", F = " + F.getValues().toString() + 
 						", best = " + bestValue.toString() + ", time_to_best = " + time_to_best + 
 						", nic/maxStable = " + nic + "/" + maxStable);
 				if(F.getValues().lt(bestValue)){
 					updateBest();
 					time_to_best = System.currentTimeMillis() - t0;
 					time_to_best = time_to_best * 0.001;
+					
+					if(knownOptimal != null){
+						if(F.getValues().leq(knownOptimal)){
+							if(verbose) System.out.println(name() + "::search, step " + currentIter + ", time " + t + ", F = " + F.getValues().toString() + 
+									", best = " + bestValue.toString() + ", time_to_best = " + time_to_best + 
+									", REACH KNOWN OPTIMAL --> BREAK");
+							break;
+						}
+					}
 				}else{
 					nic++;
 					if(nic > maxStable){
@@ -155,10 +188,11 @@ public class GenericLocalSearch implements ISearch {
 					}
 				}
 			} else {
-				System.out.println(name()
+				if(verbose) System.out.println(name()
 						+ "::search --> no move available, break");
-				//break;
-				restart();
+				
+				if(noMoveBreak) break;
+				else restart();
 			}
 			// System.out.println(obj.toString());
 
@@ -168,8 +202,8 @@ public class GenericLocalSearch implements ISearch {
 
 		XR.setValue(bestSolution);
 
-		System.out.println("Best = " + F.getValues().toString());
-		System.out.println("bestValues = " + bestValue.toString());
+		if(verbose) System.out.println("Best = " + F.getValues().toString());
+		if(verbose) System.out.println("bestValues = " + bestValue.toString());
 		
 	}
 	public void perturb(int nbSteps){
@@ -210,10 +244,12 @@ public class GenericLocalSearch implements ISearch {
 			LexMultiValues bestEval = new LexMultiValues();
 			bestEval.fill(F.size(), CBLSVR.MAX_INT);
 			
-			
+			NEM.exploreNeighborhoodsFirstImprovement(N, bestEval);
+			/*
 			for(INeighborhoodExplorer NI: neighborhoodExplorer){
 				NI.exploreNeighborhood(N, bestEval);
 			}
+			*/
 			
 			if (N.hasMove()) {
 				IVRMove m = N.getAMove();

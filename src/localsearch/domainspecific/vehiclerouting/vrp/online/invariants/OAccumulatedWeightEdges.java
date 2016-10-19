@@ -56,7 +56,7 @@ public class OAccumulatedWeightEdges extends AccumulatedWeightEdgesVR implements
 		for(int k = 1; k <= VR.getNbRoutes(); k++){
 			costRight[getIndex(VR.getStartingPointOfRoute(k))] = TDM.getTraversedDistance(k);//traveledDistance[XR.getStartingPointOfRoute(k)];
 			costLeft[getIndex(VR.getStartingPointOfRoute(k))] = TDM.getBackwardTraversedDistance(k);//backTraveledDistance[XR.getStartingPointOfRoute(k)];
-			log.println(name() + "::updateWhenReachingTimePoint(" + t + "), costRight[" + k + "] = " + costRight[getIndex(XR.getStartingPointOfRoute(k))]);
+			//log.println(name() + "::updateWhenReachingTimePoint(" + t + "), costRight[" + k + "] = " + costRight[getIndex(XR.getStartingPointOfRoute(k))]);
 			super.update(k);
 		}
 	}

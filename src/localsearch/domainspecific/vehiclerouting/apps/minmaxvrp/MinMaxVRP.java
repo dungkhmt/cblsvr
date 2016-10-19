@@ -105,6 +105,7 @@ class MMSearch extends GenericLocalSearch {
 	public void restart(){
 		System.out.println("RESTART----------------------------------------");
 		generateInitialSolution();
+		NEM.restart();
 		System.out.println("RESTART----------------------------------------F = " + F.getValues().toString());
 		if(F.getValues().lt(bestValue)){
 			updateBest();

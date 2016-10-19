@@ -105,15 +105,21 @@ public class VarRoutesVROnline extends VarRoutesVR {
 		if(moving.get(k) == true) return true;
 		return false;
 	}
+	
+	public String name(){
+		return "VarRoutesVROnline";
+	}
 	public void update(int k, Point nextPoint){
+		//System.out.println(name() + "::update(" + k + ", nextPoint = " + nextPoint.ID + ")");
+		//System.exit(-1);
 		
 		Point s = next(getStartingPointOfRoute(k));
 		//passedPoints[k].clear();
 		while(s != nextPoint){
 			activePoints.remove(s);
 			passedPoints[k].add(s);
-			log.println(name() + "::update(" + k + "," + nextPoint.ID + ") --> passedPoint[" + k + "].add(" + s.ID + ")" + 
-			", --> XR.full = " + toStringFull());
+			//log.println(name() + "::update(" + k + "," + nextPoint.ID + ") --> passedPoint[" + k + "].add(" + s.ID + ")" + 
+			//", --> XR.full = " + toStringFull());
 			
 			s = next(s);
 		}

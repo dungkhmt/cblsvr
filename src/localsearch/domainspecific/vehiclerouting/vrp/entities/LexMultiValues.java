@@ -20,6 +20,10 @@ public class LexMultiValues {
 	public LexMultiValues(ArrayList<Double> values){
 		this.values = values;
 	}
+	public LexMultiValues(double v){
+		values = new ArrayList<Double>();
+		values.add(v);
+	}
 	public LexMultiValues(double v1, double v2){
 		values = new ArrayList<Double>();
 		values.add(v1);

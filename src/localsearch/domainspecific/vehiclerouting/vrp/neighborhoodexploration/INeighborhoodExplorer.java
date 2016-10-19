@@ -13,4 +13,5 @@ import localsearch.domainspecific.vehiclerouting.vrp.search.Neighborhood;
 public interface INeighborhoodExplorer {
 	public void exploreNeighborhood(Neighborhood N, LexMultiValues bestEval);
 	public void performMove(IVRMove m);
+	public String name();
 }

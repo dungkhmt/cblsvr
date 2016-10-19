@@ -3,15 +3,14 @@ package localsearch.domainspecific.vehiclerouting.vrp.online;
 import localsearch.domainspecific.vehiclerouting.vrp.VRManager;
 import localsearch.domainspecific.vehiclerouting.vrp.entities.Point;
 import localsearch.domainspecific.vehiclerouting.vrp.online.invariants.OInvariantVR;
-
-
 import java.util.*;
 
-import com.sun.org.apache.bcel.internal.generic.GETSTATIC;
 
 public class VRManagerOnline extends VRManager {
 	private ArrayList<OInvariantVR> oinvariants;
 	private TimeDistanceManager TDM;
+	private NodeWeightsManagerOnline nwm;
+	
 	//private TimeManager TM;
 
 	public VRManagerOnline() {
@@ -33,7 +32,9 @@ public class VRManagerOnline extends VRManager {
 			System.out.println(o.name());
 	}
 	public void update(int t) {
+		//System.out.println(name() + "::execute before TDM.update");
 		TDM.updateWhenReachingTimePoint(t);
+		//System.out.println(name() + "::execute before TDM.update");
 		for (OInvariantVR I : oinvariants)
 			I.updateWhenReachingTimePoint(t);
 	}
@@ -47,9 +48,13 @@ public class VRManagerOnline extends VRManager {
 		this.TDM = TDM;
 	}
 
+	public void setNodeWeightsManager(NodeWeightsManagerOnline nwm){
+		this.nwm = nwm;
+	}
 	public void engage(Point p){
 		getVarRoutesVR().addClientPoint(p);
 		TDM.addPoint(p);
+		nwm.addPoint(p);
 		for(OInvariantVR o: oinvariants)
 			o.addPoint(p);
 	}

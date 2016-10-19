@@ -44,6 +44,10 @@ public class GreedyOrOptMove1ExplorerLimit implements INeighborhoodExplorer {
 		delivery = new HashSet<Point>(deli);
 		id1 = id2 = 0;
 	}
+	
+	public String name(){
+		return "GreedyOrOptMove1ExplorerLimit";
+	}
 	@Override
 	public void exploreNeighborhood(Neighborhood N, LexMultiValues bestEval) {
 		// TODO Auto-generated method stub

@@ -54,7 +54,7 @@ public class MoveTwoPointsMove implements IVRMove {
 	
 	
 	public void move() {
-		//System.out.println(name() + "::move(" + x1 + "," + x2 + "," + y1 + "," + y2 + ") " + eval);
+		System.out.println(name() + "::move(" + x1 + "," + x2 + "," + y1 + "," + y2 + ") " + eval);
 		mgr.performTwoPointsMove(x1, x2, y1, y2);
 		if(NE != null) NE.performMove(this);
 	}

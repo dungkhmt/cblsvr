@@ -28,6 +28,9 @@ public class GreedyCrossExchangeMoveExplorerLimit implements INeighborhoodExplor
 		this.mgr = XR.getVRManager();
 		this.K = K;
 	}
+	public String name(){
+		return "GreedyCrossExchangeMoveExplorerLimit";
+	}
 	public GreedyCrossExchangeMoveExplorerLimit(VarRoutesVR XR, LexMultiFunctions F, int K, ArrayList<Point>pick, ArrayList<Point> deli) {
 		this.XR = XR;
 		this.F = F;

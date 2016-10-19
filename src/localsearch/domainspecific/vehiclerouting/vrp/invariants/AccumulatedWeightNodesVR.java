@@ -41,6 +41,11 @@ public class AccumulatedWeightNodesVR implements InvariantVR {
 		for (int i = 0; i < points.size(); i++) {
 			map.put(points.get(i), i);
 		}
+		for(int k= 1; k <= XR.getNbRoutes(); k++){
+			Point p = XR.startPoint(k);
+			sumWeights[getIndex(p)] = nwm.getWeight(p);
+		}
+		
 		mgr.post(this);
 	}
 	
@@ -70,12 +75,14 @@ public class AccumulatedWeightNodesVR implements InvariantVR {
 	public void setAccumulatedWeightStartPoint(int k, double w){
 		Point sp = XR.startPoint(k);
 		nwm.setWeight(sp, w);		
+		sumWeights[getIndex(sp)] = w;
 	}
 	// update sumWeight of points of route k
     protected void update(int k) {
+    	//System.out.println(name() + "::update(" + k + ")");
     	Point sp = XR.getStartingPointOfRoute(k);
         Point tp = XR.getTerminatingPointOfRoute(k);
-        sumWeights[getIndex(sp)] = nwm.getWeight(sp);
+        //sumWeights[getIndex(sp)] = nwm.getWeight(sp);
         for (Point u = sp; u != tp; u = XR.next(u)){
         	sumWeights[getIndex(XR.next(u))] = sumWeights[getIndex(u)] + nwm.getWeight(XR.next(u));
         }

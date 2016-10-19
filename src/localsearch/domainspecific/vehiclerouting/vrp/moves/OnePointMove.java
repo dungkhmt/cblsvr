@@ -35,7 +35,7 @@ public class OnePointMove implements IVRMove {
 	
 	public void move() {
 		// TODO Auto-generated method stub
-		//System.out.println(name() + "::move(" + x + "," + y + ") " + eval);
+		System.out.println(name() + "::move(" + x + "," + y + ") " + eval);
 		mgr.performOnePointMove(x, y);
 		
 		if(NE != null) NE.performMove(this);

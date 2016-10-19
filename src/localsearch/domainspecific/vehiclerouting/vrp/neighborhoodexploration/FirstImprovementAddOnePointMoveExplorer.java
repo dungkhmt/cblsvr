@@ -27,7 +27,9 @@ public class FirstImprovementAddOnePointMoveExplorer implements INeighborhoodExp
 		this.mgr = XR.getVRManager();
 	}
 	
-	
+	public String name(){
+		return "FirstImprovementAddOnePointMove";
+	}
 	public void exploreNeighborhood(Neighborhood N, LexMultiValues bestEval) {
 		// TODO Auto-generated method stub
 		for (Point x : XR.getClientPoints()) {

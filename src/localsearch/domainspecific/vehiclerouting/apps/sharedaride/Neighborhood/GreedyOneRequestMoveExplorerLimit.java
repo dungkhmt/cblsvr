@@ -43,6 +43,9 @@ public class GreedyOneRequestMoveExplorerLimit implements INeighborhoodExplorer 
 		this.p = p;
 	}
 	
+	public String name(){
+		return "GreedyOneRequestMoveExplorerLimit";
+	}
 	@Override
 	public void exploreNeighborhood(Neighborhood N, LexMultiValues bestEval) {
 		// TODO Auto-generated method stub

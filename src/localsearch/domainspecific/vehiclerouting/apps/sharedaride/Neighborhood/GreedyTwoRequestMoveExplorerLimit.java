@@ -30,6 +30,9 @@ public class GreedyTwoRequestMoveExplorerLimit implements INeighborhoodExplorer 
 		this.delivery = delivery;
 		this.p = 1;
 	}
+	public String name(){
+		return "GreedyTwoRequestMoveExplorerLimit";
+	}
 	public GreedyTwoRequestMoveExplorerLimit(VarRoutesVR XR, LexMultiFunctions F,double p, ArrayList<Point>pickup, ArrayList<Point> delivery) {
 		this.XR = XR;
 		this.F = F;
