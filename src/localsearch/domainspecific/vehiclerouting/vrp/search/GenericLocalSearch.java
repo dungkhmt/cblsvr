@@ -35,11 +35,16 @@ public class GenericLocalSearch implements ISearch {
 	//protected HashMap<INeighborhoodExplorer, Integer> mN2ID;
 	protected double time_to_best;
 	protected double time;
+	protected double t0;
+	protected double t;
 	private Random R = new Random();
 	
 	// parameters
 	public boolean noMoveBreak = false;
 	public boolean verbose = true;
+	public boolean pertubationNeighborhood = true;
+	public boolean adaptNeighborhood = true;
+	public int lenAdaptNeighborhood = 10;
 	
 	public GenericLocalSearch(VRManager mgr, LexMultiFunctions F, ArrayList<INeighborhoodExplorer> neighborhoodExplorer){
 		this.mgr = mgr;
@@ -114,7 +119,7 @@ public class GenericLocalSearch implements ISearch {
 	public double getTimeToBest(){
 		return time_to_best;
 	}
-	public void restart(){
+	public void restart(int currentIter){
 		if(verbose) System.out.println(name() + "::restart............");
 		//XR.setRandom();
 		//generateInitialSolution();
@@ -123,11 +128,34 @@ public class GenericLocalSearch implements ISearch {
 			updateBest();
 		}
 		nic = 0;
-		NEM.restart();
+		NEM.restart(currentIter);
 	}
 	 
 	public void generateInitialSolution(){
 		XR.setRandom();
+	}
+	
+	public void processNeighbor(){
+		if(F.getValues().lt(bestValue)){
+			updateBest();
+			time_to_best = System.currentTimeMillis() - t0;
+			time_to_best = time_to_best * 0.001;
+			
+			if(knownOptimal != null){
+				if(F.getValues().leq(knownOptimal)){
+					if(verbose) System.out.println(name() + "::search, step " + currentIter + ", time " + t + ", F = " + F.getValues().toString() + 
+							", best = " + bestValue.toString() + ", time_to_best = " + time_to_best + 
+							", REACH KNOWN OPTIMAL --> BREAK");
+					//break;
+				}
+			}
+		}else{
+			nic++;
+			if(nic > maxStable){
+				restart(currentIter);
+			}
+		}
+
 	}
 	public void search(int maxIter, int timeLimit){
 		bestSolution = new ValueRoutesVR(XR);
@@ -137,12 +165,12 @@ public class GenericLocalSearch implements ISearch {
 		Neighborhood N = new Neighborhood(mgr);
 		bestValue = new LexMultiValues(F.getValues());
 		updateBest();
-		double t0 = System.currentTimeMillis();
+		t0 = System.currentTimeMillis();
 		if(verbose) System.out.println(name() + "::search, init bestValue = " + bestValue.toString());
 		//System.exit(-1);
 		if(verbose) System.out.println(XR.toString());
 		while (currentIter < maxIter) {
-			double t = System.currentTimeMillis() - t0;
+			t = System.currentTimeMillis() - t0;
 			t = t * 0.001;
 			if (t  > timeLimit)
 				break;
@@ -152,14 +180,12 @@ public class GenericLocalSearch implements ISearch {
 			//bestEval.fill(F.size(), CBLSVR.MAX_INT);
 			bestEval.fill(F.size(), 0);
 			
-			perturbNeighborhoodExplorer();
-			NEM.exploreNeighborhoodsFirstImprovement(N, bestEval);
-			/*
-			for(INeighborhoodExplorer NI: neighborhoodExplorer){
-				NI.exploreNeighborhood(N, bestEval);
-			}
-			*/
-			NEM.adaptNeighborhoods(10);
+			if(pertubationNeighborhood) perturbNeighborhoodExplorer();
+			
+			NEM.exploreNeighborhoodsFirstImprovement(N, bestEval, currentIter);
+			
+			//System.out.println("adaptNeighborhood = " + adaptNeighborhood); System.exit(-1);
+			if(adaptNeighborhood) NEM.adaptNeighborhoods(lenAdaptNeighborhood,currentIter);
 			
 			if (N.hasMove()) {
 				IVRMove m = N.getAMove();
@@ -168,6 +194,18 @@ public class GenericLocalSearch implements ISearch {
 				if(verbose) System.out.println(name() + "::search, step " + currentIter + ", time " + t + ", F = " + F.getValues().toString() + 
 						", best = " + bestValue.toString() + ", time_to_best = " + time_to_best + 
 						", nic/maxStable = " + nic + "/" + maxStable);
+				
+				processNeighbor();
+				
+				if(knownOptimal != null){
+					if(F.getValues().leq(knownOptimal)){
+						if(verbose) System.out.println(name() + "::search, step " + currentIter + ", time " + t + ", F = " + F.getValues().toString() + 
+								", best = " + bestValue.toString() + ", time_to_best = " + time_to_best + 
+								", REACH KNOWN OPTIMAL --> BREAK");
+						break;
+					}
+				}
+				/*
 				if(F.getValues().lt(bestValue)){
 					updateBest();
 					time_to_best = System.currentTimeMillis() - t0;
@@ -184,15 +222,16 @@ public class GenericLocalSearch implements ISearch {
 				}else{
 					nic++;
 					if(nic > maxStable){
-						restart();
+						restart(currentIter);
 					}
 				}
+				*/
 			} else {
 				if(verbose) System.out.println(name()
 						+ "::search --> no move available, break");
 				
 				if(noMoveBreak) break;
-				else restart();
+				else restart(currentIter);
 			}
 			// System.out.println(obj.toString());
 
@@ -244,7 +283,7 @@ public class GenericLocalSearch implements ISearch {
 			LexMultiValues bestEval = new LexMultiValues();
 			bestEval.fill(F.size(), CBLSVR.MAX_INT);
 			
-			NEM.exploreNeighborhoodsFirstImprovement(N, bestEval);
+			NEM.exploreNeighborhoodsFirstImprovement(N, bestEval,currentIter);
 			/*
 			for(INeighborhoodExplorer NI: neighborhoodExplorer){
 				NI.exploreNeighborhood(N, bestEval);

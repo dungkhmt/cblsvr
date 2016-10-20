@@ -122,13 +122,13 @@ public class GreedyKPointsMoveExplorer implements INeighborhoodExplorer {
 				neighborhood.clear();
 				ArrayList<Point> sx = copy(x);
 				ArrayList<Point> sy = copy(y);
-				neighborhood.add(new KPointsMove(mgr, eval, sx, sy));
+				neighborhood.add(new KPointsMove(mgr, eval, sx, sy,this));
 				bestEval.set(eval);
 				
 			} else if (eval.eq(bestEval)) {
 				ArrayList<Point> sx = copy(x);
 				ArrayList<Point> sy = copy(y);
-				neighborhood.add(new KPointsMove(mgr, eval, sx, sy));
+				neighborhood.add(new KPointsMove(mgr, eval, sx, sy, this));
 			}
 			if(eval.lt(zeros)) found = true;// first improvement
 		}

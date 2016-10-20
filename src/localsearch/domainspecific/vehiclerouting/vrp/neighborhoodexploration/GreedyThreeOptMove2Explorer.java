@@ -60,10 +60,10 @@ public class GreedyThreeOptMove2Explorer implements INeighborhoodExplorer {
 						LexMultiValues eval = F.evaluateThreeOptMove2(x, y, z);
 						if (eval.lt(bestEval)){
 							N.clear();
-							N.add(new ThreeOptMove2(mgr, eval, x, y, z));
+							N.add(new ThreeOptMove2(mgr, eval, x, y, z, this));
 							bestEval.set(eval);
 						} else if (eval.eq(bestEval)) {
-							N.add(new ThreeOptMove2(mgr, eval, x, y, z));
+							N.add(new ThreeOptMove2(mgr, eval, x, y, z, this));
 						}
 						if(firstImprovement){
 							if(eval.lt(0)) return;

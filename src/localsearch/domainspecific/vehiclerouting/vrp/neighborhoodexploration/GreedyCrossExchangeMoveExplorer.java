@@ -60,10 +60,10 @@ public class GreedyCrossExchangeMoveExplorer implements INeighborhoodExplorer {
 									LexMultiValues eval = F.evaluateCrossExchangeMove(x1, y1, x2, y2);
 									if (eval.lt(bestEval)) {
 										N.clear();
-										N.add(new CrossExchangeMove(mgr, eval, x1, y1, x2, y2));
+										N.add(new CrossExchangeMove(mgr, eval, x1, y1, x2, y2, this));
 										bestEval.set(eval);
 									} else if (eval.eq(bestEval)) {
-										N.add(new CrossExchangeMove(mgr, eval, x1, y1, x2, y2));
+										N.add(new CrossExchangeMove(mgr, eval, x1, y1, x2, y2, this));
 									}
 									if(firstImprovement){
 										if(eval.lt(0)) return;

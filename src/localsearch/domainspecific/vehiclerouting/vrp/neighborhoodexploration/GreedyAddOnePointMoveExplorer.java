@@ -48,10 +48,10 @@ public class GreedyAddOnePointMoveExplorer implements INeighborhoodExplorer {
 					LexMultiValues eval = F.evaluateAddOnePoint(x, y);
 					if (eval.lt(bestEval)) {
 						N.clear();
-						N.add(new AddOnePoint(mgr, eval, x, y));
+						N.add(new AddOnePoint(mgr, eval, x, y, this));
 						bestEval.set(eval);
 					} else if (eval.eq(bestEval)) {
-						N.add(new AddOnePoint(mgr, eval, x, y));
+						N.add(new AddOnePoint(mgr, eval, x, y, this));
 					}
 					if(firstImprovement){
 						if(eval.lt(0)) return;

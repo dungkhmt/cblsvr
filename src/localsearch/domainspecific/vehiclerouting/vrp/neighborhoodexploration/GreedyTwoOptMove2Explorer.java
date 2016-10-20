@@ -59,10 +59,10 @@ public class GreedyTwoOptMove2Explorer implements INeighborhoodExplorer {
 							LexMultiValues eval = F.evaluateTwoOptMove2(x, y);
 							if (eval.lt(bestEval)){
 								N.clear();
-								N.add(new TwoOptMove2(mgr, eval, x, y));
+								N.add(new TwoOptMove2(mgr, eval, x, y, this));
 								bestEval.set(eval);
 							} else if (eval.eq(bestEval)) {
-								N.add(new TwoOptMove2(mgr, eval, x, y));
+								N.add(new TwoOptMove2(mgr, eval, x, y, this));
 							}
 							if(firstImprovement){
 								if(eval.lt(0)) return;

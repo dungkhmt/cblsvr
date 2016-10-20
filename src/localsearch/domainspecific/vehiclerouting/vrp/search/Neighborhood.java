@@ -27,6 +27,9 @@ public class Neighborhood {
 			eval = m.evaluation();
 		}
 	}
+	public ArrayList<IVRMove> getMoves(){
+		return moves;
+	}
 	public void clear(){
 		moves.clear();
 		eval = null;
