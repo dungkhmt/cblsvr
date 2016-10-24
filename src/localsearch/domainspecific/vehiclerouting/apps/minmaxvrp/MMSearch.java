@@ -117,7 +117,6 @@ public class MMSearch extends GenericLocalSearch {
 						Cand.add(new PairPoints(p,q));
 					}
 				}
-				
 			}
 			PairPoints PP = Cand.get(R.nextInt(Cand.size()));
 			sel_p = PP.x; sel_q = PP.y;
