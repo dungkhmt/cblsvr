@@ -25,7 +25,6 @@ public class ExperimentRunner {
 
 	public static void runExperiments(){
 		int nbRuns = 20;
-		
 		String[] fn = new String[]{
 				"E-n101-k14.vrp",
 				"E-n23-k3.vrp",
@@ -44,9 +43,19 @@ public class ExperimentRunner {
 			"E-n13-k4.vrp",
 			"E-n31-k7.vrp"
 		};
-
-		String in_dir = "data/MinMaxVRP/Christophides/std-all/";
-		String out_dir = "output/MinMaxVRP/";
+		
+		/*
+		String[] fn = new String[]{
+				//"E-n22-k4.vrp",
+				"E-n13-k4.vrp",
+		};
+		*/
+		//String in_dir = "data/MinMaxVRP/Christophides/std-all/";
+		//String out_dir = "output/MinMaxVRP/Christophides/std-all/";
+		
+		String in_dir = "data/MinMaxVRP/Christophides/std-all-round-euclide-distance/";
+		String out_dir = "output/MinMaxVRP/Christophides/std-all-round-euclide-distance/";
+		
 		int timeLimit = 300;
 		
 		try{
@@ -84,41 +93,48 @@ public class ExperimentRunner {
 
 	}
 
-	public static void runStatistics(String statisticFN){
+	public static void runStatistics(String out_dir, String statisticFN){
 		int nbRuns = 20;
 		
 		String[] fn = new String[]{
-				"E-n101-k14.vrp",
+				"E-n7-k2.vrp",
+				"E-n13-k4.vrp",
+				"E-n22-k4.vrp",
 				"E-n23-k3.vrp",
+				"E-n30-k4.vrp",
+				"E-n30-k3.vrp",
+				"E-n31-k7.vrp",
 				"E-n33-k4.vrp",
+				"E-n51-k5.vrp",
 				"E-n76-k14.vrp",
 				"E-n76-k8.vrp",
-				"E-n101-k8.vrp",
-				"E-n30-k3.vrp",
-				"E-n51-k5.vrp",
 				"E-n76-k15.vrp",
-				"E-n22-k4.vrp",
-				"E-n30-k4.vrp",
 				"E-n76-k10.vrp",
 				"E-n76-k7.vrp",
-			"E-n7-k2.vrp",
-			"E-n13-k4.vrp",
-			"E-n31-k7.vrp"
+				"E-n101-k8.vrp",
+				"E-n101-k14.vrp"
+				
 		};
 
-		String in_dir = "data/MinMaxVRP/Christophides/std-all/";
-		String out_dir = "output/MinMaxVRP/";
+		//String in_dir = "data/MinMaxVRP/Christophides/std-all/";
+		//String out_dir = "output/MinMaxVRP/Christophides/std-all/";
 		int timeLimit = 300;
 		
 		try{
 			PrintWriter out = new PrintWriter(statisticFN);
-			
 			String[] algo = new String[]{
-					"MinMaxCVRPMultiNeighborhoodsWithTotalCost",
-					"MinMaxCVRPMultiNeighborhoods",
 					"MinMaxCVRP2Neighborhoods",
 					"MinMaxCVRP2NeighborhoodsWithTotalCost",
+					"MinMaxCVRPMultiNeighborhoods",
+					"MinMaxCVRPMultiNeighborhoodsWithTotalCost",
+					
 			};
+			out.print("Instances");
+			for(int k = 0; k < algo.length; k++){
+				out.print("\t" + algo[k] + "\t\t\t");
+			}
+			out.println();
+			
 			for(int i = 0; i < fn.length; i++){
 				
 				out.print(fn[i] + "\t");
@@ -156,7 +172,9 @@ public class ExperimentRunner {
 	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-		ExperimentRunner.runStatistics("output/MinMaxVRP");
+		//ExperimentRunner.runStatistics( "output/MinMaxVRP/Christophides/std-all/","output/MinMaxVRP/Christophides/std-all/statistic.txt");
+		
+		ExperimentRunner.runExperiments();
 	}
 
 }
