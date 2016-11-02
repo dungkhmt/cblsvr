@@ -25,6 +25,7 @@ public class ExperimentRunner {
 
 	public static void runExperiments(){
 		int nbRuns = 20;
+		/*
 		String[] fn = new String[]{
 				"E-n101-k14.vrp",
 				"E-n23-k3.vrp",
@@ -44,17 +45,39 @@ public class ExperimentRunner {
 			"E-n31-k7.vrp"
 		};
 		
-		/*
-		String[] fn = new String[]{
-				//"E-n22-k4.vrp",
-				"E-n13-k4.vrp",
-		};
-		*/
-		//String in_dir = "data/MinMaxVRP/Christophides/std-all/";
-		//String out_dir = "output/MinMaxVRP/Christophides/std-all/";
-		
+			
 		String in_dir = "data/MinMaxVRP/Christophides/std-all-round-euclide-distance/";
 		String out_dir = "output/MinMaxVRP/Christophides/std-all-round-euclide-distance/";
+		
+		int timeLimit = 300;
+		*/
+		
+		String[] fn = {
+				"kelly01.txt",
+				"kelly02.txt",
+				"kelly03.txt",
+				"kelly04.txt",
+				"kelly05.txt",
+				"kelly06.txt",
+				"kelly07.txt",
+				"kelly08.txt",
+				"kelly09.txt",
+				"kelly10.txt",
+				"kelly11.txt",
+				"kelly12.txt",
+				"kelly13.txt",
+				"kelly14.txt",
+				"kelly15.txt",
+				"kelly16.txt",
+				"kelly17.txt",
+				"kelly18.txt",
+				"kelly19.txt",
+				"kelly20.txt",
+			};
+		
+			
+		String in_dir = "data/MinMaxVRP/Kelly/std_all/ ";
+		String out_dir = "output/MinMaxVRP/Kelly/std_all/";
 		
 		int timeLimit = 300;
 		
