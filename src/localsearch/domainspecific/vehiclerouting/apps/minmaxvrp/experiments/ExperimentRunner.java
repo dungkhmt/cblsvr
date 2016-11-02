@@ -117,7 +117,7 @@ public class ExperimentRunner {
 	}
 
 	public static void runStatistics(String out_dir, String statisticFN){
-		int nbRuns = 20;
+		int nbRuns = 15;
 		
 		String[] fn = new String[]{
 				"E-n7-k2.vrp",
@@ -196,8 +196,9 @@ public class ExperimentRunner {
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		//ExperimentRunner.runStatistics( "output/MinMaxVRP/Christophides/std-all/","output/MinMaxVRP/Christophides/std-all/statistic.txt");
+		ExperimentRunner.runStatistics( "output/MinMaxVRP/Kelly/std_all/","output/MinMaxVRP/Kelly/std_all/statistic.txt");
 		
-		ExperimentRunner.runExperiments();
+		//ExperimentRunner.runExperiments();
 	}
 
 }
