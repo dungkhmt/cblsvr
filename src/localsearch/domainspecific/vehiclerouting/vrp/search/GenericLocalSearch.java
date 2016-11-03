@@ -157,6 +157,9 @@ public class GenericLocalSearch implements ISearch {
 		}
 
 	}
+	public void endOfAnIteration(){
+		// to be overridden in extended classes
+	}
 	public void search(int maxIter, int timeLimit){
 		bestSolution = new ValueRoutesVR(XR);
 		currentIter = 0;
@@ -235,6 +238,8 @@ public class GenericLocalSearch implements ISearch {
 			}
 			// System.out.println(obj.toString());
 
+			endOfAnIteration();
+			
 			currentIter++;
 
 		}
@@ -332,7 +337,9 @@ public class GenericLocalSearch implements ISearch {
 		return bestValue;
 	}
 
-	
+	public LexMultiFunctions getFunction(){
+		return F;
+	}
 	public int getCurrentIteration() {
 		// TODO Auto-generated method stub
 		return currentIter;

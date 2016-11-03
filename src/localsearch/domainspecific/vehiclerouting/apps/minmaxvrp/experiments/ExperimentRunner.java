@@ -118,6 +118,7 @@ public class ExperimentRunner {
 
 	public static void runStatistics(String out_dir, String statisticFN){
 		int nbRuns = 15;
+
 		
 		String[] fn = new String[]{
 				"E-n7-k2.vrp",
@@ -138,6 +139,32 @@ public class ExperimentRunner {
 				"E-n101-k14.vrp"
 				
 		};
+		
+		/*
+		
+		String[] fn = {
+				"kelly01.txt",
+				"kelly02.txt",
+				"kelly03.txt",
+				"kelly04.txt",
+				"kelly05.txt",
+				"kelly06.txt",
+				"kelly07.txt",
+				"kelly08.txt",
+				"kelly09.txt",
+				"kelly10.txt",
+				"kelly11.txt",
+				"kelly12.txt",
+				"kelly13.txt",
+				"kelly14.txt",
+				"kelly15.txt",
+				"kelly16.txt",
+				"kelly17.txt",
+				"kelly18.txt",
+				"kelly19.txt",
+				"kelly20.txt",
+			};
+		*/
 
 		//String in_dir = "data/MinMaxVRP/Christophides/std-all/";
 		//String out_dir = "output/MinMaxVRP/Christophides/std-all/";
@@ -150,17 +177,20 @@ public class ExperimentRunner {
 					"MinMaxCVRP2NeighborhoodsWithTotalCost",
 					"MinMaxCVRPMultiNeighborhoods",
 					"MinMaxCVRPMultiNeighborhoodsWithTotalCost",
-					
 			};
 			out.print("Instances");
 			for(int k = 0; k < algo.length; k++){
-				out.print("\t" + algo[k] + "\t\t\t");
+				out.print("\t" + algo[k] + "\t\t\t\t\t\t\t");
 			}
 			out.println();
 			
+			double[][][] f = new double[fn.length][algo.length][nbRuns+1];
+			//double[][][] c_max = new double[fn.length][algo.length][nbRuns];
+			//double[][][] c_avg = new double[fn.length][algo.length][nbRuns];
+			
 			for(int i = 0; i < fn.length; i++){
 				
-				out.print(fn[i] + "\t");
+				out.print(fn[i] + "\t&\t");
 				for(int k = 0; k < algo.length; k++){
 					double min_f = Integer.MAX_VALUE;
 					double max_f = 1-min_f;
@@ -168,7 +198,7 @@ public class ExperimentRunner {
 					double avg_t = 0;
 					
 					for(int r = 1; r <= nbRuns; r++){
-						String fo = out_dir + algo[k] + "-ins-" + 
+						String fo = out_dir + "/" + algo[k] + "-ins-" + 
 								fn[i] + "-run-" + r + ".txt";
 						Result rs = new Result(fo);
 						if(min_f > rs.obj) min_f = rs.obj;
@@ -176,17 +206,38 @@ public class ExperimentRunner {
 						avg_f += rs.obj;
 						avg_t += rs.time_2_best;
 			
+						f[i][k][r] = rs.obj;
+						
 					}
 					
 					avg_f = avg_f*1.0/nbRuns;
 					avg_t = avg_t*1.0/nbRuns;
 					
-					out.print(min_f + "\t" + max_f + "\t" + avg_f + "\t" + avg_t + "\t");
+					out.print(min_f + "\t&\t" + max_f + "\t&\t" + avg_f + "\t&\t" + avg_t + "\t&\t");
 					
 				}
 				out.println();
 			}
 			out.close();
+			
+			// count number of runs that one algo find better results than another
+			int nbBetter = 0;
+			int nbEqual = 0;
+			int nbWorse = 0;
+			for(int i = 0; i < fn.length; i++){
+				for(int r = 0; r < nbRuns; r++){
+					if(Math.abs(f[i][3][r] - f[i][0][r]) < 0.0001){
+						nbEqual++;
+					}else if(f[i][3][r] < f[i][0][r]){
+						nbBetter++;
+					}else{
+						nbWorse++;
+					}
+				}
+			}
+			
+			System.out.println("nbBetter = " + nbBetter + ", nbEqual = " + nbEqual + ", nbWorse = " + nbWorse);
+			
 		}catch(Exception ex){
 			ex.printStackTrace();
 		}
@@ -195,8 +246,8 @@ public class ExperimentRunner {
 	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-		//ExperimentRunner.runStatistics( "output/MinMaxVRP/Christophides/std-all/","output/MinMaxVRP/Christophides/std-all/statistic.txt");
-		ExperimentRunner.runStatistics( "output/MinMaxVRP/Kelly/std_all/","output/MinMaxVRP/Kelly/std_all/statistic.txt");
+		ExperimentRunner.runStatistics( "output/MinMaxVRP/Christophides/std-all-round-euclide-distance/","output/MinMaxVRP/Christophides/std-all-round-euclide-distance/statistic.txt");
+		//ExperimentRunner.runStatistics( "output/MinMaxVRP/Kelly/std_all/","output/MinMaxVRP/Kelly/std_all/statistic.txt");
 		
 		//ExperimentRunner.runExperiments();
 	}

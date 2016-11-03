@@ -1,5 +1,6 @@
 package localsearch.domainspecific.vehiclerouting.apps.minmaxvrp;
 
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Random;
@@ -12,11 +13,27 @@ import localsearch.domainspecific.vehiclerouting.vrp.search.GenericLocalSearch;
 
 public class MMSearch extends GenericLocalSearch {
 	private Random R;
+	PrintWriter log = null;
 	public MMSearch(VRManager mgr) {
 		super(mgr);
 		R = new Random();
 		maxStable = 20;
 	}
+	public void initLog(String fn){
+		try{
+			log = new PrintWriter(fn);
+			
+		}catch(Exception ex){
+			ex.printStackTrace();
+		}
+	}
+	public void finalizeLog(){
+		log.close();
+	}
+	public void endOfAnIteration(){
+		log.println(getCurrentIteration() + "\t" + getFunction().getValues().get(1) + "\t" + getIncumbentValue().get(1));
+	}
+
 	public String name(){
 		return "MMSearch";
 	}

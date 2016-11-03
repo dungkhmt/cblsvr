@@ -119,7 +119,9 @@ public class MinMaxCVRPMultiNeighborhoodsWithTotalCost extends MinMaxCVRP {
 		se.setMaxStable(50);
 		se.adaptNeighborhood = false;
 		
+		se.initLog("MinMaxCVRPMultiNeighborhoodsWithTotalCost-log.txt");
 		se.search(10000, timeLimit);
+		se.finalizeLog();
 		
 		best_obj = obj.getValue();
 		time_to_best = se.getTimeToBest();
@@ -145,7 +147,8 @@ public class MinMaxCVRPMultiNeighborhoodsWithTotalCost extends MinMaxCVRP {
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		MinMaxCVRPMultiNeighborhoodsWithTotalCost vrp = new MinMaxCVRPMultiNeighborhoodsWithTotalCost();
-		vrp.readData("data/MinMaxVRP/Christophides/std-all/E-n101-k14.vrp");
+		//vrp.readData("data/MinMaxVRP/Christophides/std-all/E-n101-k14.vrp");
+		vrp.readData("data/MinMaxVRP/Kelly/std_all/kelly20.txt");
 		vrp.mapping();
 		vrp.stateModel();
 		vrp.search(300);

@@ -102,7 +102,9 @@ public class MinMaxCVRP2NeighborhoodsWithTotalCost extends MinMaxCVRP {
 		se.setMaxStable(50);
 		se.adaptNeighborhood = false;
 		
+		se.initLog("MinMaxCVRP2Neighborhoods-log.txt");
 		se.search(10000, timeLimit);
+		se.finalizeLog();
 		
 		best_obj = obj.getValue();
 		time_to_best = se.getTimeToBest();
