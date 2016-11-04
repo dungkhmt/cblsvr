@@ -76,7 +76,7 @@ public class ExperimentRunner {
 			};
 		
 			
-		String in_dir = "data/MinMaxVRP/Kelly/std_all/ ";
+		String in_dir = "data/MinMaxVRP/Kelly/std_all/";
 		String out_dir = "output/MinMaxVRP/Kelly/std_all/";
 		
 		int timeLimit = 300;
@@ -88,7 +88,10 @@ public class ExperimentRunner {
 				for(int i = 0; i < fn.length; i++){
 					String fi = in_dir + "" + fn[i];
 					
-					String fo = out_dir + "MinMaxCVRPMultiNeighborhoodsWithTotalCost-ins-" + 
+					String fo = "";
+					
+					/*
+					fo = out_dir + "MinMaxCVRPMultiNeighborhoodsWithTotalCost-ins-" + 
 					fn[i] + "-run-" + r + ".txt";
 					MinMaxCVRPMultiNeighborhoodsWithTotalCost.run(fi, fo, timeLimit);
 					
@@ -105,6 +108,11 @@ public class ExperimentRunner {
 					fo = out_dir + "MinMaxCVRP2NeighborhoodsWithTotalCost-ins-" + 
 							fn[i] + "-run-" + r + ".txt";
 					MinMaxCVRP2NeighborhoodsWithTotalCost.run(fi, fo, timeLimit);
+					*/
+					
+					fo = out_dir + "MinMaxCVRPMultiNeighborhoodsWithTotalCostNotPerturbNeighborhood-ins-" + 
+							fn[i] + "-run-" + r + ".txt";
+					MinMaxCVRPMultiNeighborhoodsWithTotalCostNotPerturbNeighborhood.run(fi, fo, timeLimit);
 			
 				}
 				
@@ -246,10 +254,13 @@ public class ExperimentRunner {
 	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-		ExperimentRunner.runStatistics( "output/MinMaxVRP/Christophides/std-all-round-euclide-distance/","output/MinMaxVRP/Christophides/std-all-round-euclide-distance/statistic.txt");
+		//ExperimentRunner.runStatistics( "output/MinMaxVRP/Christophides/std-all-round-euclide-distance/","output/MinMaxVRP/Christophides/std-all-round-euclide-distance/statistic.txt");
 		//ExperimentRunner.runStatistics( "output/MinMaxVRP/Kelly/std_all/","output/MinMaxVRP/Kelly/std_all/statistic.txt");
 		
-		//ExperimentRunner.runExperiments();
+		ExperimentRunner.runExperiments();
+		
+		
+		
 	}
 
 }
