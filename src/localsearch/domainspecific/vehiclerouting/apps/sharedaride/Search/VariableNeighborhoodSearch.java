@@ -98,7 +98,7 @@ public class VariableNeighborhoodSearch implements ISearch {
 public void search(int maxIter, int timeLimit){
 	bestSolution = new ValueRoutesVR(XR);
 	currentIter = 0;
-	XR.setRandom();
+	//XR.setRandom();
 	bestSolution.store();
 	nic = 0;
 	Neighborhood N = new Neighborhood(mgr);
@@ -131,7 +131,7 @@ public void search(int maxIter, int timeLimit){
 			//System.out.println(t+"  -  "+timeLimit);
 			break;
 		}
-		System.out.println(t/1000+"    "+(curTime-previous)/1000+"   "+t/(currentIter*1000));
+		//System.out.println(t/1000+"    "+(curTime-previous)/1000+"   "+t/(currentIter*1000));
 		previous = curTime;
 		
 		N.clear();

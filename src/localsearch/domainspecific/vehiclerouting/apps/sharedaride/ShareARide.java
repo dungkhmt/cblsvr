@@ -3,9 +3,11 @@ package localsearch.domainspecific.vehiclerouting.apps.sharedaride;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Set;
 
 import localsearch.domainspecific.vehiclerouting.apps.sharedaride.Constraint.CPickupDeliveryOfGoodVR;
 import localsearch.domainspecific.vehiclerouting.apps.sharedaride.Constraint.CPickupDeliveryOfPeopleVR;
@@ -26,9 +28,11 @@ import localsearch.domainspecific.vehiclerouting.vrp.constraints.timewindows.CEa
 import localsearch.domainspecific.vehiclerouting.vrp.entities.ArcWeightsManager;
 import localsearch.domainspecific.vehiclerouting.vrp.entities.LexMultiValues;
 import localsearch.domainspecific.vehiclerouting.vrp.entities.Point;
+import localsearch.domainspecific.vehiclerouting.vrp.functions.AccumulatedEdgeWeightsOnPathVR;
 import localsearch.domainspecific.vehiclerouting.vrp.functions.ConstraintViolationsVR;
 import localsearch.domainspecific.vehiclerouting.vrp.functions.LexMultiFunctions;
 import localsearch.domainspecific.vehiclerouting.vrp.functions.TotalCostVR;
+import localsearch.domainspecific.vehiclerouting.vrp.invariants.AccumulatedWeightEdgesVR;
 import localsearch.domainspecific.vehiclerouting.vrp.invariants.EarliestArrivalTimeVR;
 import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.GreedyCrossExchangeMoveExplorer;
 import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.GreedyOnePointMoveExplorer;
@@ -49,24 +53,35 @@ public class ShareARide{
 	ArrayList<Point> startPoints;
 	ArrayList<Point> stopPoints;
 	
+	ArrayList<Point> rejectPoints;
+	ArrayList<Point> rejectPickup;
+	ArrayList<Point> rejectDelivery;
+	ArrayList<Integer> typeOfRejectPoint;
 	HashMap<Point, Integer> earliestAllowedArrivalTime;
 	HashMap<Point, Integer> serviceDuration;
 	HashMap<Point, Integer> lastestAllowedArrivalTime;
-	ArcWeightsManager awm;
-	
+	HashMap<Point,Point> pickup2DeliveryOfGood;
+	HashMap<Point,Point> pickup2DeliveryOfPeople;
 	
 	int nVehicle;
 	int nRequest;
 	
+	ArcWeightsManager awm;
 	VRManager mgr;
 	VarRoutesVR XR;
 	ConstraintSystemVR S;
 	IFunctionVR objective;
 	public CEarliestArrivalTimeVR ceat;
 	LexMultiValues valueSolution;
+	EarliestArrivalTimeVR eat;
+	CEarliestArrivalTimeVR cEarliest;
+	
+	AccumulatedWeightEdgesVR accDisInvr;
+	HashMap<Point, IFunctionVR> accDisF;
 	
 	int cntTimeRestart;
 	int cntInteration;
+	
 	public int calVioNow()
 	{
 		int vio = 0;
@@ -102,6 +117,11 @@ public class ShareARide{
 		startPoints = new ArrayList<Point>();
 		stopPoints = new ArrayList<Point>();
 		type = new ArrayList<>();
+		
+		rejectPoints = new ArrayList<Point>();
+		rejectPickup = new ArrayList<Point>();
+		rejectDelivery = new ArrayList<Point>();
+		typeOfRejectPoint = new ArrayList<Integer>();
 		for(int i=1; i <= info.nbVehicle; ++i)
 		{
 			int startPointId = i+info.nRequest*2;
@@ -155,8 +175,8 @@ public class ShareARide{
 	}
 
 public void stateModel() {
-	HashMap<Point,Point> pickup2DeliveryOfGood = new HashMap<Point, Point>();
-	HashMap<Point,Point> pickup2DeliveryOfPeople = new HashMap<Point, Point>();
+	pickup2DeliveryOfGood = new HashMap<Point, Point>();
+	pickup2DeliveryOfPeople = new HashMap<Point, Point>();
 	for(int i=0; i < nRequest; ++i)
 	{
 		Point pickup = pickupPoints.get(i);
@@ -174,6 +194,7 @@ public void stateModel() {
 	S = new ConstraintSystemVR(mgr);
 	for(int i=0;i<nVehicle;++i)
 		XR.addRoute(startPoints.get(i), stopPoints.get(i));
+	
 	for(int i=0;i<nRequest; ++i)
 	{
 		Point pickup = pickupPoints.get(i);
@@ -201,13 +222,25 @@ public void stateModel() {
 	
 	IConstraintVR goodC = new CPickupDeliveryOfGoodVR(XR, pickup2DeliveryOfGood);
 	IConstraintVR peopleC = new CPickupDeliveryOfPeopleVR(XR, pickup2DeliveryOfPeople);
-	S.post(new ScaleConstraint(goodC, scale));
-	S.post(new ScaleConstraint(peopleC, scale));
+	S.post(goodC);
+	S.post(peopleC);
 
-	EarliestArrivalTimeVR eat = new EarliestArrivalTimeVR(XR,awm,earliestAllowedArrivalTime,serviceDuration);
-	CEarliestArrivalTimeVR cEarliest = new CEarliestArrivalTimeVR(eat, lastestAllowedArrivalTime);
+	//time windows
+	eat = new EarliestArrivalTimeVR(XR,awm,earliestAllowedArrivalTime,serviceDuration);
+	cEarliest = new CEarliestArrivalTimeVR(eat, lastestAllowedArrivalTime);
+	
+	// new accumulated distance
+	accDisInvr = new AccumulatedWeightEdgesVR(XR, awm);
+	//function mapping a point to F calculate distance when route exchanged
+	accDisF = new HashMap<Point, IFunctionVR>();
+	for(Point p: XR.getAllPoints()){
+		IFunctionVR f =new AccumulatedEdgeWeightsOnPathVR(accDisInvr, p);
+		accDisF.put(p, f);
+		
+	}
 	S.post(cEarliest);
 	objective = new TotalCostVR(XR,awm);
+	
 	mgr.close();
 }
 
@@ -377,6 +410,211 @@ ArrayList<ArrayList<INeighborhoodExplorer>>search8(LexMultiFunctions F)
 	return listNE;
 }
 
+
+public VarRoutesVR test(){
+	System.out.println("greedyConstructiveSearch start, XR = " + XR.toString());
+	int idxVehicle = 1;
+	for(int i = 0; i < pickupPoints.size(); i++){
+		Point pickup = pickupPoints.get(i);
+		Point delivery = deliveryPoints.get(i);
+
+		Point end = XR.endPoint(idxVehicle);
+		Point pre_end = XR.prev(end);
+		System.out.println("1 vio all: " + S.violations());
+		mgr.performAddOnePoint(pickup, pre_end);
+		mgr.performAddOnePoint(delivery, pickup);
+		if(idxVehicle > XR.getNbRoutes()) idxVehicle = 1;
+		/*if(i < 5) {
+			System.out.println("Iter " + i+ ", XR = " + XR.toString() + ", S.violations = "+ S.violations()+", obj=" + objective.getValue());
+		
+		//for(Point q: XR.getAllPoints()){
+			System.out.println("greedyConstructiveSearch, earliest arrival time at point " + pickup.ID + " = " + 
+		eat.getEarliestArrivalTime(pickup) + ", earliest arrival time at point " + delivery.ID + " = " + 
+					eat.getEarliestArrivalTime(delivery) + ", acc_dis[" + pickup.ID + "] = " + accDisInvr.getCostRight(pickup) +
+					", acc_dis[" + delivery.ID+"] = " + accDisInvr.getCostRight(delivery)+
+					"disF[" + pickup.ID + "]=" + accDisF.get(pickup).getValue());
+			
+		}*/
+	}
+	
+	valueSolution = new LexMultiValues();
+	valueSolution.add(S.violations());
+	valueSolution.add(objective.getValue());
+	System.out.println("vio = " + S.violations() + ", value = " + objective.getValue());
+	return XR;
+}
+	
+	public VarRoutesVR greedyConstructiveSearch(int typeInit){
+		System.out.println("greedyConstructiveSearch start, XR = " + XR.toString());
+
+		int ix = 0;
+		if(typeInit == 1){
+			for(int i = 0; i < pickupPoints.size(); i++){
+				Point pickup = pickupPoints.get(i);
+				Point delivery = deliveryPoints.get(i);
+				ix++;
+				//add the request to end route
+				boolean added = false;
+				int vio_cur = S.violations();
+				for(int r = 1; r <= XR.getNbRoutes(); r++){
+					Point end = XR.endPoint(r);
+					Point pre_end = XR.prev(end);
+	
+					mgr.performAddOnePoint(pickup, pre_end);
+					mgr.performAddOnePoint(delivery, pickup);
+	
+					if(S.violations() > vio_cur){
+						mgr.performRemoveOnePoint(delivery);
+						mgr.performRemoveOnePoint(pickup);
+					}
+					else{
+						added = true;
+						System.out.println("ix = " + ix + ", add = " + added);
+						break;
+					}
+				}
+				if(!added){
+					rejectPoints.add(pickup);
+					rejectPoints.add(delivery);
+					rejectPickup.add(pickup);
+					rejectDelivery.add(delivery);
+					typeOfRejectPoint.add(type.get(i));
+					System.out.println("reject request: " + i + "reject size = " + rejectPickup.size());
+				}
+			}
+		}
+		else if(typeInit == 2){
+			ix = 0;
+			//add the people request to end route
+			for(Point pickup : pickup2DeliveryOfPeople.keySet()){
+				Point delivery = pickup2DeliveryOfPeople.get(pickup);
+				
+				ix++;
+				boolean added = false;
+				int vio_cur = S.violations();
+				for(int r = 1; r <= XR.getNbRoutes(); r++){
+					Point end = XR.endPoint(r);
+					Point pre_end = XR.prev(end);
+	
+					mgr.performAddOnePoint(pickup, pre_end);
+					mgr.performAddOnePoint(delivery, pickup);
+	
+					if(S.violations() > vio_cur){
+						mgr.performRemoveOnePoint(delivery);
+						mgr.performRemoveOnePoint(pickup);
+					}
+					else{
+						System.out.println("ix = " + ix + ", add = " + added);
+						added = true;
+						break;
+					}
+				}
+
+				if(!added){
+					rejectPoints.add(pickup);
+					rejectPoints.add(delivery);
+					rejectPickup.add(pickup);
+					rejectDelivery.add(delivery);
+				}
+			}
+			
+			//add the parcel request to route
+			Set<Point> peoplePickup = pickup2DeliveryOfPeople.keySet();
+			for(Point pickup : pickup2DeliveryOfGood.keySet()){
+				Point delivery = pickup2DeliveryOfGood.get(pickup);
+				ix++;
+				boolean added = false;
+				int vio_cur = S.violations();
+				for(int r = 1; r <= XR.getNbRoutes(); r++){
+					for(Point v = XR.getStartingPointOfRoute(r); v!= XR.getTerminatingPointOfRoute(r); v = XR.next(v)){
+						//if(!peoplePickup.contains(v)){
+							mgr.performAddOnePoint(pickup, v);
+							for(Point u = pickup; u != XR.getTerminatingPointOfRoute(r); u = XR.next(u)){
+								//if(!peoplePickup.contains(u)){
+									mgr.performAddOnePoint(delivery, u);
+									if(S.violations() > vio_cur){
+										mgr.performRemoveOnePoint(delivery);
+									}
+									else{
+										added = true;
+										System.out.println("ix = " + ix + ", add = " + added);
+										break;
+									}
+								//}
+							}
+							if(added)
+								break;
+							else
+								mgr.performRemoveOnePoint(pickup);
+						//}	
+					}
+					if(added)
+						break;
+				}
+				if(!added){
+					rejectPoints.add(pickup);
+					rejectPoints.add(delivery);
+					rejectPickup.add(pickup);
+					rejectDelivery.add(delivery);
+				}
+			}
+		}
+		
+		else if(typeInit == 3){
+			ix = 0;
+			Set<Point> peoplePickup = pickup2DeliveryOfPeople.keySet();
+			for(int i = 0; i < pickupPoints.size(); i++){
+				Point pickup = pickupPoints.get(i);
+				Point delivery = deliveryPoints.get(i);
+				ix++;
+				//add the request to end route
+				boolean added = false;
+				int vio_cur = S.violations();
+				for(int r = 1; r <= XR.getNbRoutes(); r++){
+					for(Point v = XR.getStartingPointOfRoute(r); v!= XR.getTerminatingPointOfRoute(r); v = XR.next(v)){
+						//if(!peoplePickup.contains(v)){
+							mgr.performAddOnePoint(pickup, v);
+							for(Point u = pickup; u != XR.getTerminatingPointOfRoute(r); u = XR.next(u)){
+								//if(!peoplePickup.contains(u)){
+									mgr.performAddOnePoint(delivery, u);
+									if(S.violations() > vio_cur){
+										mgr.performRemoveOnePoint(delivery);
+									}
+									else{
+										added = true;
+										System.out.println("ix = " + ix + ", add = " + added);
+										break;
+									}
+								//}
+							}
+							if(added)
+								break;
+							else
+								mgr.performRemoveOnePoint(pickup);
+						//}	
+					}
+					if(added)
+						break;
+				}
+				if(!added){
+					rejectPoints.add(pickup);
+					rejectPoints.add(delivery);
+					rejectPickup.add(pickup);
+					rejectDelivery.add(delivery);
+					typeOfRejectPoint.add(type.get(i));
+					System.out.println("reject request: " + i + "reject size = " + rejectPickup.size());
+				}
+			}
+		}
+		
+		valueSolution = new LexMultiValues();
+		valueSolution.add(S.violations());
+		valueSolution.add(objective.getValue());
+		System.out.println("vio = " + S.violations() + ", value = " + objective.getValue());
+		System.out.println("rejected reqs = " + rejectPickup.size());
+		return XR;
+	}
+	
     VarRoutesVR search(int maxIter, int timeLimit, int searchMethod)
     {
     	LexMultiFunctions F;
@@ -422,22 +660,26 @@ ArrayList<ArrayList<INeighborhoodExplorer>>search8(LexMultiFunctions F)
     
     public static void main(String []args) throws FileNotFoundException
     {
-    	int S = 7;
-    	for(int data = 1; data <= 10; ++data)
-    	{
-			Info info = new Info("data/sharedaride/n100r10_"+data+".txt");
-	    	
-	    	PrintWriter out = new PrintWriter(new File("out/S"+S+"/N100_R10_D"+data+"_S"+S+".txt"));
-	    	for(int turn = 0; turn < 10; ++turn)
+    	Info info = new Info("data/vrpData/n4111r1000_1" + ".txt");
+    	//sar.test();
+    	for(int typeInit = 2; typeInit <= 3; typeInit++){	    	
+	    	for(int S = 1; S <= 1; S++)
 	    	{
 	    		ShareARide sar = new ShareARide(info);
 	        	sar.stateModel();
-	        	sar.search(20000, 300000, S);
+		    	sar.greedyConstructiveSearch(typeInit);
+		    	PrintWriter out = new PrintWriter("output/N4111_R1000_D1_type" + typeInit + "_S" + S + ".txt");
 	        	LexMultiValues v = sar.valueSolution;
-	        	out.println(v.get(0)+"  "+v.get(1)*50/3600.0);
-	        	out.flush();
+	        	out.println("first vio = " + v.get(0) + ", first obj = " + v.get(1));
+	        	out.println("rejected reqs: " + sar.rejectPickup.size());
+	        	out.println(sar.XR.toString());
+	        	sar.search(1000, 1300, S);
+	        	v = sar.valueSolution;
+	        	out.println("new vio = " + v.get(0)+ ", new obj = " + v.get(1));
+	        	out.println("rejected reqs: " + sar.rejectPickup.size());
+	        	out.println(sar.XR.toString());
+		    	out.close();
 	    	}
-	    	out.close();
     	}
     }
     

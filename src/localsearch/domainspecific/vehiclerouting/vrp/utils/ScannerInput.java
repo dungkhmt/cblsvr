@@ -28,7 +28,7 @@ public class ScannerInput {
         try {
             br = new BufferedReader(new FileReader(s));
         } catch (FileNotFoundException ex) {
-            System.out.println("ko ton tai file" + s);
+            //System.out.println("ko ton tai file" + s);
         }
     }
 
