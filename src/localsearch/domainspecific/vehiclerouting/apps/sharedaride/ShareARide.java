@@ -220,10 +220,10 @@ public void stateModel() {
 		*/
 	}
 	
-	IConstraintVR goodC = new CPickupDeliveryOfGoodVR(XR, pickup2DeliveryOfGood);
-	IConstraintVR peopleC = new CPickupDeliveryOfPeopleVR(XR, pickup2DeliveryOfPeople);
-	S.post(goodC);
-	S.post(peopleC);
+	//IConstraintVR goodC = new CPickupDeliveryOfGoodVR(XR, pickup2DeliveryOfGood);
+	//IConstraintVR peopleC = new CPickupDeliveryOfPeopleVR(XR, pickup2DeliveryOfPeople);
+	//S.post(goodC);
+	//S.post(peopleC);
 
 	//time windows
 	eat = new EarliestArrivalTimeVR(XR,awm,earliestAllowedArrivalTime,serviceDuration);
@@ -244,7 +244,51 @@ public void stateModel() {
 	mgr.close();
 }
 
+public void insertPeople(Point pickup, Point delivery){
+	double minDelta = Integer.MAX_VALUE;
+	Point sel_p = null;
+	for(int r = 1; r <= XR.getNbRoutes(); r++){
+		for(Point p = XR.startPoint(r); p != XR.endPoint(r); p = XR.next(p)){
+			int dv = S.evaluateAddOnePoint(pickup, p);
+			if(dv > 0) continue;
+			
+			double dc = objective.evaluateAddOnePoint(pickup, p);
+			if(dc < minDelta){
+				minDelta = dc;
+				sel_p = p;
+			}
+			
+		}
+	}
+	
+	mgr.performAddOnePoint(pickup, sel_p);
+	mgr.performAddOnePoint(delivery, pickup);
+	
+}
 
+public void insertParcel(Point pickup, Point delivery){
+	double minDelta = Integer.MAX_VALUE;
+	Point sel_p = null;
+	for(int r = 1; r <= XR.getNbRoutes(); r++){
+		for(Point p = XR.startPoint(r); p != XR.endPoint(r); p = XR.next(p)){
+			for(Point q =XR.next(p); q != XR.endPoint(r); q = XR.next(q)){
+			int dv = S.evaluateAddOnePoint(pickup, p);
+			if(dv > 0) continue;
+			
+			double dc = objective.evaluateAddOnePoint(pickup, p);
+			if(dc < minDelta){
+				minDelta = dc;
+				sel_p = p;
+			}
+			}
+			
+		}
+	}
+	
+	mgr.performAddOnePoint(pickup, sel_p);
+	mgr.performAddOnePoint(delivery, pickup);
+	
+}
 
 ArrayList<ArrayList<INeighborhoodExplorer>>search1(LexMultiFunctions F)
 {
@@ -670,7 +714,7 @@ public VarRoutesVR test(){
 		    	sar.greedyConstructiveSearch(typeInit);
 		    	PrintWriter out = new PrintWriter("output/N4111_R1000_D1_type" + typeInit + "_S" + S + ".txt");
 	        	LexMultiValues v = sar.valueSolution;
-	        	out.println("first vio = " + v.get(0) + ", first obj = " + v.get(1));
+	        	out.println("first violationss = " + v.get(0) + ", first obj = " + v.get(1));
 	        	out.println("rejected reqs: " + sar.rejectPickup.size());
 	        	out.println(sar.XR.toString());
 	        	sar.search(1000, 1300, S);
