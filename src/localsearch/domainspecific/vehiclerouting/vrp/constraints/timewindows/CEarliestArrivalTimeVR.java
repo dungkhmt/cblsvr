@@ -1153,6 +1153,7 @@ public class CEarliestArrivalTimeVR implements IConstraintVR {
 		Point ny = XR.next(y);
 		t_next.put(y, x);
 		t_next.put(x, ny);
+		vio.put(x, 0);
 		getSegment(ny, XR.getTerminatingPointOfRoute(k));
 		int delta = 0;
 		
