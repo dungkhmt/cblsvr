@@ -136,7 +136,8 @@ public void search(int maxIter, int timeLimit){
 		
 		N.clear();
 		LexMultiValues bestEval = new LexMultiValues();
-		bestEval.fill(F.size(), CBLSVR.MAX_INT);
+		//bestEval.fill(F.size(), Double.MAX_VALUE);//search min violation.
+		bestEval.fill(F.size(), 0);//vio = 0,cost = current cost.
 		
 		LexMultiValues curValue = F.getValues();
 		for(int turn = 0; turn < listNeighborhoodExplorer.size(); ++ turn)
@@ -145,7 +146,8 @@ public void search(int maxIter, int timeLimit){
 			ArrayList<INeighborhoodExplorer> neighborhoodExplorer = listNeighborhoodExplorer.get(turn);
 			for(INeighborhoodExplorer NI : neighborhoodExplorer)
 			{
-				NI.exploreNeighborhood(N, bestEval);
+				//NI.exploreNeighborhood(N, bestEval); 
+				NI.exploreNeighborhood(N, bestEval); 
 			}
 			
 			if(isBetter(bestEval))
@@ -212,19 +214,20 @@ public void search(int maxIter, int timeLimit){
 			}
 			else{
 				nic++;
-				if(nic > maxStable){
-					restart();
-					nic = 0;
-					bestCurTurn = F.getValues();
-				}
+//				if(nic > maxStable){
+//					restart();
+//					nic = 0;
+//					bestCurTurn = F.getValues();
+//				}
 			}
 		} else {
 			System.out.println(name()
 					+ "::search --> no move available, break");
 			break;
 		}
-		if(currentIter%40==0)
-			System.out.println(XR.toString());
+//		if(currentIter%40==0)
+//			System.out.println(XR.toString());
+		//System.out.println("currentIter = " + currentIter);
 		currentIter++;
 	}
 
