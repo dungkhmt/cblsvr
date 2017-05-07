@@ -25,7 +25,7 @@ public class ExperimentRunner {
 
 	public static void runExperiments(){
 		int nbRuns = 20;
-		/*
+		
 		String[] fn = new String[]{
 				"E-n101-k14.vrp",
 				"E-n23-k3.vrp",
@@ -50,8 +50,9 @@ public class ExperimentRunner {
 		String out_dir = "output/MinMaxVRP/Christophides/std-all-round-euclide-distance/";
 		
 		int timeLimit = 300;
-		*/
 		
+		
+		/*
 		String[] fn = {
 				"kelly01.txt",
 				"kelly02.txt",
@@ -80,6 +81,7 @@ public class ExperimentRunner {
 		String out_dir = "output/MinMaxVRP/Kelly/std_all/";
 		
 		int timeLimit = 300;
+		*/
 		
 		try{
 			//PrintWriter out = new PrintWriter(outFile);
@@ -125,9 +127,9 @@ public class ExperimentRunner {
 	}
 
 	public static void runStatistics(String out_dir, String statisticFN){
-		int nbRuns = 15;
+		int nbRuns = 20;
 
-		
+		/*
 		String[] fn = new String[]{
 				"E-n7-k2.vrp",
 				"E-n13-k4.vrp",
@@ -148,7 +150,7 @@ public class ExperimentRunner {
 				
 		};
 		
-		/*
+		*/
 		
 		String[] fn = {
 				"kelly01.txt",
@@ -172,7 +174,7 @@ public class ExperimentRunner {
 				"kelly19.txt",
 				"kelly20.txt",
 			};
-		*/
+		
 
 		//String in_dir = "data/MinMaxVRP/Christophides/std-all/";
 		//String out_dir = "output/MinMaxVRP/Christophides/std-all/";
@@ -185,6 +187,7 @@ public class ExperimentRunner {
 					"MinMaxCVRP2NeighborhoodsWithTotalCost",
 					"MinMaxCVRPMultiNeighborhoods",
 					"MinMaxCVRPMultiNeighborhoodsWithTotalCost",
+					//"MinMaxCVRPMultiNeighborhoodsWithTotalCostNotPerturbNeighborhood",
 			};
 			out.print("Instances");
 			for(int k = 0; k < algo.length; k++){
@@ -255,9 +258,9 @@ public class ExperimentRunner {
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		//ExperimentRunner.runStatistics( "output/MinMaxVRP/Christophides/std-all-round-euclide-distance/","output/MinMaxVRP/Christophides/std-all-round-euclide-distance/statistic.txt");
-		//ExperimentRunner.runStatistics( "output/MinMaxVRP/Kelly/std_all/","output/MinMaxVRP/Kelly/std_all/statistic.txt");
+		ExperimentRunner.runStatistics( "output/MinMaxVRP/Kelly/std_all/","output/MinMaxVRP/Kelly/std_all/statistic.txt");
 		
-		ExperimentRunner.runExperiments();
+		//ExperimentRunner.runExperiments();
 		
 		
 		

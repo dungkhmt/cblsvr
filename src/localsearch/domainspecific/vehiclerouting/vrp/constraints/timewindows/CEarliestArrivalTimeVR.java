@@ -1,5 +1,7 @@
 package localsearch.domainspecific.vehiclerouting.vrp.constraints.timewindows;
 
+import java.io.FileOutputStream;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -7,6 +9,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import localsearch.domainspecific.vehiclerouting.vrp.CBLSVR;
+import localsearch.domainspecific.vehiclerouting.vrp.Constants;
 import localsearch.domainspecific.vehiclerouting.vrp.IConstraintVR;
 import localsearch.domainspecific.vehiclerouting.vrp.VRManager;
 import localsearch.domainspecific.vehiclerouting.vrp.VarRoutesVR;
@@ -42,7 +45,7 @@ public class CEarliestArrivalTimeVR implements IConstraintVR {
 
 	private int computeViolations(Point i) {
 		double v = earliestArrivalTime.get(i) <= latestAllowedArrivalTime.get(i) ? 0
-				: earliestArrivalTime.get(i) - latestAllowedArrivalTime.get(i);
+					: earliestArrivalTime.get(i) - latestAllowedArrivalTime.get(i);
 		return (int) Math.ceil(v);
 	}
 
@@ -80,9 +83,41 @@ public class CEarliestArrivalTimeVR implements IConstraintVR {
 	{
 		for(Point v = XR.getStartingPointOfRoute(k); v!= XR.getTerminatingPointOfRoute(k); v = XR.oldNext(v))
 		{
+			int tm = vio.get(v);
 			violations -= vio.get(v);
+			int xp = computeViolations(v);
 			vio.put(v,computeViolations(v));
 			violations += vio.get(v);
+		}
+	}
+	
+	private void propagateAddOnePoint(int k)
+	{
+		for(Point v = XR.getStartingPointOfRoute(k); v!= XR.getTerminatingPointOfRoute(k); v = XR.next(v))
+		{
+			int tm = vio.get(v);
+			violations -= vio.get(v);
+			int xp = computeViolations(v);
+			vio.put(v,computeViolations(v));
+			violations += vio.get(v);
+		}
+	}
+	
+	private void propagateRemoveOnePoint(int k)
+	{
+		for(Point v = XR.getStartingPointOfRoute(k); v!= XR.getTerminatingPointOfRoute(k); v = XR.oldNext(v))
+		{
+			if(XR.route(v) == Constants.NULL_POINT){
+				int tm = vio.get(v);
+				violations -= vio.get(v);
+			}
+			else{
+				int tm = vio.get(v);
+				violations -= vio.get(v);
+				int xp = computeViolations(v);
+				vio.put(v,computeViolations(v));
+				violations += vio.get(v);
+			}
 		}
 	}
 	
@@ -323,9 +358,9 @@ public class CEarliestArrivalTimeVR implements IConstraintVR {
 		TreeSet<Integer>st = new TreeSet<Integer>();
 		st.add(XR.oldRoute(x1));
 		st.add(XR.oldRoute(x2));
+		st.add(XR.oldRoute(x3));
 		st.add(XR.oldRoute(y1));
 		st.add(XR.oldRoute(y2));
-		st.add(XR.oldRoute(x3));
 		st.add(XR.oldRoute(y3));
 		for(Integer k : st)
 			propagate(k);
@@ -353,14 +388,14 @@ public class CEarliestArrivalTimeVR implements IConstraintVR {
 		// TODO Auto-generated method stub
 		int k = XR.oldRoute(y);
 		vio.put(x, 0);
-		propagate(k);
+		propagateAddOnePoint(k);
 	}
 
 	
 	public void propagateRemoveOnePoint(Point x) {
 		// TODO Auto-generated method stub
 		int k = XR.oldRoute(x);
-		propagate(k);
+		propagateRemoveOnePoint(k);
 	}
 
 	
@@ -557,7 +592,60 @@ public class CEarliestArrivalTimeVR implements IConstraintVR {
 	
 	public int evaluateTwoPointsMove(Point x, Point y) {
 		// TODO Auto-generated method stub
-		return 0;
+		int kx = XR.oldRoute(x);
+		int delta = 0;
+		Point v,nv;
+		if (XR.index(x) < XR.index(y)) {
+			v = XR.prev(x);
+			nv = XR.next(x);
+			t_next.put(v,nv);
+			v = nv;
+			while (v != y) {
+				t_next.put(v,XR.next(v));
+				v = XR.next(v);
+			}
+			t_next.put(y,x);
+			t_next.put(x,XR.next(y));
+			v = XR.next(y);
+			while (v != XR.getTerminatingPointOfRoute(kx)) {
+				t_next.put(v,XR.next(v));
+				v = XR.next(v);
+			}
+			v = XR.prev(x);
+			
+		} else {
+			v = y;
+			if(XR.next(v)!=x)
+			{
+				t_next.put(v, x);
+				t_next.put(x, XR.next(v));
+				v = XR.next(y);
+				while(v != XR.prev(x)){
+					t_next.put(v, XR.next(v));
+					v = XR.next(v);
+				}
+				t_next.put(XR.prev(x),XR.next(x));
+				getSegment(XR.next(x), XR.endPoint(kx));
+				v = y;
+			}
+			else{
+				return 0;
+			}
+		}
+		double dt = eat.getEarliestArrivalTime(v)
+				+ eat.getServiceDuration(v);
+		while (v != XR.getTerminatingPointOfRoute(kx)) {
+			nv = t_next.get(v);
+			double at = dt + eat.getTravelTime(v,nv);
+			delta = delta - vio.get(nv);
+			delta = delta + computeViolations(nv, at);
+			dt = (at < eat.getEarliestAllowedArrivalTime(nv) ? eat
+					.getEarliestAllowedArrivalTime(nv) : at )
+					+ eat.getServiceDuration(nv);
+
+			v = nv;
+		}
+		return delta;
 	}
 
 	// move of type c [Groer et al., 2010]
@@ -1065,6 +1153,7 @@ public class CEarliestArrivalTimeVR implements IConstraintVR {
 		Point ny = XR.next(y);
 		t_next.put(y, x);
 		t_next.put(x, ny);
+		vio.put(x, 0);
 		getSegment(ny, XR.getTerminatingPointOfRoute(k));
 		int delta = 0;
 		
