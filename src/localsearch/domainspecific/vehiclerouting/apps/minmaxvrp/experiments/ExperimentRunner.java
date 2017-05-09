@@ -23,10 +23,49 @@ class Result{
 }
 public class ExperimentRunner {
 
-	public static void runExperiments(){
+	public static void runExperiments(String type){
 		int nbRuns = 20;
+		String in_dir = "";
+		String out_dir = "";
+		String[] fn = null;
+		if(type == "F-VRP"){
+			fn = new String[]{
+					"F-n72-m4.vrp",
+					"F-n72-m5.vrp",
+					"F-n72-m6.vrp",
+					"F-n135-m7.vrp",
+					"F-n135-m8.vrp"
+			};
+		}
+		else if(type == "CMT"){
+			fn = new String[]{
+					"vrpnc1.txt",
+					"vrpnc2.txt",
+					"vrpnc3.txt",
+					"vrpnc4.txt",
+					"vrpnc5.txt",
+					"vrpnc11.txt",
+					"vrpnc12.txt"
+			};
+		}
+		else if(type == "CE-VRP"){
+			fn = new String[]{
+					"vrpnc1.txt",
+					"vrpnc2.txt",
+					"vrpnc3.txt",
+					"vrpnc4.txt",
+					"vrpnc5.txt",
+					"vrpnc11.txt",
+					"vrpnc12.txt"
+			};
+		}
 		
-		String[] fn = new String[]{
+		in_dir = "data/MinMaxVRP/" + type + "/std_all/";
+		out_dir = "data/output/MinMaxVRP/" + type + "/std-all/";
+		
+		int timeLimit = 300;
+		
+		/*String[] fn = new String[]{
 				"E-n101-k14.vrp",
 				"E-n23-k3.vrp",
 				"E-n33-k4.vrp",
@@ -50,7 +89,7 @@ public class ExperimentRunner {
 		String out_dir = "output/MinMaxVRP/Christophides/std-all-round-euclide-distance/";
 		
 		int timeLimit = 300;
-		
+		*/		
 		
 		/*
 		String[] fn = {
@@ -126,7 +165,7 @@ public class ExperimentRunner {
 
 	}
 
-	public static void runStatistics(String out_dir, String statisticFN){
+	public static void runStatistics(String type, String out_dir, String statisticFN){
 		int nbRuns = 20;
 
 		/*
@@ -151,7 +190,7 @@ public class ExperimentRunner {
 		};
 		
 		*/
-		
+		/*
 		String[] fn = {
 				"kelly01.txt",
 				"kelly02.txt",
@@ -174,7 +213,39 @@ public class ExperimentRunner {
 				"kelly19.txt",
 				"kelly20.txt",
 			};
-		
+		*/
+		String[] fn = null;
+		if(type == "F-VRP"){
+			fn = new String[]{
+					"F-n72-m4.vrp",
+					"F-n72-m5.vrp",
+					"F-n72-m6.vrp",
+					"F-n135-m7.vrp",
+					"F-n135-m8.vrp"
+			};
+		}
+		else if(type == "CMT"){
+			fn = new String[]{
+					"vrpnc1.txt",
+					"vrpnc2.txt",
+					"vrpnc3.txt",
+					"vrpnc4.txt",
+					"vrpnc5.txt",
+					"vrpnc11.txt",
+					"vrpnc12.txt"
+			};
+		}
+		else if(type == "CE-VRP"){
+			fn = new String[]{
+					"vrpnc1.txt",
+					"vrpnc2.txt",
+					"vrpnc3.txt",
+					"vrpnc4.txt",
+					"vrpnc5.txt",
+					"vrpnc11.txt",
+					"vrpnc12.txt"
+			};
+		}
 
 		//String in_dir = "data/MinMaxVRP/Christophides/std-all/";
 		//String out_dir = "output/MinMaxVRP/Christophides/std-all/";
@@ -257,10 +328,14 @@ public class ExperimentRunner {
 	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-		//ExperimentRunner.runStatistics( "output/MinMaxVRP/Christophides/std-all-round-euclide-distance/","output/MinMaxVRP/Christophides/std-all-round-euclide-distance/statistic.txt");
-		ExperimentRunner.runStatistics( "output/MinMaxVRP/Kelly/std_all/","output/MinMaxVRP/Kelly/std_all/statistic.txt");
 		
-		//ExperimentRunner.runExperiments();
+		//ExperimentRunner.runStatistics( "output/MinMaxVRP/Christophides/std-all-round-euclide-distance/","output/MinMaxVRP/Christophides/std-all-round-euclide-distance/statistic.txt");
+		String[] type = new String[]{"F-VRP", "CMT", "CE-VRP"};
+		for(int i = 0; i < type.length;i++){
+			ExperimentRunner.runExperiments(type[i]);
+			ExperimentRunner.runStatistics(type[i], "data/output/MinMaxVRP/" + type[i] +"/std_all/", "data/output/MinMaxVRP/" + type[i] + "/std_all/statistic.txt");
+		}
+		//ExperimentRunner.runStatistics( "output/MinMaxVRP/Kelly/std_all/","output/MinMaxVRP/Kelly/std_all/statistic.txt");
 		
 		
 		
