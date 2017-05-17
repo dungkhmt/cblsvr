@@ -302,7 +302,7 @@ public class DataConverter {
 					for(int j = 1; j <= nbPoints; j++){
 						double d = (x[i] - x[j])*(x[i] - x[j]) + (y[i] - y[j])*(y[i] - y[j]);
 						double d2 = Math.sqrt(d);
-						c[i][j] = (int)Math.round(d2);
+						c[i][j] = (int)(d2);
 					}
 				}
 				out.println(nbVehicles + " " + nbPoints);
@@ -377,8 +377,8 @@ public class DataConverter {
 		DataConverter DC = new DataConverter();
 		//DC.standardizeDataChristophides();
 		//DC.standardizeDataKelly();
-		//DC.convertFisher();
-		DC.convertCMT();
+		DC.convertFisher();
+		//DC.convertCMT();
 	}
 
 }

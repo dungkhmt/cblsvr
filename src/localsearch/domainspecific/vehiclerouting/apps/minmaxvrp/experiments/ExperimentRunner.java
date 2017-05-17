@@ -39,13 +39,23 @@ public class ExperimentRunner {
 		}
 		else if(type == "CMT"){
 			fn = new String[]{
-					"vrpnc1.txt",
-					"vrpnc2.txt",
-					"vrpnc3.txt",
-					"vrpnc4.txt",
-					"vrpnc5.txt",
-					"vrpnc11.txt",
-					"vrpnc12.txt"
+					"vrpnc1-m5.txt",
+					"vrpnc1-m6.txt",
+					"vrpnc1-m7.txt",
+					"vrpnc2-m10.txt",
+					"vrpnc2-m11.txt",
+					"vrpnc2-m12.txt",
+					"vrpnc3-m8.txt",
+					"vrpnc3-m9.txt",
+					"vrpnc3-m10.txt",
+					"vrpnc4-m12.txt",
+					"vrpnc4-m13.txt",
+					"vrpnc5-m16.txt",
+					"vrpnc5-m17.txt",
+					"vrpnc11-m7.txt",
+					"vrpnc11-m8.txt",
+					"vrpnc12-m10.txt",
+					"vrpnc12-m11.txt"
 			};
 		}
 		else if(type == "CE-VRP"){
@@ -226,13 +236,23 @@ public class ExperimentRunner {
 		}
 		else if(type == "CMT"){
 			fn = new String[]{
-					"vrpnc1.txt",
-					"vrpnc2.txt",
-					"vrpnc3.txt",
-					"vrpnc4.txt",
-					"vrpnc5.txt",
-					"vrpnc11.txt",
-					"vrpnc12.txt"
+					"vrpnc1-m5.txt",
+					"vrpnc1-m6.txt",
+					"vrpnc1-m7.txt",
+					"vrpnc2-m10.txt",
+					"vrpnc2-m11.txt",
+					"vrpnc2-m12.txt",
+					"vrpnc3-m8.txt",
+					"vrpnc3-m9.txt",
+					"vrpnc3-m10.txt",
+					"vrpnc4-m12.txt",
+					"vrpnc4-m13.txt",
+					"vrpnc5-m16.txt",
+					"vrpnc5-m17.txt",
+					"vrpnc11-m7.txt",
+					"vrpnc11-m8.txt",
+					"vrpnc12-m10.txt",
+					"vrpnc12-m11.txt"
 			};
 		}
 		else if(type == "CE-VRP"){
@@ -254,11 +274,11 @@ public class ExperimentRunner {
 		try{
 			PrintWriter out = new PrintWriter(statisticFN);
 			String[] algo = new String[]{
-					"MinMaxCVRP2Neighborhoods",
-					"MinMaxCVRP2NeighborhoodsWithTotalCost",
-					"MinMaxCVRPMultiNeighborhoods",
-					"MinMaxCVRPMultiNeighborhoodsWithTotalCost",
-					//"MinMaxCVRPMultiNeighborhoodsWithTotalCostNotPerturbNeighborhood",
+//					"MinMaxCVRP2Neighborhoods",
+//					"MinMaxCVRP2NeighborhoodsWithTotalCost",
+//					"MinMaxCVRPMultiNeighborhoods",
+//					"MinMaxCVRPMultiNeighborhoodsWithTotalCost",
+					"MinMaxCVRPMultiNeighborhoodsWithTotalCostNotPerturbNeighborhood"
 			};
 			out.print("Instances");
 			for(int k = 0; k < algo.length; k++){
@@ -306,17 +326,17 @@ public class ExperimentRunner {
 			int nbBetter = 0;
 			int nbEqual = 0;
 			int nbWorse = 0;
-			for(int i = 0; i < fn.length; i++){
-				for(int r = 0; r < nbRuns; r++){
-					if(Math.abs(f[i][3][r] - f[i][0][r]) < 0.0001){
-						nbEqual++;
-					}else if(f[i][3][r] < f[i][0][r]){
-						nbBetter++;
-					}else{
-						nbWorse++;
-					}
-				}
-			}
+//			for(int i = 0; i < fn.length; i++){
+//				for(int r = 0; r < nbRuns; r++){
+//					if(Math.abs(f[i][3][r] - f[i][0][r]) < 0.0001){
+//						nbEqual++;
+//					}else if(f[i][3][r] < f[i][0][r]){
+//						nbBetter++;
+//					}else{
+//						nbWorse++;
+//					}
+//				}
+//			}
 			
 			System.out.println("nbBetter = " + nbBetter + ", nbEqual = " + nbEqual + ", nbWorse = " + nbWorse);
 			
