@@ -196,6 +196,18 @@ public class RouteIndex implements IFunctionVR {
 		
 	}
 
+	public void propagateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
+		// TODO Auto-generated method stub
+		System.out.println("RouteIndex::propagateAddTwoPoints HAS NOT BEEN IMPLEMENTED YET");
+		System.exit(-1);
+	}
+
+	
+	public void propagateRemoveTwoPoints(Point x1, Point x2) {
+		// TODO Auto-generated method stub
+		System.out.println("RouteIndex::propagateRemoveTwoPoints HAS NOT BEEN IMPLEMENTED YET");
+		System.exit(-1);
+	}
 	
 	public String name() {
 		// TODO Auto-generated method stub
@@ -530,7 +542,6 @@ public class RouteIndex implements IFunctionVR {
 		}
 		return 0;
 	}
-
 	
 	public double evaluateRemoveOnePoint(Point x) {
 		// TODO Auto-generated method stub
@@ -544,6 +555,32 @@ public class RouteIndex implements IFunctionVR {
 		return 0;
 	}
 
+	public double evaluateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
+		// TODO Auto-generated method stub
+		if (!XR.checkPerformAddTwoPoints(x1, y1, x2, y2)) {
+			System.out.println(name() + ":: Error evaluateAddTwoPoints: " + x1 + " " + y1 + " " + x2 + " " + y2 + "\n" + XR.toString());
+    		System.exit(-1);
+		}
+		if (x1 == v) {
+			return XR.route(y1) - XR.route(x1);
+		}
+		if (x2 == v) {
+			return XR.route(y2) - XR.route(x2);
+		}
+		return 0;
+	}
+	
+	public double evaluateRemoveTwoPoints(Point x1, Point x2) {
+		// TODO Auto-generated method stub
+		if (!XR.checkPerformRemoveTwoPoints(x1, x2)) {
+			System.out.println(name() + ":: Error evaluateRemoveTwoPoints: " + x1 + " " + x2 + "\n" + XR.toString());
+    		System.exit(-1);
+		}
+		if (x1 == v || x2 == v) {
+			return Constants.NULL_POINT - XR.route(x1);
+		}
+		return 0;
+	}
 	
 	public void propagateAddRemovePoints(Point x, Point y, Point z) {
 		// TODO Auto-generated method stub

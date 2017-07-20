@@ -209,6 +209,20 @@ public class LexMultiFunctions {
 		return eval;
 	}
 	
+	public LexMultiValues evaluateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
+		LexMultiValues eval = new LexMultiValues();
+		for(int i = 0; i < functions.size(); i++)
+			eval.add(functions.get(i).evaluateAddTwoPoints(x1, y1, x2, y2));
+		return eval;
+	}
+	
+	public LexMultiValues evaluateRemoveTwoPoints(Point x1, Point x2) {
+		LexMultiValues eval = new LexMultiValues();
+		for(int i = 0; i < functions.size(); i++)
+			eval.add(functions.get(i).evaluateRemoveTwoPoints(x1, x2));
+		return eval;
+	}
+	
 	public LexMultiValues evaluateAddRemovePoints(Point x, Point y, Point z) {
 		LexMultiValues eval = new LexMultiValues();
 		for(int i = 0; i < functions.size(); i++)

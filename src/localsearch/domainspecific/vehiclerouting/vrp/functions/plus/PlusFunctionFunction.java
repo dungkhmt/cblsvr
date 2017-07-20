@@ -192,6 +192,20 @@ public class PlusFunctionFunction implements IFunctionVR {
 	}
 
 	@Override
+	public void propagateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
+		// TODO Auto-generated method stub
+		System.out.println("PlusFunctionFunction::propagateAddTwoPoints HAS NOT BEEN IMPLEMENTED YET");
+		System.exit(-1);
+	}
+
+	@Override
+	public void propagateRemoveTwoPoints(Point x1, Point x2) {
+		// TODO Auto-generated method stub
+		System.out.println("PlusFunctionFunction::propagateRemoveTwoPoints HAS NOT BEEN IMPLEMENTED YET");
+		System.exit(-1);
+	}
+	
+	@Override
 	public void propagateAddRemovePoints(Point x, Point y, Point z) {
 		// TODO Auto-generated method stub
 		initPropagation();
@@ -372,6 +386,18 @@ public class PlusFunctionFunction implements IFunctionVR {
 	public double evaluateRemoveOnePoint(Point x) {
 		// TODO Auto-generated method stub
 		return f1.evaluateRemoveOnePoint(x) + f2.evaluateRemoveOnePoint(x);
+	}
+	
+	@Override
+	public double evaluateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
+		// TODO Auto-generated method stub
+		return f1.evaluateAddTwoPoints(x1, y1, x2, y2) + f2.evaluateAddTwoPoints(x1, y1, x2, y2);
+	}
+	
+	@Override
+	public double evaluateRemoveTwoPoints(Point x1, Point x2) {
+		// TODO Auto-generated method stub
+		return f1.evaluateRemoveTwoPoints(x1, x2) + f2.evaluateRemoveTwoPoints(x1, x2);
 	}
 
 	@Override

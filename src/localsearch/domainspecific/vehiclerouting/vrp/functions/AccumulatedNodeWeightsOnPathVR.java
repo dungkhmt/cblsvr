@@ -200,6 +200,19 @@ public class AccumulatedNodeWeightsOnPathVR implements IFunctionVR {
 		// TODO Auto-generated method stub
 
 	}
+	
+	public void propagateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
+		// TODO Auto-generated method stub
+		System.out.println("AccumulatedNodeWeightsOnPathVR::propagateAddTwoPoints HAS NOT BEEN IMPLEMENTED YET");
+		System.exit(-1);
+	}
+
+	////
+	public void propagateRemoveTwoPoints(Point x1, Point x2) {
+		// TODO Auto-generated method stub
+		System.out.println("AccumulatedNodeWeightsOnPathVR::propagateRemoveTwoPoints HAS NOT BEEN IMPLEMENTED YET");
+		System.exit(-1);
+	}
 
 	////
 	public void propagateAddRemovePoints(Point x, Point y, Point z) {
@@ -1177,6 +1190,48 @@ public class AccumulatedNodeWeightsOnPathVR implements IFunctionVR {
 		}
 		if (XR.isBefore(x, v)) {
 			return -accWN.getWeights(x);
+		}
+		return 0;
+	}
+	
+	public double evaluateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
+		// TODO Auto-generated method stub
+		if (!XR.checkPerformAddTwoPoints(x1, y1, x2, y2)) {
+			System.out.println(name() + ":: Error evaluateAddTwoPoints: " + x1 + " " + y1 + " " + x2 + " " + y2 + "\n" + XR.toString());
+    		System.exit(-1);
+		}
+		if (v == x1) {
+			return accWN.getSumWeights(y1) + accWN.getWeights(x1);
+		}
+		if(v == x2){
+			return accWN.getSumWeights(y2) + accWN.getWeights(x1) + accWN.getWeights(x2);
+		}
+		if (XR.isBefore(y1, v) && !XR.isBefore(y2, v)) {
+			return accWN.getWeights(x1);
+		}
+		if(XR.isBefore(y2, v)){
+			return accWN.getWeights(x1) + accWN.getWeights(x2);
+		}
+		return 0;
+	}
+	
+	public double evaluateRemoveTwoPoints(Point x1, Point x2) {
+		// TODO Auto-generated method stub
+		if (!XR.checkPerformRemoveTwoPoints(x1, x2)) {
+			System.out.println(name() + ":: Error evaluateRemoveTwoPoints: " + x1 + " " + x2 + "\n" + XR.toString());
+    		System.exit(-1);
+		}
+		if (v == x1) {
+			return -(accWN.getSumWeights(XR.prev(x1)) + accWN.getWeights(x1));
+		}
+		if(v == x2){
+			return - accWN.getSumWeights(x2);
+		}
+		if (XR.isBefore(x1, v) && !XR.isBefore(x2, v)) {
+			return -accWN.getWeights(x1);
+		}
+		if(XR.isBefore(x2, v)){
+			return -accWN.getWeights(x1) - accWN.getWeights(x2);
 		}
 		return 0;
 	}

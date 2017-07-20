@@ -322,6 +322,18 @@ public class AccumulatedWeightEdgesVR implements InvariantVR {
 		costRight[getIndex(x)] = costLeft[getIndex(x)] = 0;
 	}
 	
+	public void propagateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
+		// TODO Auto-generated method stub
+		update(XR.route(y1));
+	}
+
+	
+	public void propagateRemoveTwoPoints(Point x1, Point x2) {
+		// TODO Auto-generated method stub
+		update(XR.oldRoute(x1));
+		costRight[getIndex(x1)] = costLeft[getIndex(x1)] = costRight[getIndex(x2)] = costLeft[getIndex(x2)] = 0;
+	}
+	
 	public void propagateAddRemovePoints(Point x, Point y, Point z) {
 		// TODO Auto-generated method stub
 		update(XR.oldRoute(x));

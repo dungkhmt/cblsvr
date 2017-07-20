@@ -329,6 +329,16 @@ public class NeqConstantFunction implements IConstraintVR {
 		// TODO Auto-generated method stub
 		initPropagation();
 	}
+	
+	public void propagateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
+		// TODO Auto-generated method stub
+		initPropagation();
+	}
+
+	public void propagateRemoveTwoPoints(Point x1, Point x2) {
+		// TODO Auto-generated method stub
+		initPropagation();
+	}
 
 	public int evaluateTwoPointsMove(Point x1, Point x2, Point y1, Point y2) {
 		// TODO Auto-generated method stub
@@ -365,6 +375,20 @@ public class NeqConstantFunction implements IConstraintVR {
 	public int evaluateRemoveOnePoint(Point x) {
 		// TODO Auto-generated method stub
 		double v = f.evaluateRemoveOnePoint(x) + f.getValue();
+		int nv = CBLSVR.equal(c, v) ? 1 : 0;
+		return nv - violations;
+	}
+	
+	public int evaluateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
+		// TODO Auto-generated method stub
+		double v = f.evaluateAddTwoPoints(x1, y1, x2, y2) + f.getValue();
+		int nv = CBLSVR.equal(c, v) ? 1 : 0;
+		return nv - violations;
+	}
+
+	public int evaluateRemoveTwoPoints(Point x1, Point x2) {
+		// TODO Auto-generated method stub
+		double v = f.evaluateRemoveTwoPoints(x1, x2) + f.getValue();
 		int nv = CBLSVR.equal(c, v) ? 1 : 0;
 		return nv - violations;
 	}

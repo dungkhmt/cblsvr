@@ -155,6 +155,18 @@ public class Test implements IFunctionVR {
 		// TODO Auto-generated method stub
 
 	}
+	
+	public void propagateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
+		// TODO Auto-generated method stub
+		System.out.println("RouteIndex::propagateAddTwoPoints HAS NOT BEEN IMPLEMENTED YET");
+		System.exit(-1);
+	}
+
+	public void propagateRemoveTwoPoints(Point x1, Point x2) {
+		// TODO Auto-generated method stub
+		System.out.println("RouteIndex::propagateAddTwoPoints HAS NOT BEEN IMPLEMENTED YET");
+		System.exit(-1);
+	}
 
 	public void propagateAddRemovePoints(Point x, Point y, Point z) {
 		// TODO Auto-generated method stub
@@ -306,6 +318,18 @@ public class Test implements IFunctionVR {
 
 	public double evaluateRemoveOnePoint(Point x) {
 		// TODO Auto-generated method stub
+		return 0;
+	}
+	
+	public double evaluateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
+		// TODO Auto-generated method stub
+		System.out.println("Test::propagateAddTwoPoints HAS NOT BEEN IMPLEMENTED YET");
+		return 0;
+	}
+
+	public double evaluateRemoveTwoPoints(Point x1, Point x2) {
+		// TODO Auto-generated method stub
+		System.out.println("Test::propagateAddTwoPoints HAS NOT BEEN IMPLEMENTED YET");
 		return 0;
 	}
 

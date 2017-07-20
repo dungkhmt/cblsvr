@@ -187,7 +187,18 @@ public interface IFunctionVR extends InvariantVR{
     // remove the point x from its current route
     double evaluateRemoveOnePoint(Point x);
     
+    // add the point x1 between y1 and next[y1]
+    // add the point x2 between y2 and next[y2]
+    // y1 and y2 are on the same route and index[y1] < index[y2]
+    // if y1 == y2, the Point x2 is added right-after the Point x1.
+    double evaluateAddTwoPoints(Point x1, Point y1, Point x2, Point y2);
+    
+    // remove two points x1 and x2 from its current route
+    // x1 and x2 are on the same route and index[x1] < index[x2]
+    double evaluateRemoveTwoPoints(Point x1, Point x2);
+    
     double evaluateAddRemovePoints(Point x, Point y, Point z);
+    
     /*
 	 * Perform moves and propagate impact
 	 */

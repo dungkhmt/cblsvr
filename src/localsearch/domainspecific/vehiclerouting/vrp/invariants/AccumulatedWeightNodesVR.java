@@ -301,6 +301,18 @@ public class AccumulatedWeightNodesVR implements InvariantVR {
 		sumWeights[getIndex(x)] = 0;
 	}
 	
+	public void propagateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
+		// TODO Auto-generated method stub
+		update(XR.route(y1));
+	}
+
+	
+	public void propagateRemoveTwoPoints(Point x1, Point x2) {
+		// TODO Auto-generated method stub
+		update(XR.oldRoute(x1));
+		sumWeights[getIndex(x1)] = sumWeights[getIndex(x2)] = 0;
+	}
+	
 	public void propagateAddRemovePoints(Point x, Point y, Point z) {
 		// TODO Auto-generated method stub
 		update(XR.oldRoute(x));

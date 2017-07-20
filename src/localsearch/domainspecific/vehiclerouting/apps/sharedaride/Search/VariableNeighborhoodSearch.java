@@ -1,5 +1,7 @@
 package localsearch.domainspecific.vehiclerouting.apps.sharedaride.Search;
 
+import java.io.FileOutputStream;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -96,6 +98,9 @@ public class VariableNeighborhoodSearch implements ISearch {
 	}
 @Override 
 public void search(int maxIter, int timeLimit){
+	
+}
+public void search(int maxIter, int timeLimit, String outDir){
 	bestSolution = new ValueRoutesVR(XR);
 	currentIter = 0;
 	//XR.setRandom();
@@ -109,7 +114,6 @@ public void search(int maxIter, int timeLimit){
 	System.out.println(XR.toString());
 	double previous = t0;
 	LexMultiValues bestCurTurn = F.getValues();
-	
 	cntTimeRestart = 0;
 	int km4 = 0;
 	int km2 = 0;
@@ -219,6 +223,13 @@ public void search(int maxIter, int timeLimit){
 //					nic = 0;
 //					bestCurTurn = F.getValues();
 //				}
+			}
+			try{
+				PrintWriter out = new PrintWriter(new FileOutputStream(outDir, true));
+				out.println("ShareARide::search vio = " + F.getValues().get(0) + ", obj = " + F.getValues().get(1) + ", iter = " + currentIter + ", time = " + t);
+				out.close();
+			}catch(Exception e){
+				
 			}
 		} else {
 			System.out.println(name()

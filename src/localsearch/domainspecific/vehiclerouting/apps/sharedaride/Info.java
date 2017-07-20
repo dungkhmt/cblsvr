@@ -42,7 +42,7 @@ public class Info {
 			p[i*2+2] = new Point(fi.readDouble(),fi.readDouble());
 			earliest[i*2+2] = fi.readInt();
 			lastest[i*2+2] = fi.readInt();
-			serviceTime[i*2+1] = fi.readInt();
+			serviceTime[i*2+2] = fi.readInt();
 		}
 		int np = nRequest*2;
 		for(int i= 0 ; i < nbVehicle; ++i)
@@ -59,7 +59,7 @@ public class Info {
 		for (int i = 1; i <n; i++) {
 			for (int j = 1; j < n; j++) {
 				double dis = fi.readDouble();
-				cost[i][j] = (int)(dis * 3.6 /V);
+				cost[i][j] = (int)(dis);
 			}
 		}
 		double XBase =  20.987610;

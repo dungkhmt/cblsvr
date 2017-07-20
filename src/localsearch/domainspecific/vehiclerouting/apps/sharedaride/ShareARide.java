@@ -450,7 +450,7 @@ ArrayList<ArrayList<INeighborhoodExplorer>> search9(LexMultiFunctions F)
 	return listNE;
 }
 
-VarRoutesVR search(int maxIter, int timeLimit, int searchMethod)
+VarRoutesVR search(int maxIter, int timeLimit, int searchMethod, String outDir)
 {
 	LexMultiFunctions F;
 	F = new LexMultiFunctions();
@@ -488,7 +488,7 @@ VarRoutesVR search(int maxIter, int timeLimit, int searchMethod)
 	}
 	
 	VariableNeighborhoodSearch vns = new VariableNeighborhoodSearch(mgr, F, listNE, pickupPoints, deliveryPoints);
-	vns.search(maxIter, timeLimit);
+	vns.search(maxIter, timeLimit, outDir);
 	valueSolution =vns.getIncumbentValue();
 	cntInteration = vns.getCurrentIteration();
 	cntTimeRestart = vns.getCntRestart();
@@ -767,18 +767,19 @@ VarRoutesVR search(int maxIter, int timeLimit, int searchMethod)
 			}
 		}
 	}
-	public void reInsertRequest(int typeInsert, double maxTime) throws FileNotFoundException{
+	public void reInsertRequest(int typeInsert, double maxTime, String outDir) throws FileNotFoundException{
 		System.out.println("ShareARide::reInsertReq======start");
 		double t0 = System.currentTimeMillis();
 		int nRemove = 0;
 		int nLoop = 0;
 		int nAdd = 0;
-		PrintWriter output = new PrintWriter("output/N4111_R1000_D1_type" + typeInsert + "_reInsert_maxTime" + maxTime + ".txt");
-		output.println("start===== vio = " + S.violations() + ", obj = " + objective.getValue());
+		PrintWriter output = new PrintWriter(new FileOutputStream(outDir, true));
+		output.println("ShareARide::reInsertReq======start vio = " + S.violations() + ", obj = " + objective.getValue() + ", reject size = " + rejectPickup.size());
 		output.close();
 		double cur_obj = objective.getValue();
+		int cur_vio = S.violations();
 		System.out.println(System.currentTimeMillis() - t0);
-		while(System.currentTimeMillis() - t0 < maxTime){
+		while((System.currentTimeMillis() - t0)/1000 < maxTime){
 			Point badDelivery;
 			Set<Point> pickPeoplePoints = pickup2DeliveryOfPeople.keySet();
 			if(pickPeoplePoints.contains(badPick))
@@ -797,10 +798,13 @@ VarRoutesVR search(int maxIter, int timeLimit, int searchMethod)
 			}
 			nLoop++;
 			addRequestIntoRoute(typeInsert, rejectPickup, rejectDelivery);
-			if(objective.getValue() < cur_obj){
+			if((objective.getValue() < cur_obj && S.violations() <= cur_vio)
+					|| (objective.getValue() == cur_obj && S.violations() < cur_vio)){
 				nAdd++;
-				PrintWriter out = new PrintWriter(new FileOutputStream("output/N4111_R1000_D1_type" + typeInsert + "_reInsert_maxTime" + maxTime + ".txt", false));
-				out.println("reinsert nLoop = " + nLoop + ", nRemove " + nRemove + ", nAdd = " + nAdd + ", vio = " + S.violations() + ", obj = " + objective.getValue());
+				cur_obj = objective.getValue();
+				cur_vio = S.violations();
+				PrintWriter out = new PrintWriter(new FileOutputStream(outDir, true));
+				out.println("ShareARide::reInsertReq====== nLoop = " + nLoop + ", nRemove " + nRemove + ", nAdd = " + nAdd + ", vio = " + S.violations() + ", obj = " + objective.getValue() + ", reject size = " + rejectPickup.size());
 				out.close();
 			}
 			System.out.println("nLoop = " + nLoop + ", nRemove = " + nRemove + ", nAdd = " + nAdd);
@@ -810,30 +814,35 @@ VarRoutesVR search(int maxIter, int timeLimit, int searchMethod)
 		valueSolution.add(objective.getValue());
 		System.out.println("vio = " + S.violations() + ", value = " + objective.getValue());
 		System.out.println("rejected reqs = " + rejectPickup.size());
+		PrintWriter out = new PrintWriter(new FileOutputStream(outDir, true));
+		out.println("ShareARide::reInsertReq====== end loop = " + nLoop + ", nRemove " + nRemove + ", nAdd = " + nAdd + ", vio = " + S.violations() + ", obj = " + objective.getValue() + ", reject size = " + rejectPickup.size());
+		out.close();
 	}
     public static void main(String []args) throws FileNotFoundException
     {
-    	Info info = new Info("data/vrpData/n4111r1000_1" + ".txt");
-    	//sar.test();
-    	for(int typeInit = 3; typeInit <= 3; typeInit++){	    	
-	    	//for(int S = 1; S <= 9; S++)
-	    	//{
-	    		ShareARide sar = new ShareARide(info);
-	        	sar.stateModel();
-		    	sar.greedyInitSolution(typeInit);
-		    	PrintWriter out = new PrintWriter("output/N4111_R1000_D1_type" + typeInit + "_S" + 10 + ".txt");
-	        	LexMultiValues v = sar.valueSolution;
-	        	out.println("first violationss = " + v.get(0) + ", first obj = " + v.get(1));
-	        	out.println("rejected reqs: " + sar.rejectPickup.size());
-	        	//out.println(sar.XR.toString());
-	        	//sar.search(10000, 10000, S);
-	        	//v = sar.valueSolution;
-	        	//out.println("new vio = " + v.get(0)+ ", new obj = " + v.get(1));
-	        	sar.reInsertRequest(typeInit, 3000);
-	        	out.println("rejected reqs: " + sar.rejectPickup.size());
-	        	//out.println(sar.XR.toString());
-		    	out.close();
-	    	//}
+    	String inData = "data/SARP-offline/n2466r500_1.txt";
+    	
+    	int timeLimit = 43200;
+    	int typeInit = 3;
+    	int nIter = 10000;
+    	for(int i = 1; i <= 9; i++){
+    		String outDir= "data/output/SARP-offline/N2466_R500_D1_type" + typeInit +"_nIter" + nIter + "_time" + timeLimit + "_S" + i + ".txt";
+    		Info info = new Info(inData);
+			ShareARide sar = new ShareARide(info);
+	    	sar.stateModel();
+	    	sar.greedyInitSolution(typeInit);
+	    	PrintWriter out = new PrintWriter(outDir);
+	    	LexMultiValues v = sar.valueSolution;
+	    	out.println("first violationss = " + v.get(0) + ", first obj = " + v.get(1));
+	    	out.println("rejected reqs: " + sar.rejectPickup.size());
+	    	out.close();
+	    	//sar.reInsertRequest(typeInit, timeLimit, outDir);
+	    	sar.search(nIter, timeLimit/9, i, outDir);
+	    	PrintWriter out2 = new PrintWriter(new FileOutputStream(outDir, true));
+	    	LexMultiValues v1 = sar.valueSolution;
+	    	out2.println("The last violationss = " + v1.get(0) + ", obj = " + v1.get(1));
+	    	out2.println("rejected reqs: " + sar.rejectPickup.size());
+	    	out2.close();
     	}
     }
     

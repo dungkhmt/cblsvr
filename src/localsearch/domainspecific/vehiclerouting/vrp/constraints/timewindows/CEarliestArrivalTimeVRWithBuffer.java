@@ -383,6 +383,18 @@ public class CEarliestArrivalTimeVRWithBuffer implements IConstraintVR {
 		int k = XR.oldRoute(x);
 		propagate(k);
 	}
+	
+	public void propagateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
+		// TODO Auto-generated method stub
+		System.out.println("CEarliestArrivalTimeVRWithBuffer::propagateAddTwoPoints HAS NOT BEEN IMPLEMENTED YET");
+		System.exit(-1);
+	}
+
+	public void propagateRemoveTwoPoints(Point x1, Point x2) {
+		// TODO Auto-generated method stub
+		System.out.println("CEarliestArrivalTimeVRWithBuffer::propagateRemoveTwoPoints HAS NOT BEEN IMPLEMENTED YET");
+		System.exit(-1);
+	}
 
 	@Override
 	public void propagateAddRemovePoints(Point x, Point y, Point z) {
@@ -1289,6 +1301,18 @@ public class CEarliestArrivalTimeVRWithBuffer implements IConstraintVR {
 		return calDeltaSegment(px, XR.getTerminatingPointOfRoute(k));
 	}
 
+	public int evaluateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
+		// TODO Auto-generated method stub
+		System.out.println("CEarliestArrivalTimeVRWithBuffer::evaluateAddTwoPoints HAS NOT BEEN IMPLEMENTED YET");
+		return 0;
+	}
+
+	public int evaluateRemoveTwoPoints(Point x1, Point x2) {
+		// TODO Auto-generated method stub
+		System.out.println("CEarliestArrivalTimeVRWithBuffer::evaluateRemoveTwoPoints HAS NOT BEEN IMPLEMENTED YET");
+		return 0;
+	}
+	
 	@Override
 	public int evaluateAddRemovePoints(Point x, Point y, Point z) {
 		// TODO Auto-generated method stub

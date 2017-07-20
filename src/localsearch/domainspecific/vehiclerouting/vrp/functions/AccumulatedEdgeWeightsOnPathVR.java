@@ -1331,6 +1331,19 @@ public class AccumulatedEdgeWeightsOnPathVR implements IFunctionVR {
 		// TODO Auto-generated method stub
 
 	}
+	
+	public void propagateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
+		// TODO Auto-generated method stub
+		System.out.println("AccumulatedEdgeWeightsOnPathVR::propagateAddTwoPoints HAS NOT BEEN IMPLEMENTED YET");
+		//System.exit(-1);
+	}
+
+	//
+	public void propagateRemoveTwoPoints(Point x1, Point x2) {
+		// TODO Auto-generated method stub
+		System.out.println("AccumulatedEdgeWeightsOnPathVR::propagateRemoveTwoPoints HAS NOT BEEN IMPLEMENTED YET");
+		//System.exit(-1);
+	}
 
 	private void swap(Point[] a, int i, int j) {
 		Point tmp = a[i];
@@ -1619,6 +1632,77 @@ public class AccumulatedEdgeWeightsOnPathVR implements IFunctionVR {
 		return 0;
 	}
 
+	public double evaluateAddTwoPoints(Point x1, Point y1, Point x2, Point y2){
+		// TODO Auto-generated method stub
+		if (!XR.checkPerformAddTwoPoints(x1, y1, x2, y2)) {
+			System.out.println(name() + ":: Error evaluate AddTwoPoint: " + x1
+					+ " " + y1 + " " + x2
+					+ " " + y2 + "\n" + XR.toString());
+			System.exit(-1);
+		}
+		if (x1 == v)
+			return accWE.getCostRight(y1) + accWE.getCost(y1, x1);
+
+		if (x2 == v) {
+			if(y1 != y2){
+				Point ny1 = XR.next(y1);
+				return accWE.getCostRight(y2) - accWE.getCost(y1, ny1)
+				+ accWE.getCost(y1, x1) + accWE.getCost(x1, ny1) + accWE.getCost(y2, x2);
+			}
+			else
+				return accWE.getCostRight(y1) + accWE.getCost(y1, x1) + accWE.getCost(x1, x2);
+		}
+		
+		if (XR.isBefore(y1, v) && !XR.isBefore(y2, v))
+			return accWE.getCost(y1, x1) + accWE.getCost(x1, XR.next(y1))
+					- accWE.getCost(y1, XR.next(y1));
+		
+		if(XR.isBefore(y2, v)){
+			if(y1 != y2)
+				return accWE.getCost(y1, x1) + accWE.getCost(x1, XR.next(y1)) - accWE.getCost(y1, XR.next(y1))
+				+ accWE.getCost(y2, x2) + accWE.getCost(x2, XR.next(y2)) - accWE.getCost(y2, XR.next(y2));
+			else
+				return accWE.getCost(y1, x1) + accWE.getCost(x1, x2) 
+				+ accWE.getCost(x2, XR.next(y1)) - accWE.getCost(y1,  XR.next(y1));
+		}
+		
+		return 0;
+	}
+	
+	public double evaluateRemoveTwoPoints(Point x1, Point x2) {
+		// TODO Auto-generated method stub
+		if (!XR.checkPerformRemoveTwoPoints(x1, x2)) {
+			System.out.println(name() + ":: Error evaluate RemoveTwoPoints: "
+					+ x1 + " " + x2 + "\n" + XR.toString());
+			System.exit(-1);
+		}
+		if (x1 == v)
+			return -accWE.getCostRight(x1);
+		
+		if(x2 == v)
+			return -accWE.getCostRight(x2);
+		
+		if (XR.isBefore(x1, v) && !XR.isBefore(x2, v))
+			return accWE.getCost(XR.prev(x1), XR.next(x1))
+					- accWE.getCost(XR.prev(x1), x1)
+					- accWE.getCost(x1, XR.next(x1));
+		
+		if(XR.isBefore(x2, v))
+			if(x2 == XR.next(x1)){
+				return accWE.getCost(XR.prev(x1), XR.next(x2)) - accWE.getCost(XR.prev(x1), x1)
+						- accWE.getCost(x1, x2) - accWE.getCost(x2, XR.next(x2));
+			}
+			else{
+				return accWE.getCost(XR.prev(x1), XR.next(x1))
+						- accWE.getCost(XR.prev(x1), x1)
+						- accWE.getCost(x1, XR.next(x1))
+						+ accWE.getCost(XR.prev(x2), XR.next(x2))
+						- accWE.getCost(XR.prev(x2), x2)
+						- accWE.getCost(x2, XR.next(x2));
+			}
+		return 0;
+	}
+	
 	//
 	public void propagateAddRemovePoints(Point x, Point y, Point z) {
 		// TODO Auto-generated method stub

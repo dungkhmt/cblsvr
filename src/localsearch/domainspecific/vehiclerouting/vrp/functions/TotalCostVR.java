@@ -400,6 +400,24 @@ public class TotalCostVR implements IFunctionVR {
 		update(r);
 		value += getCostRight(XR.getTerminatingPointOfRoute(r));
 	}
+	
+	//@Override
+	public void propagateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
+		// TODO Auto-generated method stub
+		int r = XR.route(y1);
+		value -= getCostRight(XR.getTerminatingPointOfRoute(r));
+		update(r);
+		value += getCostRight(XR.getTerminatingPointOfRoute(r));
+	}
+
+	//@Override
+	public void propagateRemoveTwoPoints(Point x1, Point x2) {
+		// TODO Auto-generated method stub
+		int r = XR.oldRoute(x1);
+		value -= getCostRight(XR.getTerminatingPointOfRoute(r));
+		update(r);
+		value += getCostRight(XR.getTerminatingPointOfRoute(r));
+	}
 
 	//@Override
 	public void propagateAddRemovePoints(Point x, Point y, Point z) {
@@ -1075,6 +1093,35 @@ public class TotalCostVR implements IFunctionVR {
     		System.exit(-1);
 		}
 		return getCost(XR.prev(x), XR.next(x)) - getCost(XR.prev(x), x) - getCost(x, XR.next(x));
+	}
+	
+	//@Override
+	public double evaluateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
+		// TODO Auto-generated method stub
+		if (!XR.checkPerformAddTwoPoints(x1, y1, x2, y2)) {
+			System.out.println(name() + ":: Error evaluateAddTwoPoints: " + x1 + " " + y1 + " " + x2 + " " + y2 + "\n" + XR.toString());
+    		System.exit(-1);
+		}
+		if(y1 == y2){
+			return getCost(y1, x1) + getCost(x1, x2) + getCost(x2, XR.next(y1)) - getCost(y1, XR.next(y1));
+		}
+		return getCost(y1, x1) + getCost(x1, XR.next(y1)) - getCost(y1, XR.next(y1))
+			+ getCost(y2, x2) + getCost(x2, XR.next(y2)) - getCost(y2, XR.next(y2));
+	}
+	
+	//@Override
+	public double evaluateRemoveTwoPoints(Point x1, Point x2) {
+		// TODO Auto-generated method stub
+		if (!XR.checkPerformRemoveTwoPoints(x1, x2)) {
+			System.out.println(name() + ":: Error evaluate RemoveTwoPoints: " + x1 + " " + x2 + "\n" + XR.toString());
+    		System.exit(-1);
+		}
+		if(x2 == XR.next(x1)){
+			return getCost(XR.prev(x1), XR.next(x2)) - getCost(XR.prev(x1), x1)
+					- getCost(x1, x2) - getCost(x2, XR.next(x2));
+		}
+		return getCost(XR.prev(x1), XR.next(x1)) - getCost(XR.prev(x1), x1) - getCost(x1, XR.next(x1))
+				+ getCost(XR.prev(x2), XR.next(x2)) - getCost(XR.prev(x2), x2) - getCost(x2, XR.next(x2));
 	}
 
 	//@Override

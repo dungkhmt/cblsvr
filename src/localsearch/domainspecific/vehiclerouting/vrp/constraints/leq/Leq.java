@@ -326,6 +326,18 @@ public class Leq implements IConstraintVR {
 		
 	}
 	
+	public void propagateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
+		// TODO Auto-generated method stub
+		System.out.println("Leq::propagateAddTwoPoints HAS NOT BEEN IMPLEMENTED YET");
+		System.exit(-1);
+	}
+
+	public void propagateRemoveTwoPoints(Point x1, Point x2) {
+		// TODO Auto-generated method stub
+		System.out.println("Leq::propagateRemoveTwoPoints HAS NOT BEEN IMPLEMENTED YET");
+		System.exit(-1);
+	}
+	
 	public int evaluateTwoPointsMove(Point x1, Point x2, Point y1, Point y2) {
 		// TODO Auto-generated method stub
 		return cstr.evaluateTwoPointsMove(x1, x2, y1, y2);
@@ -353,6 +365,16 @@ public class Leq implements IConstraintVR {
 	public int evaluateRemoveOnePoint(Point x) {
 		// TODO Auto-generated method stub
 		return cstr.evaluateRemoveOnePoint(x);
+	}
+	
+	public int evaluateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
+		// TODO Auto-generated method stub
+		return cstr.evaluateAddTwoPoints(x1, y1, x2, y2);
+	}
+
+	public int evaluateRemoveTwoPoints(Point x1, Point x2) {
+		// TODO Auto-generated method stub
+		return cstr.evaluateRemoveTwoPoints(x1, x2);
 	}
 	
 	public void propagateAddRemovePoints(Point x, Point y, Point z) {
