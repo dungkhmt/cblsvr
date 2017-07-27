@@ -13,6 +13,7 @@ import localsearch.domainspecific.vehiclerouting.vrp.functions.LexMultiFunctions
 import localsearch.domainspecific.vehiclerouting.vrp.moves.AddTwoPoints;
 import localsearch.domainspecific.vehiclerouting.vrp.moves.IVRMove;
 import localsearch.domainspecific.vehiclerouting.vrp.moves.KPointsMove;
+import localsearch.domainspecific.vehiclerouting.vrp.moves.OnePointMove;
 import localsearch.domainspecific.vehiclerouting.vrp.moves.RemoveTwoPoints;
 import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.INeighborhoodExplorer;
 import localsearch.domainspecific.vehiclerouting.vrp.search.ISearch;
@@ -67,43 +68,27 @@ public class GreedyExchangeRequestWithPeriodTime implements INeighborhoodExplore
 						int timeY1 = earliestAllowedArrivalTime.get(y1);
 						if(pickup.contains(y1) && x1 != y1 && timeX1 - 1800 <= timeY1 && timeY1 <= timeX1 + 1800){
 							Point y2 = pickup2Delivery.get(y1);
-							
-							Point preX1 = XR.prev(x1);
-							Point preX2 = XR.prev(x2);
-							Point preY1 = XR.prev(y1);
-							Point preY2 = XR.prev(y2);
-							if(XR.checkPerformRemoveTwoPoints(x1, x2) && XR.checkPerformRemoveTwoPoints(y1, y2)){
-								mgr.performRemoveTwoPoints(x1, x2);
-								mgr.performRemoveTwoPoints(y1, y2);
-								ArrayList<Point> x = new ArrayList<Point>();
-								x.add(x1);
-								x.add(x2);
-								ArrayList<Point> y = new ArrayList<Point>();
-								y.add(y1);
-								y.add(y2);
-								ArrayList<Point> addX = getPositionForInsertion(x1, x2, j);
-								ArrayList<Point> addY = getPositionForInsertion(y1, y2, XR.route(preX1));
-								if (XR.checkPerformAddTwoPoints(x1, addX.get(0), x2, addX.get(1))
-									&& XR.checkPerformAddTwoPoints(y1, addY.get(0), y2, addY.get(1))) {
-									LexMultiValues evalX = F.evaluateAddTwoPoints(x1, addX.get(0), x2, addX.get(1));
-									LexMultiValues evalY = F.evaluateAddTwoPoints(y1, addY.get(0), y2, addY.get(1));
-									LexMultiValues eval = evalX.plus(evalY);
-									if (eval.lt(bestEval)){
-										N.clear();
-										N.add(new RemoveTwoPoints(mgr, eval, x1, x2));
-										N.add(new RemoveTwoPoints(mgr, eval, y1, y2));
-										N.add(new AddTwoPoints(mgr, eval, x1, addX.get(0), x2, addX.get(1)));
-										N.add(new AddTwoPoints(mgr, eval, y1, addY.get(0), y2, addY.get(1)));
-										bestEval.set(eval);
-									} else if (eval.eq(bestEval)) {
-										N.add(new RemoveTwoPoints(mgr, eval, x1, x2));
-										N.add(new RemoveTwoPoints(mgr, eval, y1, y2));
-										N.add(new AddTwoPoints(mgr, eval, x1, addX.get(0), x2, addX.get(1)));
-										N.add(new AddTwoPoints(mgr, eval, y1, addY.get(0), y2, addY.get(1)));
-									}
+							ArrayList<Point> x = new ArrayList<Point>();
+							x.add(x1);
+							x.add(x2);
+							x.add(y1);
+							x.add(y2);
+							ArrayList<Point> addX = getPositionForInsertion(x1, x2, j);
+							ArrayList<Point> addY = getPositionForInsertion(y1, y2, XR.route(x1));
+							ArrayList<Point> y = new ArrayList<Point>();
+							y.add(addX.get(0));
+							y.add(addX.get(1));
+							y.add(addY.get(0));
+							y.add(addY.get(1));
+							if(XR.checkPerformKPointsMove(x, y)){
+								LexMultiValues eval = F.evaluateKPointsMove(x, y);
+								if(eval.lt(bestEval)){
+									N.clear();
+									N.add(new KPointsMove(mgr, eval, x, y));
+									bestEval.set(eval);
+								} else if (eval.eq(bestEval)) {
+									N.add(new KPointsMove(mgr, eval, x, y, this));
 								}
-								mgr.performAddTwoPoints(x1, preX1, x2, preX2);
-								mgr.performAddTwoPoints(y1, preY1, y2, preY2);
 							}
 						}
 					}

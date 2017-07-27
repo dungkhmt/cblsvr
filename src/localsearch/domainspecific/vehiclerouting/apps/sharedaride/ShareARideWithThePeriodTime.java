@@ -288,8 +288,9 @@ ArrayList<ArrayList<INeighborhoodExplorer>>search1(LexMultiFunctions F)
 {
 	ArrayList<ArrayList<INeighborhoodExplorer>> listNE = new ArrayList<>();
 	ArrayList<INeighborhoodExplorer> NE = new ArrayList<>();
-	NE.add(new GreedyOnePointMoveExplorer(XR, F)); 
-	NE.add(new GreedyTwoPointsMoveExplorer(XR, F));
+	NE.add(new GreedyExchangeRequestWithPeriodTime(XR, F, 1, 1000, pickupPoints, deliveryPoints,
+			pickup2Delivery, earliestAllowedArrivalTime, scoreReq)); 
+	//NE.add(new GreedyTwoPointsMoveExplorer(XR, F));
 	listNE.add(NE);
 	return listNE;
 }
@@ -334,23 +335,9 @@ ArrayList<ArrayList<INeighborhoodExplorer>>search5(LexMultiFunctions F)
 {
 	ArrayList<ArrayList<INeighborhoodExplorer>> listNE = new ArrayList<>();
 	ArrayList<INeighborhoodExplorer> NE = new ArrayList<>();
-	
-	NE = new ArrayList<>();
-	NE.add(new GreedyOnePointMoveExplorerLimit(XR, F, 4));  // 2
-	NE.add(new GreedyTwoPointsMoveExplorerLimit(XR, F,4));		//2
-	NE.add(new GreedyOrOptMove1ExplorerLimit(XR, F, 2));
+	NE.add(new GreedyOnePointMoveExplorer(XR, F)); 
+	NE.add(new GreedyTwoPointsMoveExplorer(XR, F));
 	listNE.add(NE);
-	NE = new ArrayList<>();
-	NE.add(new GreedyOnePointMoveExplorer(XR, F));  // 2
-	NE.add(new GreedyTwoPointsMoveExplorer(XR, F));		//2
-	NE.add(new GreedyOrOptMove1ExplorerLimit(XR, F, 5));
-	
-	listNE.add(NE);
-	
-	NE = new ArrayList<>();
-	NE.add(new GreedyOrOptMove1Explorer(XR, F));
-	listNE.add(NE);
-	
 	return listNE;
 }
 
@@ -462,10 +449,23 @@ ArrayList<ArrayList<INeighborhoodExplorer>> search10(LexMultiFunctions F)
 {
 	ArrayList<ArrayList<INeighborhoodExplorer>> listNE = new ArrayList<>();
 	ArrayList<INeighborhoodExplorer> NE = new ArrayList<>();
-	NE.add(new GreedyExchangeRequestWithPeriodTime(XR, F, 1, 1000, pickupPoints, deliveryPoints,
-			pickup2Delivery, earliestAllowedArrivalTime, scoreReq)); 
-	//NE.add(new GreedyTwoPointsMoveExplorer(XR, F));
+	
+	NE = new ArrayList<>();
+	NE.add(new GreedyOnePointMoveExplorerLimit(XR, F, 4));  // 2
+	NE.add(new GreedyTwoPointsMoveExplorerLimit(XR, F,4));		//2
+	NE.add(new GreedyOrOptMove1ExplorerLimit(XR, F, 2));
 	listNE.add(NE);
+	NE = new ArrayList<>();
+	NE.add(new GreedyOnePointMoveExplorer(XR, F));  // 2
+	NE.add(new GreedyTwoPointsMoveExplorer(XR, F));		//2
+	NE.add(new GreedyOrOptMove1ExplorerLimit(XR, F, 5));
+	
+	listNE.add(NE);
+	
+	NE = new ArrayList<>();
+	NE.add(new GreedyOrOptMove1Explorer(XR, F));
+	listNE.add(NE);
+	
 	return listNE;
 }
 
@@ -504,8 +504,10 @@ VarRoutesVR search(int maxIter, int timeLimit, int searchMethod, String outDir)
 		break;
 	case 9:
 		listNE = search9(F);
+		break;
 	case 10:
 		listNE = search10(F);
+		break;
 	}
 	
 	VariableNeighborhoodSearch vns = new VariableNeighborhoodSearch(mgr, F, listNE, pickupPoints, deliveryPoints);
@@ -583,7 +585,7 @@ VarRoutesVR search(int maxIter, int timeLimit, int searchMethod, String outDir)
 							if(S.evaluateAddOnePoint(delivery, u) > 0 || pickPeoplePoints.contains(u)){
 								continue;
 							}
-							if(objective.evaluateAddTwoPoints(pickup, v, delivery, u) + objective.getValue() < cur_obj){
+							if(S.evaluateAddTwoPoints(pickup, v, delivery, u) == 0 && objective.evaluateAddTwoPoints(pickup, v, delivery, u) + objective.getValue() < cur_obj){
 								cur_obj = objective.getValue() + objective.evaluateAddTwoPoints(pickup, v, delivery, u);
 								pre_pick = v;
 								pre_delivery = u;
@@ -696,8 +698,10 @@ VarRoutesVR search(int maxIter, int timeLimit, int searchMethod, String outDir)
     {
     	String inData = "data/SARP-offline/n2466r500_1.txt";
     	
-    	int timeLimit = 300;
-    	int nIter = 100;
+    	int timeLimit = 36000;
+    	int nIter = 1000;
+    	String description = "===comparison 10 searching types. search1 exchange two requests between two routes===";
+    	
     	for(int i = 10; i <= 10; i++){
     		String outDir= "data/output/SARP-offline/N2466_R500_D1_" + "nIter" + nIter + "_time" + timeLimit + "_S" + i + ".txt";
     		Info info = new Info(inData);
@@ -706,11 +710,12 @@ VarRoutesVR search(int maxIter, int timeLimit, int searchMethod, String outDir)
 	    	sar.greedyInitSolution();
 	    	LexMultiValues v = sar.valueSolution;
 	    	PrintWriter out = new PrintWriter(outDir);
+	    	out.println(description);
 	    	out.println("first violationss = " + v.get(0) + ", first obj = " + v.get(1));
 	    	out.println("rejected reqs: " + sar.rejectPickup.size());
 	    	out.close();
 	    	//sar.reInsertRequest(typeInit, timeLimit, outDir);
-	    	sar.search(nIter, 100, i, outDir);
+	    	sar.search(nIter, timeLimit/10, i, outDir);
 	    	PrintWriter out2 = new PrintWriter(new FileOutputStream(outDir, true));
 	    	LexMultiValues v1 = sar.valueSolution;
 	    	out2.println("The last violationss = " + v1.get(0) + ", obj = " + v1.get(1));
