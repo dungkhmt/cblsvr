@@ -288,7 +288,7 @@ ArrayList<ArrayList<INeighborhoodExplorer>>search1(LexMultiFunctions F)
 {
 	ArrayList<ArrayList<INeighborhoodExplorer>> listNE = new ArrayList<>();
 	ArrayList<INeighborhoodExplorer> NE = new ArrayList<>();
-	NE.add(new GreedyExchangeRequestWithPeriodTime(XR, F, 1, 1000, pickupPoints, deliveryPoints,
+	NE.add(new GreedyExchangeRequestWithPeriodTime(XR, F, 0.5, (int)(XR.getNbRoutes()*0.5), pickupPoints, deliveryPoints,
 			pickup2Delivery, earliestAllowedArrivalTime, scoreReq)); 
 	//NE.add(new GreedyTwoPointsMoveExplorer(XR, F));
 	listNE.add(NE);
@@ -663,8 +663,7 @@ VarRoutesVR search(int maxIter, int timeLimit, int searchMethod, String outDir)
 			else
 				badDelivery = pickup2DeliveryOfGood.get(badPick);
 			if(XR.route(badPick) != Constants.NULL_POINT){	
-				mgr.performRemoveOnePoint(badPick);
-				mgr.performRemoveOnePoint(badDelivery);
+				mgr.performRemoveTwoPoints(badPick, badDelivery);
 				rejectPickup.add(badPick);
 				rejectDelivery.add(badDelivery);
 				rejectPoints.add(badPick);
@@ -702,7 +701,7 @@ VarRoutesVR search(int maxIter, int timeLimit, int searchMethod, String outDir)
     	int nIter = 1000;
     	String description = "===comparison 10 searching types. search1 exchange two requests between two routes===";
     	
-    	for(int i = 10; i <= 10; i++){
+    	for(int i = 1; i <= 10; i++){
     		String outDir= "data/output/SARP-offline/N2466_R500_D1_" + "nIter" + nIter + "_time" + timeLimit + "_S" + i + ".txt";
     		Info info = new Info(inData);
 			ShareARideWithThePeriodTime sar = new ShareARideWithThePeriodTime(info);
@@ -714,7 +713,7 @@ VarRoutesVR search(int maxIter, int timeLimit, int searchMethod, String outDir)
 	    	out.println("first violationss = " + v.get(0) + ", first obj = " + v.get(1));
 	    	out.println("rejected reqs: " + sar.rejectPickup.size());
 	    	out.close();
-	    	//sar.reInsertRequest(typeInit, timeLimit, outDir);
+	    	sar.reInsertRequest(timeLimit, outDir);
 	    	sar.search(nIter, timeLimit/10, i, outDir);
 	    	PrintWriter out2 = new PrintWriter(new FileOutputStream(outDir, true));
 	    	LexMultiValues v1 = sar.valueSolution;
