@@ -1,5 +1,7 @@
 package localsearch.domainspecific.vehiclerouting.apps.sharedaride.Neighborhood;
 
+import java.io.FileOutputStream;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -55,6 +57,14 @@ public class GreedyExchangeRequestWithPeriodTime implements INeighborhoodExplore
 		// TODO Auto-generated method stub
 		ArrayList<Integer> listJ = RandomUtil.randomKFromN(K, XR.getNbRoutes());
 
+		try{
+			PrintWriter out = new PrintWriter("greedyExchangeRequest.txt");
+			out.println("ShareARide::first vio = " + bestEval.toString());
+			out.close();
+		}
+		catch(Exception e){
+			
+		}
 		for (int j : listJ) 
 		{
 			for (int i : listJ) {
@@ -91,6 +101,14 @@ public class GreedyExchangeRequestWithPeriodTime implements INeighborhoodExplore
 											N.clear();
 											N.add(new KPointsMove(mgr, eval, x, y));
 											bestEval.set(eval);
+											try{
+												PrintWriter out = new PrintWriter(new FileOutputStream("greedyExchangeRequest.txt", true));
+												out.println("ShareARide::search vio = " + bestEval.toString());
+												out.close();
+											}
+											catch(Exception e){
+												
+											}
 										} else if (eval.eq(bestEval)) {
 											N.add(new KPointsMove(mgr, eval, x, y, this));
 										}
