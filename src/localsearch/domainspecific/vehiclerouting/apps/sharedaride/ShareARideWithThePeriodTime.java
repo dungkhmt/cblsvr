@@ -288,7 +288,7 @@ ArrayList<ArrayList<INeighborhoodExplorer>>search1(LexMultiFunctions F)
 {
 	ArrayList<ArrayList<INeighborhoodExplorer>> listNE = new ArrayList<>();
 	ArrayList<INeighborhoodExplorer> NE = new ArrayList<>();
-	NE.add(new GreedyExchangeRequestWithPeriodTime(XR, F, 0.5, (int)(XR.getNbRoutes()*0.5), pickupPoints, deliveryPoints,
+	NE.add(new GreedyExchangeRequestWithPeriodTime(XR, F, 0.9, (int)(XR.getNbRoutes()*0.1), pickupPoints, deliveryPoints,
 			pickup2Delivery, earliestAllowedArrivalTime, scoreReq)); 
 	//NE.add(new GreedyTwoPointsMoveExplorer(XR, F));
 	listNE.add(NE);
@@ -550,7 +550,6 @@ VarRoutesVR search(int maxIter, int timeLimit, int searchMethod, String outDir)
 //	return XR;
 //}
 	public void addRequestIntoRoute(ArrayList<Point> ppList, ArrayList<Point> dpList) throws FileNotFoundException{
-		int ix = 0;
 		Set<Point> pickPeoplePoints = pickup2DeliveryOfPeople.keySet();
 		String outDir= "data/output/SARP-offline/logtest.txt";
 		PrintWriter out1 = new PrintWriter(outDir);
@@ -558,11 +557,11 @@ VarRoutesVR search(int maxIter, int timeLimit, int searchMethod, String outDir)
 		out1.println(XR.toString());
 		out1.close();
 		for(int i = 0; i < ppList.size(); i++){
+			System.out.println("i = " + i);
 			Point pickup = ppList.get(i);
 			if(XR.route(pickup) != Constants.NULL_POINT)
 				continue;
 			Point delivery = dpList.get(i);
-			ix++;
 			//add the request to route
 			Point pre_pick = null;
 			Point pre_delivery = null;
@@ -622,9 +621,10 @@ VarRoutesVR search(int maxIter, int timeLimit, int searchMethod, String outDir)
 		updateBadRequest();
 	}
 	
-	public VarRoutesVR greedyInitSolution() throws FileNotFoundException{
+	public VarRoutesVR greedyInitSolution(String outDir) throws FileNotFoundException{
 		System.out.println("greedyInitSolution start");
 
+		
 		addRequestIntoRoute(pickupPoints, deliveryPoints);
 		
 		valueSolution = new LexMultiValues();
@@ -650,11 +650,11 @@ VarRoutesVR search(int maxIter, int timeLimit, int searchMethod, String outDir)
 		int nLoop = 0;
 		int nAdd = 0;
 		PrintWriter output = new PrintWriter(new FileOutputStream(outDir, true));
-		output.println("ShareARide::reInsertReq======start vio = " + S.violations() + ", obj = " + objective.getValue() + ", reject size = " + rejectPickup.size());
+		output.println("ShareARide::reInsertReq======start vio = " + S.violations() + ", obj = " + objective.getValue() 
+			+ ", reject size = " + rejectPickup.size());
 		output.close();
 		double cur_obj = objective.getValue();
 		int cur_vio = S.violations();
-		System.out.println(System.currentTimeMillis() - t0);
 		while((System.currentTimeMillis() - t0)/1000 < maxTime){
 			Point badDelivery;
 			Set<Point> pickPeoplePoints = pickup2DeliveryOfPeople.keySet();
@@ -690,36 +690,56 @@ VarRoutesVR search(int maxIter, int timeLimit, int searchMethod, String outDir)
 		System.out.println("vio = " + S.violations() + ", value = " + objective.getValue());
 		System.out.println("rejected reqs = " + rejectPickup.size());
 		PrintWriter out = new PrintWriter(new FileOutputStream(outDir, true));
-		out.println("ShareARide::reInsertReq====== end loop = " + nLoop + ", nRemove " + nRemove + ", nAdd = " + nAdd + ", vio = " + S.violations() + ", obj = " + objective.getValue() + ", reject size = " + rejectPickup.size());
+		out.println("ShareARide::reInsertReq====== end loop = " + nLoop + ", nRemove " + nRemove + ", nAdd = " + nAdd 
+				+ ", vio = " + S.violations() + ", obj = " + objective.getValue() + ", reject size = " 
+				+ rejectPickup.size());
 		out.close();
 	}
     public static void main(String []args) throws FileNotFoundException
     {
-    	String inData = "data/SARP-offline/n2466r500_1.txt";
+    	String inData = "data/SARP-offline/n6167r200_1.txt";
     	
     	int timeLimit = 36000;
-    	int nIter = 1000;
+    	int nIter = 3000;
     	String description = "===comparison 10 searching types. search1 exchange two requests between two routes===";
     	
     	for(int i = 1; i <= 10; i++){
-    		String outDir= "data/output/SARP-offline/N2466_R500_D1_" + "nIter" + nIter + "_time" + timeLimit + "_S" + i + ".txt";
+    		String outDir= "data/output/SARP-offline/N6167_R200_D1_" + "nIter" + nIter + "_time" + timeLimit + "_S" + i + ".txt";
     		Info info = new Info(inData);
 			ShareARideWithThePeriodTime sar = new ShareARideWithThePeriodTime(info);
-	    	sar.stateModel();
-	    	sar.greedyInitSolution();
-	    	LexMultiValues v = sar.valueSolution;
+			double t0 = System.currentTimeMillis();
+	    	
+			sar.stateModel();
 	    	PrintWriter out = new PrintWriter(outDir);
 	    	out.println(description);
-	    	out.println("first violationss = " + v.get(0) + ", first obj = " + v.get(1));
-	    	out.println("rejected reqs: " + sar.rejectPickup.size());
+	    	out.println("statemodel: starting time = " + t0 + ", endtime = " + (System.currentTimeMillis() - t0));
 	    	out.close();
+	    	
+	    	t0 = System.currentTimeMillis();
+	    	sar.greedyInitSolution(outDir);
+	    	LexMultiValues v = sar.valueSolution;
+	    	PrintWriter out1 = new PrintWriter(new FileOutputStream(outDir, true));
+	    	out1.println("======================================");
+	    	out1.println("greedyInitSolution: starting time = " + t0 + ", ending time = " + (System.currentTimeMillis() - t0) 
+	    			+ ", first violationss = " + v.get(0) + ", first obj = " + v.get(1) + ", rejected reqs: " + sar.rejectPickup.size());
+	    	out1.close();
+	    	
+	    	t0 = System.currentTimeMillis();
 	    	sar.reInsertRequest(timeLimit, outDir);
-	    	sar.search(nIter, timeLimit/10, i, outDir);
 	    	PrintWriter out2 = new PrintWriter(new FileOutputStream(outDir, true));
-	    	LexMultiValues v1 = sar.valueSolution;
-	    	out2.println("The last violationss = " + v1.get(0) + ", obj = " + v1.get(1));
-	    	out2.println("rejected reqs: " + sar.rejectPickup.size());
+	    	out2.println("======================================");
+	    	out2.println("reInsertRequest: starting time = " + t0 + ", ending time = " + (System.currentTimeMillis() - t0) 
+	    			+ ", violationss = " + v.get(0) + ", obj = " + v.get(1) + ", rejected reqs: " + sar.rejectPickup.size());
 	    	out2.close();
+	    	
+	    	t0 = System.currentTimeMillis();
+	    	sar.search(nIter, timeLimit/10, i, outDir);
+	    	PrintWriter out3 = new PrintWriter(new FileOutputStream(outDir, true));
+	    	LexMultiValues v1 = sar.valueSolution;
+	    	out3.println("======================================");
+	    	out3.println("search:: starting time = " + t0 + ", ending time = " + (System.currentTimeMillis() - t0) 
+	    			+ ", The last violationss = " + v1.get(0) + ", obj = " + v1.get(1) + ", rejected reqs: " + sar.rejectPickup.size());
+	    	out3.close();
     	}
     }
     

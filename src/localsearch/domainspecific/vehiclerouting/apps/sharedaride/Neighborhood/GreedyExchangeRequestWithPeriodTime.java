@@ -56,62 +56,61 @@ public class GreedyExchangeRequestWithPeriodTime implements INeighborhoodExplore
 	public void exploreNeighborhood(Neighborhood N, LexMultiValues bestEval) {
 		// TODO Auto-generated method stub
 		ArrayList<Integer> listJ = RandomUtil.randomKFromN(K, XR.getNbRoutes());
-
+		double t = System.currentTimeMillis();
 		try{
 			PrintWriter out = new PrintWriter("greedyExchangeRequest.txt");
-			out.println("ShareARide::first vio = " + bestEval.toString());
+			out.println("ShareARide::exploreNeighborhood: first vio = " + bestEval.toString() + 
+					", K = " + listJ.size() + ", p = " + p + ", starting time = " + t);
 			out.close();
 		}
 		catch(Exception e){
 			
 		}
-		for (int j : listJ) 
-		{
+		for (int j : listJ){
 			for (int i : listJ) {
 				if(i == j)
 					continue;
+				System.out.println("Loop: j = " + j + ", i = " + i);
 				for (Point x1 = XR.getStartingPointOfRoute(i); x1 != XR.getTerminatingPointOfRoute(i); x1 = XR.next(x1)) {
 					if(Math.random() > p){
 						continue;
 					}
-					System.out.println("Loop: j = " + j + ", i = " + i);
-					if(pickup.contains(x1)){
-						Point x2 = pickup2Delivery.get(x1);
-						if(XR.route(x1) != Constants.NULL_POINT && XR.route(x1) != j){
-							for (Point y1 = XR.getStartingPointOfRoute(j); y1 != XR.getTerminatingPointOfRoute(j); y1 = XR.next(y1)) {
-								int timeX1 = earliestAllowedArrivalTime.get(x1);
-								int timeY1 = earliestAllowedArrivalTime.get(y1);
-								if(pickup.contains(y1) && x1 != y1 && timeX1 - 1800 <= timeY1 && timeY1 <= timeX1 + 1800){
-									Point y2 = pickup2Delivery.get(y1);
-									ArrayList<Point> x = new ArrayList<Point>();
-									x.add(x1);
-									x.add(x2);
-									x.add(y1);
-									x.add(y2);
-									ArrayList<Point> addX = getPositionForInsertion(x1, x2, j);
-									ArrayList<Point> addY = getPositionForInsertion(y1, y2, XR.route(x1));
-									ArrayList<Point> y = new ArrayList<Point>();
-									y.add(addX.get(0));
-									y.add(addX.get(1));
-									y.add(addY.get(0));
-									y.add(addY.get(1));
-									if(XR.checkPerformKPointsMove(x, y)){
-										LexMultiValues eval = F.evaluateKPointsMove(x, y);
-										if(eval.lt(bestEval)){
-											N.clear();
-											N.add(new KPointsMove(mgr, eval, x, y));
-											bestEval.set(eval);
-											try{
-												PrintWriter out = new PrintWriter(new FileOutputStream("greedyExchangeRequest.txt", true));
-												out.println("ShareARide::search vio = " + bestEval.toString());
-												out.close();
-											}
-											catch(Exception e){
-												
-											}
-										} else if (eval.eq(bestEval)) {
-											N.add(new KPointsMove(mgr, eval, x, y, this));
+					
+					Point x2 = pickup2Delivery.get(x1);
+					if(x2 != null){
+						for (Point y1 = XR.getStartingPointOfRoute(j); y1 != XR.getTerminatingPointOfRoute(j); y1 = XR.next(y1)) {
+							int timeX1 = earliestAllowedArrivalTime.get(x1);
+							int timeY1 = earliestAllowedArrivalTime.get(y1);
+							Point y2 = pickup2Delivery.get(y1);
+							if(y2 != null && timeX1 - 1800 <= timeY1 && timeY1 <= timeX1 + 1800){
+								ArrayList<Point> x = new ArrayList<Point>();
+								x.add(x1);
+								x.add(x2);
+								x.add(y1);
+								x.add(y2);
+								ArrayList<Point> addX = getPositionForInsertion(x1, x2, j);
+								ArrayList<Point> addY = getPositionForInsertion(y1, y2, XR.route(x1));
+								ArrayList<Point> y = new ArrayList<Point>();
+								y.add(addX.get(0));
+								y.add(addX.get(1));
+								y.add(addY.get(0));
+								y.add(addY.get(1));
+								if(XR.checkPerformKPointsMove(x, y)){
+									LexMultiValues eval = F.evaluateKPointsMove(x, y);
+									if(eval.lt(bestEval)){
+										N.clear();
+										N.add(new KPointsMove(mgr, eval, x, y));
+										bestEval.set(eval);
+										try{
+											PrintWriter out = new PrintWriter(new FileOutputStream("greedyExchangeRequest.txt", true));
+											out.println("ShareARide::exploreNeighborhood vio = " + bestEval.toString());
+											out.close();
 										}
+										catch(Exception e){
+											
+										}
+									} else if (eval.eq(bestEval)) {
+										N.add(new KPointsMove(mgr, eval, x, y, this));
 									}
 								}
 							}
@@ -119,6 +118,15 @@ public class GreedyExchangeRequestWithPeriodTime implements INeighborhoodExplore
 					}
 				}
 			}
+		}
+		try{
+			PrintWriter out = new PrintWriter(new FileOutputStream("greedyExchangeRequest.txt", true));
+			out.println("ShareARide::exploreNeighborhood the last vio = " + bestEval.toString() 
+				+ ", ending time = " + (System.currentTimeMillis() - t));
+			out.close();
+		}
+		catch(Exception e){
+			
 		}
 	}
 	
