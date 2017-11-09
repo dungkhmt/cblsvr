@@ -18,6 +18,7 @@ import localsearch.domainspecific.vehiclerouting.apps.sharedaride.Neighborhood.G
 import localsearch.domainspecific.vehiclerouting.apps.sharedaride.Neighborhood.GreedyOrOptMove1ExplorerLimit;
 import localsearch.domainspecific.vehiclerouting.apps.sharedaride.Neighborhood.GreedyTwoPointsMoveExplorerLimit;
 import localsearch.domainspecific.vehiclerouting.apps.sharedaride.Neighborhood.GreedyTwoRequestMoveExplorerLimit;
+import localsearch.domainspecific.vehiclerouting.apps.sharedaride.Search.AdaptiveLargeNeighborhoodSearch;
 import localsearch.domainspecific.vehiclerouting.apps.sharedaride.Search.VariableNeighborhoodSearch;
 import localsearch.domainspecific.vehiclerouting.vrp.Constants;
 import localsearch.domainspecific.vehiclerouting.vrp.ConstraintSystemVR;
@@ -33,8 +34,11 @@ import localsearch.domainspecific.vehiclerouting.vrp.functions.AccumulatedEdgeWe
 import localsearch.domainspecific.vehiclerouting.vrp.functions.ConstraintViolationsVR;
 import localsearch.domainspecific.vehiclerouting.vrp.functions.LexMultiFunctions;
 import localsearch.domainspecific.vehiclerouting.vrp.functions.TotalCostVR;
+import localsearch.domainspecific.vehiclerouting.vrp.functions.TotalRequestsNotServed;
 import localsearch.domainspecific.vehiclerouting.vrp.invariants.AccumulatedWeightEdgesVR;
 import localsearch.domainspecific.vehiclerouting.vrp.invariants.EarliestArrivalTimeVR;
+import localsearch.domainspecific.vehiclerouting.vrp.largeneighborhoodexploration.ILargeNeighborhoodExplorer;
+import localsearch.domainspecific.vehiclerouting.vrp.largeneighborhoodexploration.RandomRemovalsAndGreedyInsertions;
 import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.GreedyCrossExchangeMoveExplorer;
 import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.GreedyOnePointMoveExplorer;
 import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.GreedyOrOptMove1Explorer;
@@ -62,6 +66,8 @@ public class ShareARide{
 	HashMap<Point, Integer> lastestAllowedArrivalTime;
 	HashMap<Point,Point> pickup2DeliveryOfGood;
 	HashMap<Point,Point> pickup2DeliveryOfPeople;
+	HashMap<Point,Point> pickup2delivery;
+	HashMap<Point,Point> delivery2pickup;
 	private HashMap<Point, Double> scoreReq;
 	Point badPick;
 	int nVehicle;
@@ -72,6 +78,7 @@ public class ShareARide{
 	VarRoutesVR XR;
 	ConstraintSystemVR S;
 	IFunctionVR objective;
+	IFunctionVR objNbRejectedReqs;
 	public CEarliestArrivalTimeVR ceat;
 	LexMultiValues valueSolution;
 	EarliestArrivalTimeVR eat;
@@ -180,6 +187,8 @@ public class ShareARide{
 public void stateModel() {
 	pickup2DeliveryOfGood = new HashMap<Point, Point>();
 	pickup2DeliveryOfPeople = new HashMap<Point, Point>();
+	pickup2delivery = new HashMap<Point, Point>();
+	delivery2pickup = new HashMap<Point, Point>();
 	for(int i=0; i < nRequest; ++i)
 	{
 		Point pickup = pickupPoints.get(i);
@@ -191,6 +200,8 @@ public void stateModel() {
 		else{
 			pickup2DeliveryOfGood.put(pickup, delivery);
 		}
+		pickup2delivery.put(pickup, delivery);
+		delivery2pickup.put(delivery, pickup);
 	}
 	mgr = new VRManager();
 	XR = new VarRoutesVR(mgr);
@@ -226,6 +237,7 @@ public void stateModel() {
 	}
 	S.post(cEarliest);
 	objective = new TotalCostVR(XR,awm);
+	objNbRejectedReqs = new TotalRequestsNotServed(XR, pickupPoints, deliveryPoints);
 	
 	mgr.close();
 }
@@ -450,13 +462,26 @@ ArrayList<ArrayList<INeighborhoodExplorer>> search9(LexMultiFunctions F)
 	return listNE;
 }
 
+ArrayList<ArrayList<ILargeNeighborhoodExplorer>> search10(LexMultiFunctions F)
+{
+	ArrayList<ArrayList<ILargeNeighborhoodExplorer>> listLNE = new ArrayList<>();
+	ArrayList<ILargeNeighborhoodExplorer> LNE = new ArrayList<>();
+	LNE.add(new RandomRemovalsAndGreedyInsertions(XR, F, 100, pickup2delivery, delivery2pickup, pickup2DeliveryOfPeople, pickup2DeliveryOfGood));
+	//NE.add(new GreedyTwoPointsMoveExplorer(XR, F));
+	listLNE.add(LNE);
+	return listLNE;
+}
+
+
 VarRoutesVR search(int maxIter, int timeLimit, int searchMethod, String outDir)
 {
 	LexMultiFunctions F;
 	F = new LexMultiFunctions();
 	F.add(new ConstraintViolationsVR(S));
+	F.add(objNbRejectedReqs);
 	F.add(objective);
-	ArrayList<ArrayList<INeighborhoodExplorer>> listNE = null;;
+	ArrayList<ArrayList<INeighborhoodExplorer>> listNE = null;
+	ArrayList<ArrayList<ILargeNeighborhoodExplorer>> listLNE = null;
 	switch(searchMethod)
 	{
 	case 1:
@@ -485,13 +510,21 @@ VarRoutesVR search(int maxIter, int timeLimit, int searchMethod, String outDir)
 		break;
 	case 9:
 		listNE = search9(F);
+	case 10:
+		listLNE = search10(F);
 	}
 	
-	VariableNeighborhoodSearch vns = new VariableNeighborhoodSearch(mgr, F, listNE, pickupPoints, deliveryPoints);
-	vns.search(maxIter, timeLimit, outDir);
-	valueSolution =vns.getIncumbentValue();
-	cntInteration = vns.getCurrentIteration();
-	cntTimeRestart = vns.getCntRestart();
+	if(searchMethod != 10){
+		VariableNeighborhoodSearch vns = new VariableNeighborhoodSearch(mgr, F, listNE, pickupPoints, deliveryPoints);
+		vns.search(maxIter, timeLimit, outDir);
+		valueSolution =vns.getIncumbentValue();
+		cntInteration = vns.getCurrentIteration();
+		cntTimeRestart = vns.getCntRestart();
+	}
+	else{
+		AdaptiveLargeNeighborhoodSearch alns = new AdaptiveLargeNeighborhoodSearch(mgr, F, listLNE);
+		alns.search(maxIter, timeLimit, outDir);
+	}
 	return XR;
 }
 //public VarRoutesVR test(){
@@ -729,6 +762,7 @@ VarRoutesVR search(int maxIter, int timeLimit, int searchMethod, String outDir)
 					mgr.performAddOnePoint(delivery, pre_delivery);
 					//System.out.println("ix = " + ix + ", pre_pick = " + pre_pick + ", pre_delivery = " + pre_delivery);
 				}
+				System.out.println("i = " + i);
 			}
 		}
 		
@@ -820,13 +854,13 @@ VarRoutesVR search(int maxIter, int timeLimit, int searchMethod, String outDir)
 	}
     public static void main(String []args) throws FileNotFoundException
     {
-    	String inData = "data/SARP-offline/n2466r500_1.txt";
+    	String inData = "data/SARP-offline/n616r20_1.txt";
     	
     	int timeLimit = 43200;
     	int typeInit = 3;
     	int nIter = 10000;
-    	for(int i = 1; i <= 9; i++){
-    		String outDir= "data/output/SARP-offline/N2466_R500_D1_type" + typeInit +"_nIter" + nIter + "_time" + timeLimit + "_S" + i + ".txt";
+    	for(int i = 10; i <= 10; i++){
+    		String outDir= "data/output/SARP-offline/N616_R20_D1_type" + typeInit +"_nIter" + nIter + "_time" + timeLimit + "_S" + i + ".txt";
     		Info info = new Info(inData);
 			ShareARide sar = new ShareARide(info);
 	    	sar.stateModel();
@@ -837,6 +871,7 @@ VarRoutesVR search(int maxIter, int timeLimit, int searchMethod, String outDir)
 	    	out.println("rejected reqs: " + sar.rejectPickup.size());
 	    	out.close();
 	    	//sar.reInsertRequest(typeInit, timeLimit, outDir);
+	    	System.out.println("search start");
 	    	sar.search(nIter, timeLimit/9, i, outDir);
 	    	PrintWriter out2 = new PrintWriter(new FileOutputStream(outDir, true));
 	    	LexMultiValues v1 = sar.valueSolution;

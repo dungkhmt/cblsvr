@@ -1625,7 +1625,7 @@ public class VarRoutesVR{
     			isStartingPoint(y1)) && route[getIndex(y1)] != Constants.NULL_POINT
     			&& route[getIndex(x2)] == Constants.NULL_POINT && isClientPoint(x2) && (isClientPoint(y2) || 
     	    	isStartingPoint(y2)) && route[getIndex(y2)] != Constants.NULL_POINT
-    	    	&& index[getIndex(y1)] <= index[getIndex(y2)]);
+    	    	&& route[getIndex(y1)] == route[getIndex(y2)] && index[getIndex(y1)] <= index[getIndex(y2)]);
     }
     
     public void performAddOnePoint(Point x, Point y){
