@@ -1,2 +1,0 @@
-first violationss = 0.0, first obj = 21618.0
-rejected reqs: 0
