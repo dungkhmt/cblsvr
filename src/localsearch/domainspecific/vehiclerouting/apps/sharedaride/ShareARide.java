@@ -39,6 +39,7 @@ import localsearch.domainspecific.vehiclerouting.vrp.invariants.AccumulatedWeigh
 import localsearch.domainspecific.vehiclerouting.vrp.invariants.EarliestArrivalTimeVR;
 import localsearch.domainspecific.vehiclerouting.vrp.largeneighborhoodexploration.ILargeNeighborhoodExplorer;
 import localsearch.domainspecific.vehiclerouting.vrp.largeneighborhoodexploration.RandomRemovalsAndGreedyInsertions;
+import localsearch.domainspecific.vehiclerouting.vrp.largeneighborhoodexploration.RandomRouteRemovalsAndGreedyInsertions;
 import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.GreedyCrossExchangeMoveExplorer;
 import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.GreedyOnePointMoveExplorer;
 import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.GreedyOrOptMove1Explorer;
@@ -466,12 +467,21 @@ ArrayList<ArrayList<ILargeNeighborhoodExplorer>> search10(LexMultiFunctions F)
 {
 	ArrayList<ArrayList<ILargeNeighborhoodExplorer>> listLNE = new ArrayList<>();
 	ArrayList<ILargeNeighborhoodExplorer> LNE = new ArrayList<>();
-	LNE.add(new RandomRemovalsAndGreedyInsertions(XR, F, 100, pickup2delivery, delivery2pickup, pickup2DeliveryOfPeople, pickup2DeliveryOfGood));
+	LNE.add(new RandomRemovalsAndGreedyInsertions(XR, F, 100, pickup2delivery, delivery2pickup, pickup2DeliveryOfPeople, pickup2DeliveryOfGood, rejectPoints, rejectPickup, rejectDelivery));
 	//NE.add(new GreedyTwoPointsMoveExplorer(XR, F));
 	listLNE.add(LNE);
 	return listLNE;
 }
 
+ArrayList<ArrayList<ILargeNeighborhoodExplorer>> search11(LexMultiFunctions F)
+{
+	ArrayList<ArrayList<ILargeNeighborhoodExplorer>> listLNE = new ArrayList<>();
+	ArrayList<ILargeNeighborhoodExplorer> LNE = new ArrayList<>();
+	LNE.add(new RandomRouteRemovalsAndGreedyInsertions(XR, F, 100, pickup2delivery, delivery2pickup, pickup2DeliveryOfPeople, pickup2DeliveryOfGood, rejectPoints, rejectPickup, rejectDelivery));
+	//NE.add(new GreedyTwoPointsMoveExplorer(XR, F));
+	listLNE.add(LNE);
+	return listLNE;
+}
 
 VarRoutesVR search(int maxIter, int timeLimit, int searchMethod, String outDir)
 {
@@ -510,11 +520,16 @@ VarRoutesVR search(int maxIter, int timeLimit, int searchMethod, String outDir)
 		break;
 	case 9:
 		listNE = search9(F);
+		break;
 	case 10:
 		listLNE = search10(F);
+		break;
+	case 11:
+		listLNE = search11(F);
+		break;
 	}
 	
-	if(searchMethod != 10){
+	if(searchMethod <= 9){
 		VariableNeighborhoodSearch vns = new VariableNeighborhoodSearch(mgr, F, listNE, pickupPoints, deliveryPoints);
 		vns.search(maxIter, timeLimit, outDir);
 		valueSolution =vns.getIncumbentValue();
@@ -854,13 +869,13 @@ VarRoutesVR search(int maxIter, int timeLimit, int searchMethod, String outDir)
 	}
     public static void main(String []args) throws FileNotFoundException
     {
-    	String inData = "data/SARP-offline/n616r20_1.txt";
+    	String inData = "data/SARP-offline/n822r5_1.txt";
     	
     	int timeLimit = 43200;
     	int typeInit = 3;
     	int nIter = 10000;
-    	for(int i = 10; i <= 10; i++){
-    		String outDir= "data/output/SARP-offline/N616_R20_D1_type" + typeInit +"_nIter" + nIter + "_time" + timeLimit + "_S" + i + ".txt";
+    	for(int i = 11; i <= 11; i++){
+    		String outDir= "data/output/SARP-offline/N822_R5_D1_type" + typeInit +"_nIter" + nIter + "_time" + timeLimit + "_S" + i + ".txt";
     		Info info = new Info(inData);
 			ShareARide sar = new ShareARide(info);
 	    	sar.stateModel();
@@ -870,6 +885,8 @@ VarRoutesVR search(int maxIter, int timeLimit, int searchMethod, String outDir)
 	    	out.println("first violationss = " + v.get(0) + ", first obj = " + v.get(1));
 	    	out.println("rejected reqs: " + sar.rejectPickup.size());
 	    	out.close();
+	    	System.out.println("init: obj = " + sar.objective.getValue() + ", nbRejected = " + sar.objNbRejectedReqs + ", " + sar.rejectPickup.size()
+	    			+ ", vio = " + sar.S.violations());
 	    	//sar.reInsertRequest(typeInit, timeLimit, outDir);
 	    	System.out.println("search start");
 	    	sar.search(nIter, timeLimit/9, i, outDir);
@@ -878,6 +895,8 @@ VarRoutesVR search(int maxIter, int timeLimit, int searchMethod, String outDir)
 	    	out2.println("The last violationss = " + v1.get(0) + ", obj = " + v1.get(1));
 	    	out2.println("rejected reqs: " + sar.rejectPickup.size());
 	    	out2.close();
+	    	System.out.println("search: obj = " + sar.objective.getValue() + ", nbRejected = " + sar.objNbRejectedReqs + ", " + sar.rejectPickup.size()
+			+ ", vio = " + sar.S.violations());
     	}
     }
     

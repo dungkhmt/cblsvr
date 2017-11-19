@@ -469,22 +469,24 @@ public class TotalRequestsNotServed implements IFunctionVR {
 				break;
 			}
 		}
-		
-		for(int i = 0; i < delivery.size(); i++){
-			if(delivery.get(i) == x1){
-				if(XR.contains(pickup.get(i)))
-					p--;
-				t = i;
-				break;
+		if(t != -1){
+			for(int i = 0; i < delivery.size(); i++){
+				if(delivery.get(i) == x1){
+					if(XR.contains(pickup.get(i)))
+						p--;
+					t = i;
+					break;
+				}
 			}
 		}
-		
-		for(int i = 0; i < delivery.size(); i++){
-			if(delivery.get(i) == x2){
-				if(XR.contains(pickup.get(i)))
-					p--;
-				k = i;
-				break;
+		if(k != -1){
+			for(int i = 0; i < delivery.size(); i++){
+				if(delivery.get(i) == x2){
+					if(XR.contains(pickup.get(i)))
+						p--;
+					k = i;
+					break;
+				}
 			}
 		}
 		if(p == 0 && k == t)
@@ -519,22 +521,24 @@ public class TotalRequestsNotServed implements IFunctionVR {
 				break;
 			}
 		}
-		
-		for(int i = 0; i < delivery.size(); i++){
-			if(delivery.get(i) == x1){
-				if(XR.contains(pickup.get(i)))
-					p++;
-				t = i;
-				break;
+		if(t != -1){
+			for(int i = 0; i < delivery.size(); i++){
+				if(delivery.get(i) == x1){
+					if(XR.contains(pickup.get(i)))
+						p++;
+					t = i;
+					break;
+				}
 			}
 		}
-		
-		for(int i = 0; i < delivery.size(); i++){
-			if(delivery.get(i) == x2){
-				if(XR.contains(pickup.get(i)))
-					p++;
-				k = i;
-				break;
+		if(k != -1){
+			for(int i = 0; i < delivery.size(); i++){
+				if(delivery.get(i) == x2){
+					if(XR.contains(pickup.get(i)))
+						p++;
+					k = i;
+					break;
+				}
 			}
 		}
 		if(p == 0 && k == t)

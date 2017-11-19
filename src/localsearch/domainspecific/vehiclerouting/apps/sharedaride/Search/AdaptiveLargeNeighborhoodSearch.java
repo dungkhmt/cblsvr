@@ -65,7 +65,7 @@ public void search(int maxIter, int timeLimit, String outDir){
 	
 	while (currentIter < maxIter) {
 		double curTime = System.currentTimeMillis();
-		double t = curTime - t0;
+		double t = (curTime - t0)/1000;
 		if (t  > timeLimit)
 		{
 			//System.out.println(t+"  -  "+timeLimit);
