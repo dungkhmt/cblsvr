@@ -82,9 +82,11 @@ public class RandomRouteRemovalsAndGreedyInsertions  implements ILargeNeighborho
 		LexMultiValues bestEval = new LexMultiValues();
 		bestEval.fill(F.size(), 0);
 		Set<Point> pickPeoplePoints = pickup2deliveryOfPeople.keySet();
-		for(int i = 0; i < rejectPickup.size(); i++){
-			Point pickup = rejectPickup.get(i);
-			Point delivery = rejectDelivery.get(i);
+		ArrayList<Point> rjP = new ArrayList<Point>(rejectPickup);
+		ArrayList<Point> rjD = new ArrayList<Point>(rejectDelivery);
+		for(int i = 0; i < rjP.size(); i++){
+			Point pickup = rjP.get(i);
+			Point delivery = rjD.get(i);
 			//add the request to route
 			Point pre_pick = null;
 			Point pre_delivery = null;

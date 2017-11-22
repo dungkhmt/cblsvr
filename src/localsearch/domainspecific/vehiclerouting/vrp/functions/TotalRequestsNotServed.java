@@ -469,7 +469,7 @@ public class TotalRequestsNotServed implements IFunctionVR {
 				break;
 			}
 		}
-		if(t != -1){
+		if(t == -1){
 			for(int i = 0; i < delivery.size(); i++){
 				if(delivery.get(i) == x1){
 					if(XR.contains(pickup.get(i)))
@@ -479,7 +479,7 @@ public class TotalRequestsNotServed implements IFunctionVR {
 				}
 			}
 		}
-		if(k != -1){
+		if(k == -1){
 			for(int i = 0; i < delivery.size(); i++){
 				if(delivery.get(i) == x2){
 					if(XR.contains(pickup.get(i)))
@@ -521,7 +521,7 @@ public class TotalRequestsNotServed implements IFunctionVR {
 				break;
 			}
 		}
-		if(t != -1){
+		if(t == -1){
 			for(int i = 0; i < delivery.size(); i++){
 				if(delivery.get(i) == x1){
 					if(XR.contains(pickup.get(i)))
@@ -531,7 +531,7 @@ public class TotalRequestsNotServed implements IFunctionVR {
 				}
 			}
 		}
-		if(k != -1){
+		if(k == -1){
 			for(int i = 0; i < delivery.size(); i++){
 				if(delivery.get(i) == x2){
 					if(XR.contains(pickup.get(i)))
