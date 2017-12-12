@@ -276,9 +276,9 @@ public class ShareARide{
 		}
 	}
     
-	public void search(int maxIter, int timeLimit){
+	public SolutionShareARide search(int maxIter, int timeLimit){
 		ALNSwithSA alns = new ALNSwithSA(mgr, objective, S, eat, awm);
-		alns.search(maxIter, timeLimit);
+		return alns.search(maxIter, timeLimit);
 	}
 	
 	public static void main(String []args){
@@ -313,9 +313,9 @@ public class ShareARide{
 			sar.greedyInitSolution();
 				
 			LOGGER.log(Level.INFO,"Init solution done. At start search number of reject points = "+rejectPoints.size()+"    violations = "+sar.S.violations()+"   cost = "+sar.objective.getValue());
-			sar.search(nIter, timeLimit);
+			SolutionShareARide best_solution = sar.search(nIter, timeLimit);
 				
-			LOGGER.log(Level.INFO,"Search done. At end search number of reject points = "+rejectPoints.size()+"   cost = "+sar.objective.getValue());
+			LOGGER.log(Level.INFO,"Search done. At end search number of reject points = "+best_solution.get_rejectPoints().size()+"   cost = "+best_solution.get_cost());
 		
 		} catch (SecurityException | IOException e) {
 			// TODO Auto-generated catch block

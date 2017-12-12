@@ -58,7 +58,7 @@ public class ALNSwithSA {
 		this.awm = awm;
 	}
 	
-	public void search(int maxIter, int timeLimit){
+	public SolutionShareARide search(int maxIter, int timeLimit){
 		//insertion operators selection probabilities
 		double[] pti = new double[nInsertionOperators];
 		//removal operators selection probabilities
@@ -127,7 +127,13 @@ public class ALNSwithSA {
 			double new_cost = objective.getValue();
 			ShareARide.LOGGER.log(Level.INFO,"Iter "+it+" new_solution: \n"+XR.toString()+"cost = "+new_cost);
 			
-			//update scores
+			
+			/*
+			 * if new solution has cost better than current solution
+			 * 		update current solution =  new solution
+			 * 		if new solution has best cost
+			 * 			update best cost
+			 */
 			if(new_cost < current_cost){
 				if(new_cost < best_cost){
 					best_cost = new_cost;
@@ -138,16 +144,28 @@ public class ALNSwithSA {
 					si[i_selected_insertion] += sigma2;
 					sd[i_selected_removal] += sigma2;
 				}
-			}else{
+			}
+			/*
+			 * if new solution has cost worst than current solution
+			 * 		because XR is new solution
+			 * 			copy current current solution to new solution if don't change solution
+			 */
+			else{
 				si[i_selected_insertion] += sigma3;
 				sd[i_selected_removal] += sigma3;
 				
 				double v = Math.exp(-(new_cost-current_cost)/temperature);
 				double r = Math.random();
 				if(r >= v){
-					
+					ShareARide.LOGGER.log(Level.INFO,"The cost did not improve and reverse solution back to current solution");
+					current_solution.copy2XR(XR);
+					ShareARide.rejectPoints = current_solution.get_rejectPoints();
+					ShareARide.rejectPickup = current_solution.get_rejectPickupPoints();
+					ShareARide.rejectDelivery = current_solution.get_rejectDeliveryPoints();
 				}
 			}
+			
+			temperature = cooling_rate*temperature;
 			
 			//update probabilities
 			if(it % nw == 0){
@@ -164,6 +182,7 @@ public class ALNSwithSA {
 				}
 			}
 		}
+		return best_solution;
 	}
 	
 	private void random_removal(){
@@ -262,14 +281,19 @@ public class ALNSwithSA {
 						continue;
 					}
 					
-					double arrivalTime = eat.getEarliestArrivalTime(x);
+					double arrivalTime = eat.getEarliestArrivalTime(XR.prev(x))+ 
+							ShareARide.serviceDuration.get(XR.prev(x))+
+							awm.getDistance(XR.prev(x), x);
+					
 					
 					double serviceTime = 1.0*ShareARide.earliestAllowedArrivalTime.get(x);
 					serviceTime = arrivalTime > serviceTime ? arrivalTime : serviceTime;
 					
 					double depatureTime = serviceTime + ShareARide.serviceDuration.get(x);
 					
-					double arrivalTimeD = eat.getEarliestArrivalTime(dX);
+					double arrivalTimeD =  eat.getEarliestArrivalTime(XR.prev(dX))+ 
+							ShareARide.serviceDuration.get(XR.prev(dX))+
+							awm.getDistance(XR.prev(dX), dX);
 					
 					double serviceTimeD = 1.0*ShareARide.earliestAllowedArrivalTime.get(dX);
 					serviceTime = arrivalTimeD > serviceTimeD ? arrivalTimeD : serviceTimeD;
@@ -293,6 +317,7 @@ public class ALNSwithSA {
 		}
 	}
 	
+	/*
 	private void worst_distance_removal(){
 		Random R = new Random();
 		int nRemove = R.nextInt(upper_removal-lower_removal+1) + lower_removal;
@@ -333,7 +358,8 @@ public class ALNSwithSA {
 			mgr.performRemoveTwoPoints(removedPickup, removedDelivery);
 		}
 	}
-	
+	*/
+
 	private void shaw_removal(){
 		Random R = new Random();
 		int nRemove = R.nextInt(upper_removal-lower_removal+1) + lower_removal;
@@ -373,23 +399,33 @@ public class ALNSwithSA {
 			double relatedMin =  Double.MAX_VALUE;
 			
 			int routeOfR1 = XR.route(r1);
-			
 			/*
 			 * Compute arrival time at request r1 and its delivery dr1
 			 */
-			double arrivalTimeR1 = eat.getEarliestArrivalTime(r1);
+			double arrivalTimeR1 = eat.getEarliestArrivalTime(XR.prev(r1))+
+					ShareARide.serviceDuration.get(XR.prev(r1))+
+					awm.getDistance(XR.prev(r1), r1);
 			
 			double serviceTimeR1 = 1.0*ShareARide.earliestAllowedArrivalTime.get(r1);
 			serviceTimeR1 = arrivalTimeR1 > serviceTimeR1 ? arrivalTimeR1 : serviceTimeR1;
 			
 			double depatureTimeR1 = serviceTimeR1 + ShareARide.serviceDuration.get(r1);
 			
-			double arrivalTimeDR1 = eat.getEarliestArrivalTime(dr1);
+			double arrivalTimeDR1 = eat.getEarliestArrivalTime(XR.prev(dr1))+
+					ShareARide.serviceDuration.get(XR.prev(dr1))+
+					awm.getDistance(XR.prev(dr1), dr1);
 			
 			double serviceTimeDR1 = 1.0*ShareARide.earliestAllowedArrivalTime.get(dr1);
 			serviceTimeDR1 = arrivalTimeDR1 > serviceTimeDR1 ? arrivalTimeDR1 : serviceTimeDR1;
 			
 			double depatureTimeDR1 = serviceTimeDR1 + ShareARide.serviceDuration.get(dr1);
+			
+			ShareARide.rejectPoints.add(r1);
+			ShareARide.rejectPoints.add(dr1);
+			ShareARide.rejectPickup.add(r1);
+			ShareARide.rejectDelivery.add(dr1);
+			
+			mgr.performRemoveTwoPoints(r1, dr1);
 			
 			/*
 			 * find the request is the most related with r1
@@ -405,14 +441,18 @@ public class ALNSwithSA {
 					/*
 					 * Compute arrival time of x and its delivery dX
 					 */
-					double arrivalTimeX = eat.getEarliestArrivalTime(x);
+					double arrivalTimeX =  eat.getEarliestArrivalTime(XR.prev(x))+
+							ShareARide.serviceDuration.get(XR.prev(x))+
+							awm.getDistance(XR.prev(x), x);
 					
 					double serviceTimeX = 1.0*ShareARide.earliestAllowedArrivalTime.get(x);
 					serviceTimeX = arrivalTimeX > serviceTimeX ? arrivalTimeX : serviceTimeX;
 					
 					double depatureTimeX = serviceTimeX + ShareARide.serviceDuration.get(x);
 					
-					double arrivalTimeDX = eat.getEarliestArrivalTime(dX);
+					double arrivalTimeDX =  eat.getEarliestArrivalTime(XR.prev(dX))+
+							ShareARide.serviceDuration.get(XR.prev(dX))+
+							awm.getDistance(XR.prev(dX), dX);
 					
 					double serviceTimeDX = 1.0*ShareARide.earliestAllowedArrivalTime.get(dX);
 					serviceTimeDX = arrivalTimeDX > serviceTimeDX ? arrivalTimeDX : serviceTimeDX;
@@ -442,13 +482,6 @@ public class ALNSwithSA {
 			
 			r1 = removedPickup;
 			dr1 = removedDelivery;
-			
-			ShareARide.rejectPoints.add(removedDelivery);
-			ShareARide.rejectPoints.add(removedPickup);
-			ShareARide.rejectPickup.add(removedPickup);
-			ShareARide.rejectDelivery.add(removedDelivery);
-			
-			mgr.performRemoveTwoPoints(removedPickup, removedDelivery);
 		}
 		
 	}
@@ -492,6 +525,13 @@ public class ALNSwithSA {
 			Point removedDelivery = null;
 			double relatedMin =  Double.MAX_VALUE;
 			
+			ShareARide.rejectPoints.add(r1);
+			ShareARide.rejectPoints.add(dr1);
+			ShareARide.rejectPickup.add(r1);
+			ShareARide.rejectDelivery.add(dr1);
+			
+			mgr.performRemoveTwoPoints(r1, dr1);
+			
 			/*
 			 * find the request is the most related with r1
 			 */
@@ -519,13 +559,6 @@ public class ALNSwithSA {
 			
 			r1 = removedPickup;
 			dr1 = removedDelivery;
-			
-			ShareARide.rejectPoints.add(removedDelivery);
-			ShareARide.rejectPoints.add(removedPickup);
-			ShareARide.rejectPickup.add(removedPickup);
-			ShareARide.rejectDelivery.add(removedDelivery);
-			
-			mgr.performRemoveTwoPoints(removedPickup, removedDelivery);
 		}
 	}
 	
@@ -570,19 +603,30 @@ public class ALNSwithSA {
 			/*
 			 * Compute arrival time at request r1 and its delivery dr1
 			 */
-			double arrivalTimeR1 = eat.getEarliestArrivalTime(r1);
+			double arrivalTimeR1 =  eat.getEarliestArrivalTime(XR.prev(r1))+
+					ShareARide.serviceDuration.get(XR.prev(r1))+
+					awm.getDistance(XR.prev(r1), r1);
 			
 			double serviceTimeR1 = 1.0*ShareARide.earliestAllowedArrivalTime.get(r1);
 			serviceTimeR1 = arrivalTimeR1 > serviceTimeR1 ? arrivalTimeR1 : serviceTimeR1;
 			
 			double depatureTimeR1 = serviceTimeR1 + ShareARide.serviceDuration.get(r1);
 			
-			double arrivalTimeDR1 = eat.getEarliestArrivalTime(dr1);
+			double arrivalTimeDR1 =  eat.getEarliestArrivalTime(XR.prev(dr1))+
+					ShareARide.serviceDuration.get(XR.prev(dr1))+
+					awm.getDistance(XR.prev(dr1), dr1);
 			
 			double serviceTimeDR1 = 1.0*ShareARide.earliestAllowedArrivalTime.get(dr1);
 			serviceTimeDR1 = arrivalTimeDR1 > serviceTimeDR1 ? arrivalTimeDR1 : serviceTimeDR1;
 			
 			double depatureTimeDR1 = serviceTimeDR1 + ShareARide.serviceDuration.get(dr1);
+			
+			ShareARide.rejectPoints.add(r1);
+			ShareARide.rejectPoints.add(dr1);
+			ShareARide.rejectPickup.add(r1);
+			ShareARide.rejectDelivery.add(dr1);
+			
+			mgr.performRemoveTwoPoints(r1, dr1);
 			
 			/*
 			 * find the request is the most related with r1
@@ -598,14 +642,18 @@ public class ALNSwithSA {
 					/*
 					 * Compute arrival time of x and its delivery dX
 					 */
-					double arrivalTimeX = eat.getEarliestArrivalTime(x);
+					double arrivalTimeX =  eat.getEarliestArrivalTime(XR.prev(x))+
+							ShareARide.serviceDuration.get(XR.prev(x))+
+							awm.getDistance(XR.prev(x), x);
 					
 					double serviceTimeX = 1.0*ShareARide.earliestAllowedArrivalTime.get(x);
 					serviceTimeX = arrivalTimeX > serviceTimeX ? arrivalTimeX : serviceTimeX;
 					
 					double depatureTimeX = serviceTimeX + ShareARide.serviceDuration.get(x);
 					
-					double arrivalTimeDX = eat.getEarliestArrivalTime(dX);
+					double arrivalTimeDX =  eat.getEarliestArrivalTime(XR.prev(dX))+
+							ShareARide.serviceDuration.get(XR.prev(dX))+
+							awm.getDistance(XR.prev(dX), dX);
 					
 					double serviceTimeDX = 1.0*ShareARide.earliestAllowedArrivalTime.get(dX);
 					serviceTimeDX = arrivalTimeDX > serviceTimeDX ? arrivalTimeDX : serviceTimeDX;
@@ -628,13 +676,6 @@ public class ALNSwithSA {
 			
 			r1 = removedPickup;
 			dr1 = removedDelivery;
-			
-			ShareARide.rejectPoints.add(removedDelivery);
-			ShareARide.rejectPoints.add(removedPickup);
-			ShareARide.rejectPickup.add(removedPickup);
-			ShareARide.rejectDelivery.add(removedDelivery);
-			
-			mgr.performRemoveTwoPoints(removedPickup, removedDelivery);
 		}
 	}
 	
