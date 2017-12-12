@@ -2,6 +2,7 @@ package localsearch.domainspecific.vehiclerouting.apps.sharedaride.Search;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Random;
 import java.util.logging.Level;
 
@@ -24,11 +25,14 @@ public class ALNSwithSA {
 	private EarliestArrivalTimeVR eat;
 	private ArcWeightsManager awm;
 	
-	//private ArrayList<Point> rejectPoints;
-	//private ArrayList<Point> rejectPickupPoints;
-	//private ArrayList<Point> rejectDeliveryPoints;
-	//private HashMap<Point, Point> pickup2delivery;
-	//private HashMap<Point, Point> delivery2pickup;
+	private ArrayList<Point> rejectPoints;
+	private ArrayList<Point> rejectPickup;
+	private ArrayList<Point> rejectDelivery;
+	private HashMap<Point, Point> pickup2delivery;
+	private HashMap<Point, Point> delivery2pickup;
+	private HashMap<Point, Integer> serviceDuration;
+	private HashMap<Point, Integer> earliestAllowedArrivalTime;
+	private HashMap<Point,Point> pickup2DeliveryOfPeople;
 	
 	private int nRemovalOperators=7;
 	private int nInsertionOperators=2;
@@ -49,13 +53,24 @@ public class ALNSwithSA {
 	//private double shaw4th = 0.2;
 	
 	
-	public ALNSwithSA(VRManager mgr, IFunctionVR objective, ConstraintSystemVR S, EarliestArrivalTimeVR eat, ArcWeightsManager awm){
+	public ALNSwithSA(VRManager mgr, IFunctionVR objective, ConstraintSystemVR S, EarliestArrivalTimeVR eat, ArcWeightsManager awm,
+			ArrayList<Point> rejectPoints, ArrayList<Point> rejectPickup, ArrayList<Point> rejectDelivery,
+			HashMap<Point, Point> pickup2delivery, HashMap<Point, Point> delivery2pickup, HashMap<Point, Integer> serviceDuration,
+			HashMap<Point, Integer> earliestAllowedArrivalTime, HashMap<Point,Point> pickup2DeliveryOfPeople){
 		this.mgr = mgr;
 		this.objective = objective;
 		this.XR = mgr.getVarRoutesVR();
 		this.S = S;
 		this.eat = eat;
 		this.awm = awm;
+		this.rejectPoints = rejectPoints;
+		this.rejectPickup = rejectPickup;
+		this.rejectDelivery = rejectDelivery;
+		this.pickup2delivery = pickup2delivery;
+		this.delivery2pickup = delivery2pickup;
+		this.serviceDuration = serviceDuration;
+		this.earliestAllowedArrivalTime = earliestAllowedArrivalTime;
+		this.pickup2DeliveryOfPeople = pickup2DeliveryOfPeople;
 	}
 	
 	public SolutionShareARide search(int maxIter, int timeLimit){
@@ -88,13 +103,13 @@ public class ALNSwithSA {
 		int it = 0;
 		
 		double best_cost = objective.getValue();
-		SolutionShareARide best_solution = new SolutionShareARide(XR, ShareARide.rejectPoints, ShareARide.rejectPickup, ShareARide.rejectDelivery, best_cost);
+		SolutionShareARide best_solution = new SolutionShareARide(XR, rejectPoints, rejectPickup, rejectDelivery, best_cost);
 		ShareARide.LOGGER.log(Level.INFO, "start search best_solution: \n"+best_solution.toString());
 		
 		while(it++ < maxIter){
 			
 			double current_cost = objective.getValue();
-			SolutionShareARide current_solution = new SolutionShareARide(XR, ShareARide.rejectPoints, ShareARide.rejectPickup, ShareARide.rejectDelivery, current_cost);
+			SolutionShareARide current_solution = new SolutionShareARide(XR, rejectPoints, rejectPickup, rejectDelivery, current_cost);
 			ShareARide.LOGGER.log(Level.INFO, "Iter "+it+" current_solution: \n"+current_solution.toString());
 			
 			int i_selected_removal = get_operator(ptd);
@@ -139,7 +154,7 @@ public class ALNSwithSA {
 					best_cost = new_cost;
 					si[i_selected_insertion] += sigma1;
 					sd[i_selected_removal] += sigma1;
-					best_solution = new SolutionShareARide(XR, ShareARide.rejectPoints, ShareARide.rejectPickup, ShareARide.rejectDelivery, best_cost);
+					best_solution = new SolutionShareARide(XR, rejectPoints, rejectPickup, rejectDelivery, best_cost);
 				}else{
 					si[i_selected_insertion] += sigma2;
 					sd[i_selected_removal] += sigma2;
@@ -159,9 +174,9 @@ public class ALNSwithSA {
 				if(r >= v){
 					ShareARide.LOGGER.log(Level.INFO,"The cost did not improve and reverse solution back to current solution");
 					current_solution.copy2XR(XR);
-					ShareARide.rejectPoints = current_solution.get_rejectPoints();
-					ShareARide.rejectPickup = current_solution.get_rejectPickupPoints();
-					ShareARide.rejectDelivery = current_solution.get_rejectDeliveryPoints();
+					rejectPoints = current_solution.get_rejectPoints();
+					rejectPickup = current_solution.get_rejectPickupPoints();
+					rejectDelivery = current_solution.get_rejectDeliveryPoints();
 				}
 			}
 			
@@ -198,14 +213,14 @@ public class ALNSwithSA {
 			if(inRemove == nRemove)
 				break;
 			Point pr1 = clientPoints.get(i);
-			if(ShareARide.rejectPoints.contains(pr1))
+			if(rejectPoints.contains(pr1))
 				continue;
 			//out.println("pr1 = "+pr1.getID());
-			Point pr2 = ShareARide.pickup2Delivery.get(pr1);
+			Point pr2 = pickup2delivery.get(pr1);
 			boolean pr2IsDelivery = true;
 			if(pr2 == null){
 				//out.println("pr2 null");
-				pr2 = ShareARide.delivery2Pickup.get(pr1);
+				pr2 = delivery2pickup.get(pr1);
 				pr2IsDelivery = false;
 			}
 			//System.out.println("pr2 = "+pr2.getID());
@@ -222,14 +237,14 @@ public class ALNSwithSA {
 				mgr.performRemoveTwoPoints(pr2, pr1);
 			}
 		
-			ShareARide.rejectPoints.add(pr1);
-			ShareARide.rejectPoints.add(pr2);
+			rejectPoints.add(pr1);
+			rejectPoints.add(pr2);
 			if(pr2IsDelivery){
-				ShareARide.rejectDelivery.add(pr2);
-				ShareARide.rejectPickup.add(pr1);
+				rejectDelivery.add(pr2);
+				rejectPickup.add(pr1);
 			}else{
-				ShareARide.rejectDelivery.add(pr1);
-				ShareARide.rejectPickup.add(pr2);
+				rejectDelivery.add(pr1);
+				rejectPickup.add(pr2);
 			}
 		}
 		if(inRemove == 0){
@@ -249,11 +264,11 @@ public class ALNSwithSA {
 		while(next_x != XR.getTerminatingPointOfRoute(iRouteRemoval)){
 			x = next_x;
 			next_x = XR.next(x);
-			ShareARide.rejectPoints.add(x);
-			if(ShareARide.pickup2Delivery.containsKey(x)){
-				ShareARide.rejectPickup.add(x);
+			rejectPoints.add(x);
+			if(pickup2delivery.containsKey(x)){
+				rejectPickup.add(x);
 			}else{
-				ShareARide.rejectDelivery.add(x);
+				rejectDelivery.add(x);
 			}
 			mgr.performRemoveOnePoint(x);
 		}	
@@ -276,29 +291,29 @@ public class ALNSwithSA {
 				Point x = XR.getStartingPointOfRoute(k);
 				for(x = XR.next(x); x != XR.getTerminatingPointOfRoute(k); x = XR.next(x)){
 					
-					Point dX = ShareARide.pickup2Delivery.get(x);
+					Point dX = pickup2delivery.get(x);
 					if(dX == null){
 						continue;
 					}
 					
 					double arrivalTime = eat.getEarliestArrivalTime(XR.prev(x))+ 
-							ShareARide.serviceDuration.get(XR.prev(x))+
+							serviceDuration.get(XR.prev(x))+
 							awm.getDistance(XR.prev(x), x);
 					
 					
-					double serviceTime = 1.0*ShareARide.earliestAllowedArrivalTime.get(x);
+					double serviceTime = 1.0*earliestAllowedArrivalTime.get(x);
 					serviceTime = arrivalTime > serviceTime ? arrivalTime : serviceTime;
 					
-					double depatureTime = serviceTime + ShareARide.serviceDuration.get(x);
+					double depatureTime = serviceTime + serviceDuration.get(x);
 					
 					double arrivalTimeD =  eat.getEarliestArrivalTime(XR.prev(dX))+ 
-							ShareARide.serviceDuration.get(XR.prev(dX))+
+							serviceDuration.get(XR.prev(dX))+
 							awm.getDistance(XR.prev(dX), dX);
 					
-					double serviceTimeD = 1.0*ShareARide.earliestAllowedArrivalTime.get(dX);
+					double serviceTimeD = 1.0*earliestAllowedArrivalTime.get(dX);
 					serviceTime = arrivalTimeD > serviceTimeD ? arrivalTimeD : serviceTimeD;
 					
-					double depatureTimeD = serviceTimeD + ShareARide.serviceDuration.get(dX);
+					double depatureTimeD = serviceTimeD +serviceDuration.get(dX);
 					
 					double deviation = depatureTime - arrivalTime + depatureTimeD - arrivalTimeD;
 					if(deviation > deviationMax){
@@ -309,10 +324,10 @@ public class ALNSwithSA {
 				}
 			}
 			
-			ShareARide.rejectPoints.add(removedDelivery);
-			ShareARide.rejectPoints.add(removedPickup);
-			ShareARide.rejectPickup.add(removedPickup);
-			ShareARide.rejectDelivery.add(removedDelivery);
+			rejectPoints.add(removedDelivery);
+			rejectPoints.add(removedPickup);
+			rejectPickup.add(removedPickup);
+			rejectDelivery.add(removedDelivery);
 			mgr.performRemoveTwoPoints(removedPickup, removedDelivery);
 		}
 	}
@@ -376,14 +391,14 @@ public class ALNSwithSA {
 		do{
 			ipRemove = R.nextInt(clientPoints.size());
 			r1 = clientPoints.get(ipRemove);	
-		}while(ShareARide.rejectPoints.contains(r1));
+		}while(rejectPoints.contains(r1));
 		
 		Point dr1;
-		boolean isPickup = ShareARide.pickup2Delivery.containsKey(r1);
+		boolean isPickup = pickup2delivery.containsKey(r1);
 		if(isPickup){
-			dr1 = ShareARide.pickup2Delivery.get(r1);
+			dr1 = pickup2delivery.get(r1);
 		}else{
-			Point tmp = ShareARide.delivery2Pickup.get(r1);
+			Point tmp = delivery2pickup.get(r1);
 			dr1 = r1;
 			r1 = tmp;
 		}
@@ -403,27 +418,27 @@ public class ALNSwithSA {
 			 * Compute arrival time at request r1 and its delivery dr1
 			 */
 			double arrivalTimeR1 = eat.getEarliestArrivalTime(XR.prev(r1))+
-					ShareARide.serviceDuration.get(XR.prev(r1))+
+					serviceDuration.get(XR.prev(r1))+
 					awm.getDistance(XR.prev(r1), r1);
 			
-			double serviceTimeR1 = 1.0*ShareARide.earliestAllowedArrivalTime.get(r1);
+			double serviceTimeR1 = 1.0*earliestAllowedArrivalTime.get(r1);
 			serviceTimeR1 = arrivalTimeR1 > serviceTimeR1 ? arrivalTimeR1 : serviceTimeR1;
 			
-			double depatureTimeR1 = serviceTimeR1 + ShareARide.serviceDuration.get(r1);
+			double depatureTimeR1 = serviceTimeR1 + serviceDuration.get(r1);
 			
 			double arrivalTimeDR1 = eat.getEarliestArrivalTime(XR.prev(dr1))+
-					ShareARide.serviceDuration.get(XR.prev(dr1))+
+					serviceDuration.get(XR.prev(dr1))+
 					awm.getDistance(XR.prev(dr1), dr1);
 			
-			double serviceTimeDR1 = 1.0*ShareARide.earliestAllowedArrivalTime.get(dr1);
+			double serviceTimeDR1 = 1.0*earliestAllowedArrivalTime.get(dr1);
 			serviceTimeDR1 = arrivalTimeDR1 > serviceTimeDR1 ? arrivalTimeDR1 : serviceTimeDR1;
 			
-			double depatureTimeDR1 = serviceTimeDR1 + ShareARide.serviceDuration.get(dr1);
+			double depatureTimeDR1 = serviceTimeDR1 + serviceDuration.get(dr1);
 			
-			ShareARide.rejectPoints.add(r1);
-			ShareARide.rejectPoints.add(dr1);
-			ShareARide.rejectPickup.add(r1);
-			ShareARide.rejectDelivery.add(dr1);
+			rejectPoints.add(r1);
+			rejectPoints.add(dr1);
+			rejectPickup.add(r1);
+			rejectDelivery.add(dr1);
 			
 			mgr.performRemoveTwoPoints(r1, dr1);
 			
@@ -434,7 +449,7 @@ public class ALNSwithSA {
 				Point x = XR.getStartingPointOfRoute(k);
 				for(x = XR.next(x); x != XR.getTerminatingPointOfRoute(k); x = XR.next(x)){
 					
-					Point dX = ShareARide.pickup2Delivery.get(x);
+					Point dX = pickup2delivery.get(x);
 					if(dX == null)
 						continue;
 					
@@ -442,22 +457,22 @@ public class ALNSwithSA {
 					 * Compute arrival time of x and its delivery dX
 					 */
 					double arrivalTimeX =  eat.getEarliestArrivalTime(XR.prev(x))+
-							ShareARide.serviceDuration.get(XR.prev(x))+
+							serviceDuration.get(XR.prev(x))+
 							awm.getDistance(XR.prev(x), x);
 					
-					double serviceTimeX = 1.0*ShareARide.earliestAllowedArrivalTime.get(x);
+					double serviceTimeX = 1.0*earliestAllowedArrivalTime.get(x);
 					serviceTimeX = arrivalTimeX > serviceTimeX ? arrivalTimeX : serviceTimeX;
 					
-					double depatureTimeX = serviceTimeX + ShareARide.serviceDuration.get(x);
+					double depatureTimeX = serviceTimeX + serviceDuration.get(x);
 					
 					double arrivalTimeDX =  eat.getEarliestArrivalTime(XR.prev(dX))+
-							ShareARide.serviceDuration.get(XR.prev(dX))+
+							serviceDuration.get(XR.prev(dX))+
 							awm.getDistance(XR.prev(dX), dX);
 					
-					double serviceTimeDX = 1.0*ShareARide.earliestAllowedArrivalTime.get(dX);
+					double serviceTimeDX = 1.0*earliestAllowedArrivalTime.get(dX);
 					serviceTimeDX = arrivalTimeDX > serviceTimeDX ? arrivalTimeDX : serviceTimeDX;
 					
-					double depatureTimeDX = serviceTimeDX + ShareARide.serviceDuration.get(dX);
+					double depatureTimeDX = serviceTimeDX + serviceDuration.get(dX);
 					
 					/*
 					 * Compute related between r1 and x
@@ -503,14 +518,14 @@ public class ALNSwithSA {
 		do{
 			ipRemove = R.nextInt(clientPoints.size());
 			r1 = clientPoints.get(ipRemove);	
-		}while(ShareARide.rejectPoints.contains(r1));
+		}while(rejectPoints.contains(r1));
 		
 		Point dr1;
-		boolean isPickup = ShareARide.pickup2Delivery.containsKey(r1);
+		boolean isPickup = pickup2delivery.containsKey(r1);
 		if(isPickup){
-			dr1 = ShareARide.pickup2Delivery.get(r1);
+			dr1 = pickup2delivery.get(r1);
 		}else{
-			Point tmp = ShareARide.delivery2Pickup.get(r1);
+			Point tmp = delivery2pickup.get(r1);
 			dr1 = r1;
 			r1 = tmp;
 		}
@@ -525,10 +540,10 @@ public class ALNSwithSA {
 			Point removedDelivery = null;
 			double relatedMin =  Double.MAX_VALUE;
 			
-			ShareARide.rejectPoints.add(r1);
-			ShareARide.rejectPoints.add(dr1);
-			ShareARide.rejectPickup.add(r1);
-			ShareARide.rejectDelivery.add(dr1);
+			rejectPoints.add(r1);
+			rejectPoints.add(dr1);
+			rejectPickup.add(r1);
+			rejectDelivery.add(dr1);
 			
 			mgr.performRemoveTwoPoints(r1, dr1);
 			
@@ -539,7 +554,7 @@ public class ALNSwithSA {
 				Point x = XR.getStartingPointOfRoute(k);
 				for(x = XR.next(x); x != XR.getTerminatingPointOfRoute(k); x = XR.next(x)){
 					
-					Point dX = ShareARide.pickup2Delivery.get(x);
+					Point dX = pickup2delivery.get(x);
 					if(dX == null)
 						continue;
 					
@@ -578,14 +593,14 @@ public class ALNSwithSA {
 		do{
 			ipRemove = R.nextInt(clientPoints.size());
 			r1 = clientPoints.get(ipRemove);	
-		}while(ShareARide.rejectPoints.contains(r1));
+		}while(rejectPoints.contains(r1));
 		
 		Point dr1;
-		boolean isPickup = ShareARide.pickup2Delivery.containsKey(r1);
+		boolean isPickup = pickup2delivery.containsKey(r1);
 		if(isPickup){
-			dr1 = ShareARide.pickup2Delivery.get(r1);
+			dr1 = pickup2delivery.get(r1);
 		}else{
-			Point tmp = ShareARide.delivery2Pickup.get(r1);
+			Point tmp = delivery2pickup.get(r1);
 			dr1 = r1;
 			r1 = tmp;
 		}
@@ -604,27 +619,27 @@ public class ALNSwithSA {
 			 * Compute arrival time at request r1 and its delivery dr1
 			 */
 			double arrivalTimeR1 =  eat.getEarliestArrivalTime(XR.prev(r1))+
-					ShareARide.serviceDuration.get(XR.prev(r1))+
+					serviceDuration.get(XR.prev(r1))+
 					awm.getDistance(XR.prev(r1), r1);
 			
-			double serviceTimeR1 = 1.0*ShareARide.earliestAllowedArrivalTime.get(r1);
+			double serviceTimeR1 = 1.0*earliestAllowedArrivalTime.get(r1);
 			serviceTimeR1 = arrivalTimeR1 > serviceTimeR1 ? arrivalTimeR1 : serviceTimeR1;
 			
-			double depatureTimeR1 = serviceTimeR1 + ShareARide.serviceDuration.get(r1);
+			double depatureTimeR1 = serviceTimeR1 + serviceDuration.get(r1);
 			
 			double arrivalTimeDR1 =  eat.getEarliestArrivalTime(XR.prev(dr1))+
-					ShareARide.serviceDuration.get(XR.prev(dr1))+
+					serviceDuration.get(XR.prev(dr1))+
 					awm.getDistance(XR.prev(dr1), dr1);
 			
-			double serviceTimeDR1 = 1.0*ShareARide.earliestAllowedArrivalTime.get(dr1);
+			double serviceTimeDR1 = 1.0*earliestAllowedArrivalTime.get(dr1);
 			serviceTimeDR1 = arrivalTimeDR1 > serviceTimeDR1 ? arrivalTimeDR1 : serviceTimeDR1;
 			
-			double depatureTimeDR1 = serviceTimeDR1 + ShareARide.serviceDuration.get(dr1);
+			double depatureTimeDR1 = serviceTimeDR1 + serviceDuration.get(dr1);
 			
-			ShareARide.rejectPoints.add(r1);
-			ShareARide.rejectPoints.add(dr1);
-			ShareARide.rejectPickup.add(r1);
-			ShareARide.rejectDelivery.add(dr1);
+			rejectPoints.add(r1);
+			rejectPoints.add(dr1);
+			rejectPickup.add(r1);
+			rejectDelivery.add(dr1);
 			
 			mgr.performRemoveTwoPoints(r1, dr1);
 			
@@ -635,7 +650,7 @@ public class ALNSwithSA {
 				Point x = XR.getStartingPointOfRoute(k);
 				for(x = XR.next(x); x != XR.getTerminatingPointOfRoute(k); x = XR.next(x)){
 					
-					Point dX = ShareARide.pickup2Delivery.get(x);
+					Point dX = pickup2delivery.get(x);
 					if(dX == null)
 						continue;
 					
@@ -643,22 +658,22 @@ public class ALNSwithSA {
 					 * Compute arrival time of x and its delivery dX
 					 */
 					double arrivalTimeX =  eat.getEarliestArrivalTime(XR.prev(x))+
-							ShareARide.serviceDuration.get(XR.prev(x))+
+							serviceDuration.get(XR.prev(x))+
 							awm.getDistance(XR.prev(x), x);
 					
-					double serviceTimeX = 1.0*ShareARide.earliestAllowedArrivalTime.get(x);
+					double serviceTimeX = 1.0*earliestAllowedArrivalTime.get(x);
 					serviceTimeX = arrivalTimeX > serviceTimeX ? arrivalTimeX : serviceTimeX;
 					
-					double depatureTimeX = serviceTimeX + ShareARide.serviceDuration.get(x);
+					double depatureTimeX = serviceTimeX + serviceDuration.get(x);
 					
 					double arrivalTimeDX =  eat.getEarliestArrivalTime(XR.prev(dX))+
-							ShareARide.serviceDuration.get(XR.prev(dX))+
+							serviceDuration.get(XR.prev(dX))+
 							awm.getDistance(XR.prev(dX), dX);
 					
-					double serviceTimeDX = 1.0*ShareARide.earliestAllowedArrivalTime.get(dX);
+					double serviceTimeDX = 1.0*earliestAllowedArrivalTime.get(dX);
 					serviceTimeDX = arrivalTimeDX > serviceTimeDX ? arrivalTimeDX : serviceTimeDX;
 					
-					double depatureTimeDX = serviceTimeDX + ShareARide.serviceDuration.get(dX);
+					double depatureTimeDX = serviceTimeDX + serviceDuration.get(dX);
 					
 					/*
 					 * Compute related between r1 and x
@@ -696,7 +711,7 @@ public class ALNSwithSA {
 				Point x = XR.getStartingPointOfRoute(k);
 				for(x = XR.next(x); x != XR.getTerminatingPointOfRoute(k); x = XR.next(x)){
 					
-					Point dX = ShareARide.pickup2Delivery.get(x);
+					Point dX = pickup2delivery.get(x);
 					if(dX == null){
 						continue;
 					}
@@ -710,10 +725,10 @@ public class ALNSwithSA {
 				}
 			}
 			
-			ShareARide.rejectPoints.add(removedDelivery);
-			ShareARide.rejectPoints.add(removedPickup);
-			ShareARide.rejectPickup.add(removedPickup);
-			ShareARide.rejectDelivery.add(removedDelivery);
+			rejectPoints.add(removedDelivery);
+			rejectPoints.add(removedPickup);
+			rejectPickup.add(removedPickup);
+			rejectDelivery.add(removedDelivery);
 			
 			mgr.performRemoveTwoPoints(removedPickup, removedDelivery);
 		}
@@ -721,21 +736,21 @@ public class ALNSwithSA {
 	
  	private void greedy_insertion(){
 		
-		for(int i=0; i<ShareARide.rejectPickup.size(); i++){
-			Point pickup = ShareARide.rejectPickup.get(i);
-			Point delivery = ShareARide.pickup2Delivery.get(pickup);
+		for(int i=0; i<rejectPickup.size(); i++){
+			Point pickup = rejectPickup.get(i);
+			Point delivery = pickup2delivery.get(pickup);
 			
 			Point best_insertion_pickup = null;
 			Point best_insertion_delivery = null;
 			
 			double best_objective = Double.MAX_VALUE;
 			
-			boolean is_people = ShareARide.pickup2DeliveryOfPeople.containsKey(pickup);
+			boolean is_people = pickup2DeliveryOfPeople.containsKey(pickup);
 			
 			for(int k=1; k<=XR.getNbRoutes(); k++){
 				for(Point p = XR.getStartingPointOfRoute(k); p != XR.getTerminatingPointOfRoute(k); p = XR.next(p)){
 					//check constraint
-					if(ShareARide.pickup2DeliveryOfPeople.containsKey(p) || S.evaluateAddOnePoint(pickup, p) > 0)
+					if(pickup2DeliveryOfPeople.containsKey(p) || S.evaluateAddOnePoint(pickup, p) > 0)
 						continue;
 
 					//if type of point is people
@@ -753,7 +768,7 @@ public class ALNSwithSA {
 					//point is good
 					else{
 						for(Point q = p; q != XR.getTerminatingPointOfRoute(k); q = XR.next(q)){
-							if(ShareARide.pickup2DeliveryOfPeople.containsKey(q) || S.evaluateAddOnePoint(delivery, q) > 0)
+							if(pickup2DeliveryOfPeople.containsKey(q) || S.evaluateAddOnePoint(delivery, q) > 0)
 								continue;
 							if(S.evaluateAddTwoPoints(pickup, p, delivery, q) == 0){
 								double cost = objective.evaluateAddTwoPoints(pickup, p, delivery, q);
@@ -770,31 +785,31 @@ public class ALNSwithSA {
 			
 			if(best_insertion_pickup != null && best_insertion_delivery != null){
 				mgr.performAddTwoPoints(pickup, best_insertion_pickup, delivery, best_insertion_delivery);
-				ShareARide.rejectPickup.remove(pickup);
-				ShareARide.rejectDelivery.remove(delivery);
-				ShareARide.rejectPoints.remove(pickup);
-				ShareARide.rejectPoints.remove(delivery);
+				rejectPickup.remove(pickup);
+				rejectDelivery.remove(delivery);
+				rejectPoints.remove(pickup);
+				rejectPoints.remove(delivery);
 				i--;
 			}
 		}
 	}
 	
  	private void greedy_insertion_noise_function(){
- 		for(int i=0; i<ShareARide.rejectPickup.size(); i++){
-			Point pickup = ShareARide.rejectPickup.get(i);
-			Point delivery = ShareARide.pickup2Delivery.get(pickup);
+ 		for(int i=0; i<rejectPickup.size(); i++){
+			Point pickup = rejectPickup.get(i);
+			Point delivery = pickup2delivery.get(pickup);
 			
 			Point best_insertion_pickup = null;
 			Point best_insertion_delivery = null;
 			
 			double best_objective = Double.MAX_VALUE;
 			
-			boolean is_people = ShareARide.pickup2DeliveryOfPeople.containsKey(pickup);
+			boolean is_people = pickup2DeliveryOfPeople.containsKey(pickup);
 			
 			for(int k=1; k<=XR.getNbRoutes(); k++){
 				for(Point p = XR.getStartingPointOfRoute(k); p != XR.getTerminatingPointOfRoute(k); p = XR.next(p)){
 					//check constraint
-					if(ShareARide.pickup2DeliveryOfPeople.containsKey(p) || S.evaluateAddOnePoint(pickup, p) > 0)
+					if(pickup2DeliveryOfPeople.containsKey(p) || S.evaluateAddOnePoint(pickup, p) > 0)
 						continue;
 					
 					//if type of point is people
@@ -815,7 +830,7 @@ public class ALNSwithSA {
 					//point is good
 					else{
 						for(Point q = p; q != XR.getTerminatingPointOfRoute(k); q = XR.next(q)){
-							if(ShareARide.pickup2DeliveryOfPeople.containsKey(q) || S.evaluateAddOnePoint(delivery, q) > 0)
+							if(pickup2DeliveryOfPeople.containsKey(q) || S.evaluateAddOnePoint(delivery, q) > 0)
 								continue;
 							
 							if(S.evaluateAddTwoPoints(pickup, p, delivery, q) == 0){
@@ -836,10 +851,10 @@ public class ALNSwithSA {
 			
 			if(best_insertion_pickup != null && best_insertion_delivery != null){
 				mgr.performAddTwoPoints(pickup, best_insertion_pickup, delivery, best_insertion_delivery);
-				ShareARide.rejectPickup.remove(pickup);
-				ShareARide.rejectDelivery.remove(delivery);
-				ShareARide.rejectPoints.remove(pickup);
-				ShareARide.rejectPoints.remove(delivery);
+				rejectPickup.remove(pickup);
+				rejectDelivery.remove(delivery);
+				rejectPoints.remove(pickup);
+				rejectPoints.remove(delivery);
 				i--;
 			}
 		}

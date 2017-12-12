@@ -44,17 +44,17 @@ public class ShareARide{
 	ArrayList<Point> startPoints;
 	ArrayList<Point> stopPoints;
 	
-	public static ArrayList<Point> rejectPoints;
-	public static ArrayList<Point> rejectPickup;
-	public static ArrayList<Point> rejectDelivery;
-	public static HashMap<Point, Integer> earliestAllowedArrivalTime;
-	public static HashMap<Point, Integer> serviceDuration;
-	public static HashMap<Point, Integer> lastestAllowedArrivalTime;
-	public static HashMap<Point,Point> pickup2DeliveryOfGood;
-	public static HashMap<Point,Point> pickup2DeliveryOfPeople;
-	public static HashMap<Point, Point> pickup2Delivery;
-	public static HashMap<Point,Point> delivery2Pickup;
-	public static int nVehicle;
+	public ArrayList<Point> rejectPoints;
+	public ArrayList<Point> rejectPickup;
+	public ArrayList<Point> rejectDelivery;
+	public HashMap<Point, Integer> earliestAllowedArrivalTime;
+	public HashMap<Point, Integer> serviceDuration;
+	public HashMap<Point, Integer> lastestAllowedArrivalTime;
+	public HashMap<Point,Point> pickup2DeliveryOfGood;
+	public HashMap<Point,Point> pickup2DeliveryOfPeople;
+	public HashMap<Point, Point> pickup2Delivery;
+	public HashMap<Point,Point> delivery2Pickup;
+	public int nVehicle;
 	public static int nRequest;
 	public static double MAX_DISTANCE;
 	
@@ -277,7 +277,7 @@ public class ShareARide{
 	}
     
 	public SolutionShareARide search(int maxIter, int timeLimit){
-		ALNSwithSA alns = new ALNSwithSA(mgr, objective, S, eat, awm);
+		ALNSwithSA alns = new ALNSwithSA(mgr, objective, S, eat, awm, rejectPoints, rejectPickup, rejectDelivery, pickup2Delivery, delivery2Pickup, serviceDuration, earliestAllowedArrivalTime, pickup2DeliveryOfPeople);
 		return alns.search(maxIter, timeLimit);
 	}
 	
@@ -312,7 +312,7 @@ public class ShareARide{
 			LOGGER.log(Level.INFO, "Create model done --> Init solution");	
 			sar.greedyInitSolution();
 				
-			LOGGER.log(Level.INFO,"Init solution done. At start search number of reject points = "+rejectPoints.size()+"    violations = "+sar.S.violations()+"   cost = "+sar.objective.getValue());
+			LOGGER.log(Level.INFO,"Init solution done. At start search number of reject points = "+sar.rejectPoints.size()+"    violations = "+sar.S.violations()+"   cost = "+sar.objective.getValue());
 			SolutionShareARide best_solution = sar.search(nIter, timeLimit);
 				
 			LOGGER.log(Level.INFO,"Search done. At end search number of reject points = "+best_solution.get_rejectPoints().size()+"   cost = "+best_solution.get_cost());
