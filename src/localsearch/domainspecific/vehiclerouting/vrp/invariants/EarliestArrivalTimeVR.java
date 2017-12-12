@@ -52,7 +52,7 @@ public class EarliestArrivalTimeVR implements InvariantVR {
 			double tnx = earliestArrivalTime.get(x) + serviceDuration.get(x) + awm.getDistance(x, nx);
 			double tmp = tnx > earliestAllowedArrivalTime.get(nx) ? 
 					tnx : earliestAllowedArrivalTime.get(nx);
-			earliestArrivalTime.put(nx, tmp);
+				earliestArrivalTime.put(nx, tmp);
 			//System.out.println(x+"  "+nx+"  "+awm.getDistance(x, nx)+"   "+tmp);
 		}
 	}

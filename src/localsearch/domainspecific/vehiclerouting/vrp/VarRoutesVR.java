@@ -1662,6 +1662,12 @@ public class VarRoutesVR{
     }
     
     public boolean checkPerformRemoveOnePoint(Point x) {
+    	if(route[getIndex(x)] == Constants.NULL_POINT){
+    		System.out.println("Null point");
+    	}
+    	if(!isClientPoint(x)){
+    		System.out.println("not client point");
+    	}
     	return (route[getIndex(x)] != Constants.NULL_POINT && isClientPoint(x));
     }
     

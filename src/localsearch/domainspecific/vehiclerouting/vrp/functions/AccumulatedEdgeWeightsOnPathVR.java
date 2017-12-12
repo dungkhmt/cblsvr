@@ -1334,14 +1334,14 @@ public class AccumulatedEdgeWeightsOnPathVR implements IFunctionVR {
 	
 	public void propagateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
 		// TODO Auto-generated method stub
-		System.out.println("AccumulatedEdgeWeightsOnPathVR::propagateAddTwoPoints HAS NOT BEEN IMPLEMENTED YET");
+		//System.out.println("AccumulatedEdgeWeightsOnPathVR::propagateAddTwoPoints HAS NOT BEEN IMPLEMENTED YET");
 		//System.exit(-1);
 	}
 
 	//
 	public void propagateRemoveTwoPoints(Point x1, Point x2) {
 		// TODO Auto-generated method stub
-		System.out.println("AccumulatedEdgeWeightsOnPathVR::propagateRemoveTwoPoints HAS NOT BEEN IMPLEMENTED YET");
+		//System.out.println("AccumulatedEdgeWeightsOnPathVR::propagateRemoveTwoPoints HAS NOT BEEN IMPLEMENTED YET");
 		//System.exit(-1);
 	}
 
