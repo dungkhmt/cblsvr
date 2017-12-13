@@ -53,7 +53,7 @@ public class ShareARide{
 	public static HashMap<Point,Point> pickup2DeliveryOfPeople;
 	public static HashMap<Point, Point> pickup2Delivery;
 	public static HashMap<Point,Point> delivery2Pickup;
-	public static int nVehicle;
+	public int nVehicle;
 	public static int nRequest;
 	public static double MAX_DISTANCE;
 	
