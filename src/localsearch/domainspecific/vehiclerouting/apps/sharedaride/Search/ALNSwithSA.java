@@ -40,7 +40,7 @@ public class ALNSwithSA {
 	private int sigma2 = 3;
 	private int sigma3 = 5;
 	private double rp = 0.1;
-	private int nw = 10;
+	private int nw = 200;
 	private double shaw1st = 0.5;
 	private double shaw2nd = 0.2;
 	private double shaw3rd = 0.1;
@@ -89,20 +89,20 @@ public class ALNSwithSA {
 		
 		double best_cost = objective.getValue();
 		SolutionShareARide best_solution = new SolutionShareARide(XR, ShareARide.rejectPoints, ShareARide.rejectPickup, ShareARide.rejectDelivery, best_cost);
-		ShareARide.LOGGER.log(Level.INFO, "start search best_solution: \n"+best_solution.toString());
+		ShareARide.LOGGER.log(Level.INFO, "start search best_solution has cost = "+best_solution.get_cost()+"  number of rejected request = "+best_solution.get_rejectPickupPoints().size());
 		
 		while(it++ < maxIter){
 			
 			double current_cost = objective.getValue();
 			SolutionShareARide current_solution = new SolutionShareARide(XR, ShareARide.rejectPoints, ShareARide.rejectPickup, ShareARide.rejectDelivery, current_cost);
-			ShareARide.LOGGER.log(Level.INFO, "Iter "+it+" current_solution: \n"+current_solution.toString());
+			ShareARide.LOGGER.log(Level.INFO, "Iter "+it+" current_solution: has cost = "+current_solution.get_cost()+"  number of rejected request = "+current_solution.get_rejectPickupPoints().size());
 			
 			int i_selected_removal = get_operator(ptd);
 			wd[i_selected_removal]++;
 			/*
 			 * Select remove operator
 			 */
-			//ShareARide.LOGGER.log(Level.INFO,"selected removal operator = "+i_selected_removal);
+			ShareARide.LOGGER.log(Level.INFO,"selected removal operator = "+i_selected_removal);
 			switch(i_selected_removal){
 			
 				case 0: random_removal(); break;
@@ -115,7 +115,7 @@ public class ALNSwithSA {
 			}
 			int i_selected_insertion = get_operator(pti);
 			wi[i_selected_insertion]++;
-			//ShareARide.LOGGER.log(Level.INFO,"selected insertion operator = "+i_selected_insertion);
+			ShareARide.LOGGER.log(Level.INFO,"selected insertion operator = "+i_selected_insertion);
 			/*
 			 * Select insertion operator
 			 */
@@ -125,7 +125,7 @@ public class ALNSwithSA {
 				case 1: greedy_insertion_noise_function(); break;
 			}
 			double new_cost = objective.getValue();
-			ShareARide.LOGGER.log(Level.INFO,"Iter "+it+" new_solution: \n"+XR.toString()+"cost = "+new_cost);
+			ShareARide.LOGGER.log(Level.INFO,"Iter "+it+" new_solution: has cost = "+new_cost+"  number of rejected request = "+ShareARide.rejectPickup.size());
 			
 			
 			/*

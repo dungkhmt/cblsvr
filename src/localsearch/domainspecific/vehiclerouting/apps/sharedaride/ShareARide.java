@@ -6,7 +6,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Set;
 import java.util.logging.FileHandler;
 import java.util.logging.Formatter;
 import java.util.logging.Handler;
@@ -282,20 +281,20 @@ public class ShareARide{
 	}
 	
 	public static void main(String []args){
-    	String inData = "data/SARP-offline/n616r10_1.txt";
+    	String inData = "data/SARP-offline/n12335r100_1.txt";
     	
     	int timeLimit = 36000;
-    	int nIter = 100;
+    	int nIter = 10000;
   
     	Handler fileHandler;
     	Formatter simpleFormater;
 		try {
 			
-			DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss");
+			DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
 			Date date = new Date();
 			//System.out.println(dateFormat.format(date));
 			
-			fileHandler = new FileHandler("data/output/SARP-offline/anhtu/n616r10_1/"+dateFormat.format(date)+".txt");
+			fileHandler = new FileHandler("data/output/SARP-offline/anhtu/n12335r100_1/"+dateFormat.format(date)+".txt");
 			simpleFormater = new SimpleFormatter();
 			
 			LOGGER.addHandler(fileHandler);
