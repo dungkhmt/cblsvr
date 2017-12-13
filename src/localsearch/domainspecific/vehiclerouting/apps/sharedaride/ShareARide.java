@@ -282,7 +282,7 @@ public class ShareARide{
 	}
 	
 	public static void main(String []args){
-    	String inData = "data/SARP-offline/n616r10_1.txt";
+    	String inData = "data/SARP-offline/n12335r100_1.txt";
     	
     	int timeLimit = 36000;
     	int nIter = 100;
@@ -291,11 +291,11 @@ public class ShareARide{
     	Formatter simpleFormater;
 		try {
 			
-			DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss");
+			DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
 			Date date = new Date();
 			//System.out.println(dateFormat.format(date));
 			
-			fileHandler = new FileHandler("data/output/SARP-offline/anhtu/n616r10_1/"+dateFormat.format(date)+".txt");
+			fileHandler = new FileHandler("data/output/SARP-offline/anhtu/n12335r100_1/"+dateFormat.format(date)+".txt");
 			simpleFormater = new SimpleFormatter();
 			
 			LOGGER.addHandler(fileHandler);

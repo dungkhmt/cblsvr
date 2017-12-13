@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Random;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import localsearch.domainspecific.vehiclerouting.apps.sharedaride.ShareARide;
 import localsearch.domainspecific.vehiclerouting.apps.sharedaride.SolutionShareARide;
@@ -129,12 +130,24 @@ public class ALNSwithSA {
 			 * 		if new solution has best cost
 			 * 			update best cost
 			 */
-			if(new_cost < current_cost){
-				if(new_cost < best_cost){
+			int new_nb_reject_points = ShareARide.rejectPickup.size();
+			int current_nb_reject_points = current_solution.get_rejectPickupPoints().size();
+			if( new_nb_reject_points < current_nb_reject_points
+					|| (new_nb_reject_points == current_nb_reject_points && new_cost < current_cost)){
+				
+				int best_nb_reject_points = best_solution.get_rejectPickupPoints().size();
+				
+				if(new_nb_reject_points < best_nb_reject_points
+						|| (new_nb_reject_points == best_nb_reject_points && new_cost < best_cost)){
+					
 					best_cost = new_cost;
+					best_solution = new SolutionShareARide(XR, ShareARide.rejectPoints, ShareARide.rejectPickup, ShareARide.rejectDelivery, best_cost);
+					
+					ShareARide.LOGGER.log(Level.INFO,"Iter "+it+" find the best solution with number of reject points = "+best_solution.get_rejectPickupPoints().size()+"  cost = "+best_solution.get_cost());
+					
 					si[i_selected_insertion] += sigma1;
 					sd[i_selected_removal] += sigma1;
-					best_solution = new SolutionShareARide(XR, ShareARide.rejectPoints, ShareARide.rejectPickup, ShareARide.rejectDelivery, best_cost);
+					
 				}else{
 					si[i_selected_insertion] += sigma2;
 					sd[i_selected_removal] += sigma2;
