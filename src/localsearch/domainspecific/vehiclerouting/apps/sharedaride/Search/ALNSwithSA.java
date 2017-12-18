@@ -36,7 +36,7 @@ public class ALNSwithSA {
 	private int sigma2 = 3;
 	private int sigma3 = 5;
 	private double rp = 0.1;
-	private int nw = 200;
+	private int nw = 10;
 	private double shaw1st = 0.5;
 	private double shaw2nd = 0.2;
 	private double shaw3rd = 0.1;
@@ -84,14 +84,14 @@ public class ALNSwithSA {
 		int it = 0;
 		
 		double best_cost = objective.getValue();
-		SolutionShareARide best_solution = new SolutionShareARide(XR, ShareARide.rejectPoints, ShareARide.rejectPickup, ShareARide.rejectDelivery, best_cost);
-		ShareARide.LOGGER.log(Level.INFO, "start search best_solution has cost = "+best_solution.get_cost()+"  number of rejected request = "+best_solution.get_rejectPickupPoints().size());
+		SolutionShareARide best_solution = new SolutionShareARide(XR, ShareARide.rejectPoints, ShareARide.rejectPickupGoods, ShareARide.rejectPickupPeoples, best_cost);
+		ShareARide.LOGGER.log(Level.INFO, "start search best_solution has cost = "+best_solution.get_cost()+"  number of rejected request of goods = "+best_solution.get_rejectPickupGoods().size()+"  number of rejected request of peoples = "+best_solution.get_rejectPickupPeoples().size());
 		
 		while(it++ < maxIter){
 			
 			double current_cost = objective.getValue();
-			SolutionShareARide current_solution = new SolutionShareARide(XR, ShareARide.rejectPoints, ShareARide.rejectPickup, ShareARide.rejectDelivery, current_cost);
-			ShareARide.LOGGER.log(Level.INFO, "Iter "+it+" current_solution: has cost = "+current_solution.get_cost()+"  number of rejected request = "+current_solution.get_rejectPickupPoints().size());
+			SolutionShareARide current_solution = new SolutionShareARide(XR, ShareARide.rejectPoints, ShareARide.rejectPickupGoods, ShareARide.rejectPickupPeoples, current_cost);
+			ShareARide.LOGGER.log(Level.INFO, "Iter "+it+" current_solution has cost = "+current_solution.get_cost()+"  number of rejected request of goods = "+current_solution.get_rejectPickupGoods().size()+"  number of rejected request of peoples = "+current_solution.get_rejectPickupPeoples().size());
 			
 			int i_selected_removal = get_operator(ptd);
 			wd[i_selected_removal]++;
@@ -99,6 +99,7 @@ public class ALNSwithSA {
 			 * Select remove operator
 			 */
 			ShareARide.LOGGER.log(Level.INFO,"selected removal operator = "+i_selected_removal);
+			//long timeRemoveStart = System.currentTimeMillis();
 			switch(i_selected_removal){
 			
 				case 0: random_removal(); break;
@@ -109,19 +110,23 @@ public class ALNSwithSA {
 				case 5: time_based_removal(); break;
 				case 6: worst_removal(); break;
 			}
+			//long timeRemoveEnd = System.currentTimeMillis();
+			//long timeRemove = timeRemoveEnd - timeRemoveStart;
+			
 			int i_selected_insertion = get_operator(pti);
 			wi[i_selected_insertion]++;
 			ShareARide.LOGGER.log(Level.INFO,"selected insertion operator = "+i_selected_insertion);
 			/*
 			 * Select insertion operator
 			 */
+			//long timeInsertStart = Sy
 			switch(i_selected_insertion){
 				
 				case 0: greedy_insertion(); break;
 				case 1: greedy_insertion_noise_function(); break;
 			}
 			double new_cost = objective.getValue();
-			ShareARide.LOGGER.log(Level.INFO,"Iter "+it+" new_solution: has cost = "+new_cost+"  number of rejected request = "+ShareARide.rejectPickup.size());
+			ShareARide.LOGGER.log(Level.INFO,"Iter "+it+" new_solution: has cost = "+new_cost+"  number of rejected request of goods = "+ShareARide.rejectPickupGoods.size()+"  number of rejected request of peoples = "+ShareARide.rejectPickupPeoples.size());
 			
 			
 			/*
@@ -130,20 +135,20 @@ public class ALNSwithSA {
 			 * 		if new solution has best cost
 			 * 			update best cost
 			 */
-			int new_nb_reject_points = ShareARide.rejectPickup.size();
-			int current_nb_reject_points = current_solution.get_rejectPickupPoints().size();
+			int new_nb_reject_points = ShareARide.rejectPickupGoods.size()+ShareARide.rejectPickupPeoples.size();
+			int current_nb_reject_points = current_solution.get_rejectPickupGoods().size() + current_solution.get_rejectPickupPeoples().size();
 			if( new_nb_reject_points < current_nb_reject_points
 					|| (new_nb_reject_points == current_nb_reject_points && new_cost < current_cost)){
 				
-				int best_nb_reject_points = best_solution.get_rejectPickupPoints().size();
+				int best_nb_reject_points = best_solution.get_rejectPickupGoods().size()+best_solution.get_rejectPickupPeoples().size();
 				
 				if(new_nb_reject_points < best_nb_reject_points
 						|| (new_nb_reject_points == best_nb_reject_points && new_cost < best_cost)){
 					
 					best_cost = new_cost;
-					best_solution = new SolutionShareARide(XR, ShareARide.rejectPoints, ShareARide.rejectPickup, ShareARide.rejectDelivery, best_cost);
+					best_solution = new SolutionShareARide(XR, ShareARide.rejectPoints, ShareARide.rejectPickupGoods, ShareARide.rejectPickupPeoples, best_cost);
 					
-					ShareARide.LOGGER.log(Level.INFO,"Iter "+it+" find the best solution with number of reject points = "+best_solution.get_rejectPickupPoints().size()+"  cost = "+best_solution.get_cost());
+					ShareARide.LOGGER.log(Level.INFO,"Iter "+it+" find the best solution with number of rejected of goods  = "+best_solution.get_rejectPickupGoods().size()+" number of rejected of peoples  = "+best_solution.get_rejectPickupPeoples().size()+"  cost = "+best_solution.get_cost());
 					
 					si[i_selected_insertion] += sigma1;
 					sd[i_selected_removal] += sigma1;
@@ -168,8 +173,8 @@ public class ALNSwithSA {
 					ShareARide.LOGGER.log(Level.INFO,"The cost did not improve and reverse solution back to current solution");
 					current_solution.copy2XR(XR);
 					ShareARide.rejectPoints = current_solution.get_rejectPoints();
-					ShareARide.rejectPickup = current_solution.get_rejectPickupPoints();
-					ShareARide.rejectDelivery = current_solution.get_rejectDeliveryPoints();
+					ShareARide.rejectPickupGoods = current_solution.get_rejectPickupGoods();
+					ShareARide.rejectPickupPeoples = current_solution.get_rejectPickupPeoples();
 				}
 			}
 			
@@ -233,11 +238,23 @@ public class ALNSwithSA {
 			ShareARide.rejectPoints.add(pr1);
 			ShareARide.rejectPoints.add(pr2);
 			if(pr2IsDelivery){
-				ShareARide.rejectDelivery.add(pr2);
-				ShareARide.rejectPickup.add(pr1);
+				if(ShareARide.pickup2DeliveryOfPeople.containsKey(pr1)){
+					ShareARide.rejectPickupPeoples.add(pr1);
+				}else if(ShareARide.pickup2DeliveryOfGood.containsKey(pr1)){
+					ShareARide.rejectPickupGoods.add(pr1);
+				}else{
+					ShareARide.LOGGER.log(Level.INFO,"Exception point removed do not in pickup Good and people");
+					System.exit(-1);
+				}
 			}else{
-				ShareARide.rejectDelivery.add(pr1);
-				ShareARide.rejectPickup.add(pr2);
+				if(ShareARide.pickup2DeliveryOfPeople.containsKey(pr2)){
+					ShareARide.rejectPickupPeoples.add(pr2);
+				}else if(ShareARide.pickup2DeliveryOfGood.containsKey(pr2)){
+					ShareARide.rejectPickupGoods.add(pr2);
+				}else{
+					ShareARide.LOGGER.log(Level.INFO,"Exception point removed do not in pickup Good and people");
+					System.exit(-1);
+				}
 			}
 		}
 		if(inRemove == 0){
@@ -259,9 +276,14 @@ public class ALNSwithSA {
 			next_x = XR.next(x);
 			ShareARide.rejectPoints.add(x);
 			if(ShareARide.pickup2Delivery.containsKey(x)){
-				ShareARide.rejectPickup.add(x);
-			}else{
-				ShareARide.rejectDelivery.add(x);
+				if(ShareARide.pickup2DeliveryOfPeople.containsKey(x)){
+					ShareARide.rejectPickupPeoples.add(x);
+				}else if(ShareARide.pickup2DeliveryOfGood.containsKey(x)){
+					ShareARide.rejectPickupGoods.add(x);
+				}else{
+					ShareARide.LOGGER.log(Level.INFO,"Exception point removed do not in pickup Good and people");
+					System.exit(-1);
+				}
 			}
 			mgr.performRemoveOnePoint(x);
 		}	
@@ -319,8 +341,14 @@ public class ALNSwithSA {
 			
 			ShareARide.rejectPoints.add(removedDelivery);
 			ShareARide.rejectPoints.add(removedPickup);
-			ShareARide.rejectPickup.add(removedPickup);
-			ShareARide.rejectDelivery.add(removedDelivery);
+			if(ShareARide.pickup2DeliveryOfPeople.containsKey(removedPickup)){
+				ShareARide.rejectPickupPeoples.add(removedPickup);
+			}else if(ShareARide.pickup2DeliveryOfGood.containsKey(removedPickup)){
+				ShareARide.rejectPickupGoods.add(removedPickup);
+			}else{
+				ShareARide.LOGGER.log(Level.INFO,"Exception point removed do not in pickup Good and people");
+				System.exit(-1);
+			}
 			mgr.performRemoveTwoPoints(removedPickup, removedDelivery);
 		}
 	}
@@ -430,8 +458,14 @@ public class ALNSwithSA {
 			
 			ShareARide.rejectPoints.add(r1);
 			ShareARide.rejectPoints.add(dr1);
-			ShareARide.rejectPickup.add(r1);
-			ShareARide.rejectDelivery.add(dr1);
+			if(ShareARide.pickup2DeliveryOfPeople.containsKey(r1)){
+				ShareARide.rejectPickupPeoples.add(r1);
+			}else if(ShareARide.pickup2DeliveryOfGood.containsKey(r1)){
+				ShareARide.rejectPickupGoods.add(r1);
+			}else{
+				ShareARide.LOGGER.log(Level.INFO,"Exception point removed do not in pickup Good and people");
+				System.exit(-1);
+			}
 			
 			mgr.performRemoveTwoPoints(r1, dr1);
 			
@@ -535,8 +569,14 @@ public class ALNSwithSA {
 			
 			ShareARide.rejectPoints.add(r1);
 			ShareARide.rejectPoints.add(dr1);
-			ShareARide.rejectPickup.add(r1);
-			ShareARide.rejectDelivery.add(dr1);
+			if(ShareARide.pickup2DeliveryOfPeople.containsKey(r1)){
+				ShareARide.rejectPickupPeoples.add(r1);
+			}else if(ShareARide.pickup2DeliveryOfGood.containsKey(r1)){
+				ShareARide.rejectPickupGoods.add(r1);
+			}else{
+				ShareARide.LOGGER.log(Level.INFO,"Exception point removed do not in pickup Good and people");
+				System.exit(-1);
+			}
 			
 			mgr.performRemoveTwoPoints(r1, dr1);
 			
@@ -631,8 +671,14 @@ public class ALNSwithSA {
 			
 			ShareARide.rejectPoints.add(r1);
 			ShareARide.rejectPoints.add(dr1);
-			ShareARide.rejectPickup.add(r1);
-			ShareARide.rejectDelivery.add(dr1);
+			if(ShareARide.pickup2DeliveryOfPeople.containsKey(r1)){
+				ShareARide.rejectPickupPeoples.add(r1);
+			}else if(ShareARide.pickup2DeliveryOfGood.containsKey(r1)){
+				ShareARide.rejectPickupGoods.add(r1);
+			}else{
+				ShareARide.LOGGER.log(Level.INFO,"Exception point removed do not in pickup Good and people");
+				System.exit(-1);
+			}
 			
 			mgr.performRemoveTwoPoints(r1, dr1);
 			
@@ -720,8 +766,14 @@ public class ALNSwithSA {
 			
 			ShareARide.rejectPoints.add(removedDelivery);
 			ShareARide.rejectPoints.add(removedPickup);
-			ShareARide.rejectPickup.add(removedPickup);
-			ShareARide.rejectDelivery.add(removedDelivery);
+			if(ShareARide.pickup2DeliveryOfPeople.containsKey(removedPickup)){
+				ShareARide.rejectPickupPeoples.add(removedPickup);
+			}else if(ShareARide.pickup2DeliveryOfGood.containsKey(removedPickup)){
+				ShareARide.rejectPickupGoods.add(removedPickup);
+			}else{
+				ShareARide.LOGGER.log(Level.INFO,"Exception point removed do not in pickup Good and people");
+				System.exit(-1);
+			}
 			
 			mgr.performRemoveTwoPoints(removedPickup, removedDelivery);
 		}
@@ -729,8 +781,8 @@ public class ALNSwithSA {
 	
  	private void greedy_insertion(){
 		
-		for(int i=0; i<ShareARide.rejectPickup.size(); i++){
-			Point pickup = ShareARide.rejectPickup.get(i);
+		for(int i=0; i<ShareARide.rejectPickupGoods.size(); i++){
+			Point pickup = ShareARide.rejectPickupGoods.get(i);
 			Point delivery = ShareARide.pickup2Delivery.get(pickup);
 			
 			Point best_insertion_pickup = null;
@@ -738,38 +790,21 @@ public class ALNSwithSA {
 			
 			double best_objective = Double.MAX_VALUE;
 			
-			boolean is_people = ShareARide.pickup2DeliveryOfPeople.containsKey(pickup);
-			
 			for(int k=1; k<=XR.getNbRoutes(); k++){
 				for(Point p = XR.getStartingPointOfRoute(k); p != XR.getTerminatingPointOfRoute(k); p = XR.next(p)){
 					//check constraint
 					if(ShareARide.pickup2DeliveryOfPeople.containsKey(p) || S.evaluateAddOnePoint(pickup, p) > 0)
 						continue;
 
-					//if type of point is people
-					if(is_people){
-						if(S.evaluateAddTwoPoints(pickup, p, delivery, p) == 0){
-							//cost improve
-							double cost = objective.evaluateAddTwoPoints(pickup, p, delivery, p);
-							if( cost < best_objective){
+					for(Point q = p; q != XR.getTerminatingPointOfRoute(k); q = XR.next(q)){
+						if(ShareARide.pickup2DeliveryOfPeople.containsKey(q) || S.evaluateAddOnePoint(delivery, q) > 0)
+							continue;
+						if(S.evaluateAddTwoPoints(pickup, p, delivery, q) == 0){
+							double cost = objective.evaluateAddTwoPoints(pickup, p, delivery, q);
+							if(cost < best_objective){
 								best_objective = cost;
 								best_insertion_pickup = p;
-								best_insertion_delivery = p;
-							}
-						}
-					}
-					//point is good
-					else{
-						for(Point q = p; q != XR.getTerminatingPointOfRoute(k); q = XR.next(q)){
-							if(ShareARide.pickup2DeliveryOfPeople.containsKey(q) || S.evaluateAddOnePoint(delivery, q) > 0)
-								continue;
-							if(S.evaluateAddTwoPoints(pickup, p, delivery, q) == 0){
-								double cost = objective.evaluateAddTwoPoints(pickup, p, delivery, q);
-								if(cost < best_objective){
-									best_objective = cost;
-									best_insertion_pickup = p;
-									best_insertion_delivery = q;
-								}
+								best_insertion_delivery = q;
 							}
 						}
 					}
@@ -778,8 +813,43 @@ public class ALNSwithSA {
 			
 			if(best_insertion_pickup != null && best_insertion_delivery != null){
 				mgr.performAddTwoPoints(pickup, best_insertion_pickup, delivery, best_insertion_delivery);
-				ShareARide.rejectPickup.remove(pickup);
-				ShareARide.rejectDelivery.remove(delivery);
+				ShareARide.rejectPickupGoods.remove(pickup);
+				ShareARide.rejectPoints.remove(pickup);
+				ShareARide.rejectPoints.remove(delivery);
+				i--;
+			}
+		}
+		
+		for(int i=0; i<ShareARide.rejectPickupPeoples.size(); i++){
+			Point pickup = ShareARide.rejectPickupPeoples.get(i);
+			Point delivery = ShareARide.pickup2Delivery.get(pickup);
+			
+			Point best_insertion_pickup = null;
+			Point best_insertion_delivery = null;
+			
+			double best_objective = Double.MAX_VALUE;
+			
+			for(int k=1; k<=XR.getNbRoutes(); k++){
+				for(Point p = XR.getStartingPointOfRoute(k); p != XR.getTerminatingPointOfRoute(k); p = XR.next(p)){
+					//check constraint
+					if(ShareARide.pickup2DeliveryOfPeople.containsKey(p) || S.evaluateAddOnePoint(pickup, p) > 0)
+						continue;
+
+					if(S.evaluateAddTwoPoints(pickup, p, delivery, p) == 0){
+						//cost improve
+						double cost = objective.evaluateAddTwoPoints(pickup, p, delivery, p);
+						if( cost < best_objective){
+							best_objective = cost;
+							best_insertion_pickup = p;
+							best_insertion_delivery = p;
+						}
+					}
+				}
+			}
+			
+			if(best_insertion_pickup != null && best_insertion_delivery != null){
+				mgr.performAddTwoPoints(pickup, best_insertion_pickup, delivery, best_insertion_delivery);
+				ShareARide.rejectPickupPeoples.remove(pickup);
 				ShareARide.rejectPoints.remove(pickup);
 				ShareARide.rejectPoints.remove(delivery);
 				i--;
@@ -788,8 +858,8 @@ public class ALNSwithSA {
 	}
 	
  	private void greedy_insertion_noise_function(){
- 		for(int i=0; i<ShareARide.rejectPickup.size(); i++){
-			Point pickup = ShareARide.rejectPickup.get(i);
+ 		for(int i=0; i<ShareARide.rejectPickupGoods.size(); i++){
+			Point pickup = ShareARide.rejectPickupGoods.get(i);
 			Point delivery = ShareARide.pickup2Delivery.get(pickup);
 			
 			Point best_insertion_pickup = null;
@@ -797,45 +867,25 @@ public class ALNSwithSA {
 			
 			double best_objective = Double.MAX_VALUE;
 			
-			boolean is_people = ShareARide.pickup2DeliveryOfPeople.containsKey(pickup);
-			
 			for(int k=1; k<=XR.getNbRoutes(); k++){
 				for(Point p = XR.getStartingPointOfRoute(k); p != XR.getTerminatingPointOfRoute(k); p = XR.next(p)){
 					//check constraint
 					if(ShareARide.pickup2DeliveryOfPeople.containsKey(p) || S.evaluateAddOnePoint(pickup, p) > 0)
 						continue;
 					
-					//if type of point is people
-					if(is_people){
-						//check constraint
-						if(S.evaluateAddTwoPoints(pickup, p, delivery, p) == 0){
-							//cost improve
-							double cost = objective.evaluateAddTwoPoints(pickup, p, delivery, p);
+					for(Point q = p; q != XR.getTerminatingPointOfRoute(k); q = XR.next(q)){
+						if(ShareARide.pickup2DeliveryOfPeople.containsKey(q) || S.evaluateAddOnePoint(delivery, q) > 0)
+							continue;
+						
+						if(S.evaluateAddTwoPoints(pickup, p, delivery, q) == 0){
+							
+							double cost = objective.evaluateAddTwoPoints(pickup, p, delivery, q);
 							double r = Math.random()*2-1;
 							cost += ShareARide.MAX_DISTANCE*0.1*r;
-							if( cost < best_objective){
+							if(cost < best_objective){
 								best_objective = cost;
 								best_insertion_pickup = p;
-								best_insertion_delivery = p;
-							}
-						}
-					}
-					//point is good
-					else{
-						for(Point q = p; q != XR.getTerminatingPointOfRoute(k); q = XR.next(q)){
-							if(ShareARide.pickup2DeliveryOfPeople.containsKey(q) || S.evaluateAddOnePoint(delivery, q) > 0)
-								continue;
-							
-							if(S.evaluateAddTwoPoints(pickup, p, delivery, q) == 0){
-								
-								double cost = objective.evaluateAddTwoPoints(pickup, p, delivery, q);
-								double r = Math.random()*2-1;
-								cost += ShareARide.MAX_DISTANCE*0.1*r;
-								if(cost < best_objective){
-									best_objective = cost;
-									best_insertion_pickup = p;
-									best_insertion_delivery = q;
-								}
+								best_insertion_delivery = q;
 							}
 						}
 					}
@@ -844,8 +894,46 @@ public class ALNSwithSA {
 			
 			if(best_insertion_pickup != null && best_insertion_delivery != null){
 				mgr.performAddTwoPoints(pickup, best_insertion_pickup, delivery, best_insertion_delivery);
-				ShareARide.rejectPickup.remove(pickup);
-				ShareARide.rejectDelivery.remove(delivery);
+				ShareARide.rejectPickupGoods.remove(pickup);
+				ShareARide.rejectPoints.remove(pickup);
+				ShareARide.rejectPoints.remove(delivery);
+				i--;
+			}
+		}
+ 		
+ 		for(int i=0; i<ShareARide.rejectPickupPeoples.size(); i++){
+			Point pickup = ShareARide.rejectPickupPeoples.get(i);
+			Point delivery = ShareARide.pickup2Delivery.get(pickup);
+			
+			Point best_insertion_pickup = null;
+			Point best_insertion_delivery = null;
+			
+			double best_objective = Double.MAX_VALUE;
+			
+			for(int k=1; k<=XR.getNbRoutes(); k++){
+				for(Point p = XR.getStartingPointOfRoute(k); p != XR.getTerminatingPointOfRoute(k); p = XR.next(p)){
+					//check constraint
+					if(ShareARide.pickup2DeliveryOfPeople.containsKey(p) || S.evaluateAddOnePoint(pickup, p) > 0)
+						continue;
+					
+					//check constraint
+					if(S.evaluateAddTwoPoints(pickup, p, delivery, p) == 0){
+						//cost improve
+						double cost = objective.evaluateAddTwoPoints(pickup, p, delivery, p);
+						double r = Math.random()*2-1;
+						cost += ShareARide.MAX_DISTANCE*0.1*r;
+						if( cost < best_objective){
+							best_objective = cost;
+							best_insertion_pickup = p;
+							best_insertion_delivery = p;
+						}
+					}
+				}
+			}
+			
+			if(best_insertion_pickup != null && best_insertion_delivery != null){
+				mgr.performAddTwoPoints(pickup, best_insertion_pickup, delivery, best_insertion_delivery);
+				ShareARide.rejectPickupPeoples.remove(pickup);
 				ShareARide.rejectPoints.remove(pickup);
 				ShareARide.rejectPoints.remove(delivery);
 				i--;
