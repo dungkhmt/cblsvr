@@ -780,7 +780,8 @@ public class ALNSwithSA {
 	}
 	
  	private void greedy_insertion(){
-				
+ 		ShareARide.LOGGER.log(Level.INFO,"Inserting peoples to route");
+ 		
 		for(int i=0; i<ShareARide.rejectPickupPeoples.size(); i++){
 			Point pickup = ShareARide.rejectPickupPeoples.get(i);
 			Point delivery = ShareARide.pickup2Delivery.get(pickup);
@@ -816,6 +817,8 @@ public class ALNSwithSA {
 				i--;
 			}
 		}
+		
+		ShareARide.LOGGER.log(Level.INFO,"Inserting goods to route");
 		
 		for(int i=0; i<ShareARide.rejectPickupGoods.size(); i++){
 			Point pickup = ShareARide.rejectPickupGoods.get(i);
@@ -859,6 +862,8 @@ public class ALNSwithSA {
 	
  	private void greedy_insertion_noise_function(){
  		
+ 		ShareARide.LOGGER.log(Level.INFO,"Inserting peoples to route");
+ 		
  		for(int i=0; i<ShareARide.rejectPickupPeoples.size(); i++){
 			Point pickup = ShareARide.rejectPickupPeoples.get(i);
 			Point delivery = ShareARide.pickup2Delivery.get(pickup);
@@ -898,6 +903,8 @@ public class ALNSwithSA {
 			}
 		}
  		
+ 		ShareARide.LOGGER.log(Level.INFO,"Inserting goods to route");
+		
  		for(int i=0; i<ShareARide.rejectPickupGoods.size(); i++){
 			Point pickup = ShareARide.rejectPickupGoods.get(i);
 			Point delivery = ShareARide.pickup2Delivery.get(pickup);
