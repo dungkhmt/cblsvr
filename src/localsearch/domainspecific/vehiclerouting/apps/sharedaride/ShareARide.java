@@ -383,7 +383,7 @@ public class ShareARide{
     	String inData = "data/SARP-offline/n12335r100_1.txt";
     	
     	int timeLimit = 36000;
-    	int nIter = 100;
+    	int nIter = 10000;
   
     	Handler fileHandler;
     	Formatter simpleFormater;
