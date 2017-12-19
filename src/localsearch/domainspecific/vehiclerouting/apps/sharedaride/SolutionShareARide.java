@@ -10,23 +10,26 @@ public class SolutionShareARide {
 	
 	private ArrayList<ArrayList<Point>> _route;
 	private ArrayList<Point> _rejectPoints;
-	private ArrayList<Point> _rejectPickupPoints;
-	private ArrayList<Point> _rejectDeliveryPoints;
+	private ArrayList<Point> _rejectPickupGoods;
+	private ArrayList<Point> _rejectPickupPeoples;
 	private double _cost;
 	
-	public SolutionShareARide(VarRoutesVR XR, ArrayList<Point> rejectPoints, ArrayList<Point> rejectPickupPoints, ArrayList<Point> rejectDeliveryPoints, double cost){
+	public SolutionShareARide(VarRoutesVR XR, ArrayList<Point> rejectPoints, ArrayList<Point> rejectPickupGoods, ArrayList<Point> rejectPickupPeoples, double cost){
 		
 		_rejectPoints = new ArrayList<Point>();
-		_rejectDeliveryPoints = new ArrayList<Point>();
-		_rejectPickupPoints = new ArrayList<Point>();
+		_rejectPickupGoods = new ArrayList<Point>();
+		_rejectPickupPeoples = new ArrayList<Point>();
 		
 		for(int i=0; i<rejectPoints.size(); i++){
 			_rejectPoints.add(rejectPoints.get(i));
 		}
 		
-		for(int i=0; i<rejectPickupPoints.size(); i++){
-			_rejectPickupPoints.add(rejectPickupPoints.get(i));
-			_rejectDeliveryPoints.add(rejectDeliveryPoints.get(i));
+		for(int i=0; i<rejectPickupGoods.size(); i++){
+			_rejectPickupGoods.add(rejectPickupGoods.get(i));
+		}
+		
+		for(int i=0; i<rejectPickupPeoples.size(); i++){
+			_rejectPickupPeoples.add(rejectPickupPeoples.get(i));
 		}
 		
 		_route = new ArrayList<ArrayList<Point>>();
@@ -62,20 +65,20 @@ public class SolutionShareARide {
 		this._rejectPoints = _rejectPoints;
 	}
 
-	public ArrayList<Point> get_rejectPickupPoints() {
-		return _rejectPickupPoints;
+	public ArrayList<Point> get_rejectPickupGoods() {
+		return _rejectPickupGoods;
 	}
 
-	public void set_rejectPickupPoints(ArrayList<Point> _rejectPickupPoints) {
-		this._rejectPickupPoints = _rejectPickupPoints;
+	public void set_rejectPickupGoods(ArrayList<Point> _rejectPickupGoods) {
+		this._rejectPickupGoods = _rejectPickupGoods;
 	}
 
-	public ArrayList<Point> get_rejectDeliveryPoints() {
-		return _rejectDeliveryPoints;
+	public ArrayList<Point> get_rejectPickupPeoples() {
+		return _rejectPickupPeoples;
 	}
 
-	public void set_rejectDeliveryPoints(ArrayList<Point> _rejectDeliveryPoints) {
-		this._rejectDeliveryPoints = _rejectDeliveryPoints;
+	public void set_rejectPickupPeoples(ArrayList<Point> _rejectPickupPeoples) {
+		this._rejectPickupPeoples = _rejectPickupPeoples;
 	}
 
 	public double get_cost() {
@@ -116,14 +119,14 @@ public class SolutionShareARide {
 			x = route_k.get(i);
 			s = s + x.getID() + "\n";
 		}
-		
+		/*
 		String r = "rejectPoints = [";
 		for(int i = 0; i<_rejectPickupPoints.size(); i++){
 			r += (_rejectPickupPoints.get(i).getID()+", ");
 		}
 		r += "] \n";
-		
-		s += (r + "cost = "+_cost+"\n");
+		*/
+		//s += (r + "cost = "+_cost+"\n");
 		
 		return s;
 	}

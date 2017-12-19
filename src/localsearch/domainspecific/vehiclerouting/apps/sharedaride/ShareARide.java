@@ -6,6 +6,10 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.logging.FileHandler;
 import java.util.logging.Formatter;
 import java.util.logging.Handler;
@@ -44,8 +48,8 @@ public class ShareARide{
 	ArrayList<Point> stopPoints;
 	
 	public static ArrayList<Point> rejectPoints;
-	public static ArrayList<Point> rejectPickup;
-	public static ArrayList<Point> rejectDelivery;
+	public static ArrayList<Point> rejectPickupGoods;
+	public static ArrayList<Point> rejectPickupPeoples;
 	public static HashMap<Point, Integer> earliestAllowedArrivalTime;
 	public static HashMap<Point, Integer> serviceDuration;
 	public static HashMap<Point, Integer> lastestAllowedArrivalTime;
@@ -95,8 +99,9 @@ public class ShareARide{
 		type = new ArrayList<>();
 		
 		rejectPoints = new ArrayList<Point>();
-		rejectPickup = new ArrayList<Point>();
-		rejectDelivery = new ArrayList<Point>();
+		rejectPickupGoods = new ArrayList<Point>();
+		rejectPickupPeoples = new ArrayList<Point>();
+		
 		bestS = new HashMap<Integer, ArrayList<Point>>();
 		for(int i=1; i <= info.nbVehicle; ++i)
 		{
@@ -214,6 +219,7 @@ public class ShareARide{
 		mgr.close();
 	}
 	
+	/*
 	public void greedyInitSolution(){
 
 		for(int i = 0; i < pickupPoints.size(); i++){
@@ -274,7 +280,100 @@ public class ShareARide{
 			}
 		}
 	}
-    
+    */
+	public void InitSolutionByInsertGoodFirst(){
+		
+		/*
+		 * Insert good first
+		 * 		find best route and best position in route to insert
+		 */
+		LOGGER.log(Level.INFO,"Insert good to route");
+		Iterator<Map.Entry<Point, Point>> it = pickup2DeliveryOfGood.entrySet().iterator();
+		
+		while(it.hasNext()){
+			Map.Entry<Point,Point> requestOfGood = it.next();
+			Point pickup = requestOfGood.getKey();
+			Point delivery = requestOfGood.getValue();
+			
+			Point pre_pick = null;
+			Point pre_delivery = null;
+			double best_objective = Double.MAX_VALUE; 
+			
+			for(int r = 1; r <= XR.getNbRoutes(); r++){
+				for(Point p = XR.getStartingPointOfRoute(r); p!= XR.getTerminatingPointOfRoute(r); p = XR.next(p)){
+					if(S.evaluateAddOnePoint(pickup, p) > 0)
+						continue;
+					
+					for(Point q = p; q != XR.getTerminatingPointOfRoute(r); q = XR.next(q)){
+						if(S.evaluateAddOnePoint(delivery, q) > 0)
+							continue;
+						if(S.evaluateAddTwoPoints(pickup, p, delivery, q) == 0){
+							double cost = objective.evaluateAddTwoPoints(pickup, p, delivery, q);
+							if(cost < best_objective){
+								best_objective = cost;
+								pre_pick = p;
+								pre_delivery = q;
+							}
+						}
+					}
+				}
+			}
+			if(pre_pick == null || pre_delivery == null){
+				rejectPoints.add(pickup);
+				rejectPoints.add(delivery);
+				rejectPickupGoods.add(pickup);
+				//System.out.println("reject request: " + i + "reject size = " + rejectPickup.size());
+			}
+			else if(pre_pick != null && pre_delivery != null){
+				mgr.performAddTwoPoints(pickup, pre_pick, delivery, pre_delivery);
+			}
+		}
+		
+		/*
+		 * Insert people
+		 * 		find best route and best position in route to insert
+		 */
+
+		LOGGER.log(Level.INFO,"Insert people to route");
+		Iterator<Map.Entry<Point, Point>> it2 = pickup2DeliveryOfPeople.entrySet().iterator();
+
+		while(it2.hasNext()){
+			Map.Entry<Point,Point> requestOfPeople = it2.next();
+			Point pickup = requestOfPeople.getKey();
+			Point delivery = requestOfPeople.getValue();
+			
+			Point pre_pick = null;
+			Point pre_delivery = null;
+			double best_objective = Double.MAX_VALUE; 
+			
+			for(int r = 1; r <= XR.getNbRoutes(); r++){
+				for(Point p = XR.getStartingPointOfRoute(r); p!= XR.getTerminatingPointOfRoute(r); p = XR.next(p)){
+					if(S.evaluateAddOnePoint(pickup, p) > 0)
+						continue;
+					
+					if(S.evaluateAddTwoPoints(pickup, p, delivery, p) == 0){
+						//cost improve
+						double cost = objective.evaluateAddTwoPoints(pickup, p, delivery, p);
+						if( cost < best_objective){
+							best_objective = cost;
+							pre_pick = p;
+							pre_delivery = p;
+						}
+					}
+				}
+			}
+			if(pre_pick == null || pre_delivery == null){
+				rejectPoints.add(pickup);
+				rejectPoints.add(delivery);
+				rejectPickupPeoples.add(pickup);
+				//System.out.println("reject request: " + i + "reject size = " + rejectPickup.size());
+			}
+			else if(pre_pick != null && pre_delivery != null){
+				mgr.performAddTwoPoints(pickup, pre_pick, delivery, pre_delivery);
+			}
+		}
+	}
+	
 	public SolutionShareARide search(int maxIter, int timeLimit){
 		ALNSwithSA alns = new ALNSwithSA(mgr, objective, S, eat, awm);
 		return alns.search(maxIter, timeLimit);
@@ -284,7 +383,7 @@ public class ShareARide{
     	String inData = "data/SARP-offline/n12335r100_1.txt";
     	
     	int timeLimit = 36000;
-    	int nIter = 10000;
+    	int nIter = 100;
   
     	Handler fileHandler;
     	Formatter simpleFormater;
@@ -309,7 +408,7 @@ public class ShareARide{
 			sar.stateModel();
 
 			LOGGER.log(Level.INFO, "Create model done --> Init solution");	
-			sar.greedyInitSolution();
+			sar.InitSolutionByInsertGoodFirst();
 				
 			LOGGER.log(Level.INFO,"Init solution done. At start search number of reject points = "+rejectPoints.size()+"    violations = "+sar.S.violations()+"   cost = "+sar.objective.getValue());
 			SolutionShareARide best_solution = sar.search(nIter, timeLimit);
