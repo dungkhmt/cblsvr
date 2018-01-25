@@ -2,10 +2,8 @@ package localsearch.domainspecific.vehiclerouting.apps.sharedaride.Search;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Random;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import localsearch.domainspecific.vehiclerouting.apps.sharedaride.ShareARide;
 import localsearch.domainspecific.vehiclerouting.apps.sharedaride.SolutionShareARide;
@@ -27,14 +25,14 @@ public class ALNSwithSA {
 	private ArcWeightsManager awm;
 	
 	private int nRemovalOperators=7;
-	private int nInsertionOperators=2;
+	private int nInsertionOperators=6;
 	
 	//parameters
 	private int lower_removal = (int) 1*(ShareARide.nRequest)/100;
 	private int upper_removal = (int) 10*(ShareARide.nRequest)/100;
-	private int sigma1 = 1;
+	private int sigma1 = 5;
 	private int sigma2 = 3;
-	private int sigma3 = 5;
+	private int sigma3 = 1;
 	private double rp = 0.1;
 	private int nw = 5;
 	private double shaw1st = 0.5;
@@ -87,7 +85,9 @@ public class ALNSwithSA {
 		SolutionShareARide best_solution = new SolutionShareARide(XR, ShareARide.rejectPoints, ShareARide.rejectPickupGoods, ShareARide.rejectPickupPeoples, best_cost);
 		ShareARide.LOGGER.log(Level.INFO, "start search best_solution has cost = "+best_solution.get_cost()+"  number of rejected request of goods = "+best_solution.get_rejectPickupGoods().size()+"  number of rejected request of peoples = "+best_solution.get_rejectPickupPeoples().size());
 		
-		while(it++ < maxIter){
+		double start_search_time = System.currentTimeMillis();
+		double search_time = 0.0;
+		while( search_time < timeLimit && it++ < maxIter){
 			
 			double current_cost = objective.getValue();
 			SolutionShareARide current_solution = new SolutionShareARide(XR, ShareARide.rejectPoints, ShareARide.rejectPickupGoods, ShareARide.rejectPickupPeoples, current_cost);
@@ -124,6 +124,10 @@ public class ALNSwithSA {
 				
 				case 0: greedy_insertion(); break;
 				case 1: greedy_insertion_noise_function(); break;
+				case 2: second_best_insertion(); break;
+				case 3: second_best_insertion_noise_function(); break;
+				case 4: regret_n_insertion(2); break;
+				case 5: regret_n_insertion(3); break;
 			}
 			double new_cost = objective.getValue();
 			ShareARide.LOGGER.log(Level.INFO,"Iter "+it+" new_solution: has cost = "+new_cost+"  number of rejected request of goods = "+ShareARide.rejectPickupGoods.size()+"  number of rejected request of peoples = "+ShareARide.rejectPickupPeoples.size());
@@ -184,16 +188,17 @@ public class ALNSwithSA {
 			if(it % nw == 0){
 				for(int i=0; i<nInsertionOperators; i++){
 					pti[i] = pti[i]*(1-rp) + rp*si[i]/wi[i];
-					wi[i] = 1;
-					si[i] = 0;
+					//wi[i] = 1;
+					//si[i] = 0;
 				}
 				
 				for(int i=0; i<nRemovalOperators; i++){
 					ptd[i] = ptd[i]*(1-rp) + rp*sd[i]/wd[i];
-					wd[i] = 1;
-					sd[i] = 0;
+					//wd[i] = 1;
+					//sd[i] = 0;
 				}
 			}
+			search_time = System.currentTimeMillis() - start_search_time;
 		}
 		return best_solution;
 	}
@@ -931,6 +936,314 @@ public class ALNSwithSA {
 							cost += ShareARide.MAX_DISTANCE*0.1*r;
 							if(cost < best_objective){
 								best_objective = cost;
+								best_insertion_pickup = p;
+								best_insertion_delivery = q;
+							}
+						}
+					}
+				}
+			}
+			
+			if(best_insertion_pickup != null && best_insertion_delivery != null){
+				mgr.performAddTwoPoints(pickup, best_insertion_pickup, delivery, best_insertion_delivery);
+				ShareARide.rejectPickupGoods.remove(pickup);
+				ShareARide.rejectPoints.remove(pickup);
+				ShareARide.rejectPoints.remove(delivery);
+				i--;
+			}
+		}
+ 	}
+ 	
+ 	private void second_best_insertion(){
+ 		ShareARide.LOGGER.log(Level.INFO,"Inserting peoples to route");
+ 		
+		for(int i=0; i<ShareARide.rejectPickupPeoples.size(); i++){
+			Point pickup = ShareARide.rejectPickupPeoples.get(i);
+			Point delivery = ShareARide.pickup2Delivery.get(pickup);
+			
+			Point second_best_insertion_pickup = null;
+			Point second_best_insertion_delivery = null;
+			
+			double best_objective = Double.MAX_VALUE;
+			double second_best_objective = Double.MAX_VALUE;
+			
+			for(int k=1; k<=XR.getNbRoutes(); k++){
+				for(Point p = XR.getStartingPointOfRoute(k); p != XR.getTerminatingPointOfRoute(k); p = XR.next(p)){
+					//check constraint
+					if(ShareARide.pickup2DeliveryOfPeople.containsKey(p) || S.evaluateAddOnePoint(pickup, p) > 0)
+						continue;
+
+					if(S.evaluateAddTwoPoints(pickup, p, delivery, p) == 0){
+						//cost improve
+						double cost = objective.evaluateAddTwoPoints(pickup, p, delivery, p);
+						if( cost <= best_objective){
+							second_best_objective = best_objective;
+							best_objective = cost;
+						}else{
+							if(cost < second_best_objective){
+								second_best_objective = cost;
+								second_best_insertion_pickup = p;
+								second_best_insertion_delivery = p;
+							}
+						}
+					}
+				}
+			}
+			
+			if(second_best_insertion_pickup != null && second_best_insertion_delivery != null){
+				mgr.performAddTwoPoints(pickup, second_best_insertion_pickup, delivery, second_best_insertion_delivery);
+				ShareARide.rejectPickupPeoples.remove(pickup);
+				ShareARide.rejectPoints.remove(pickup);
+				ShareARide.rejectPoints.remove(delivery);
+				i--;
+			}
+		}
+		
+		ShareARide.LOGGER.log(Level.INFO,"Inserting goods to route");
+		
+		for(int i=0; i<ShareARide.rejectPickupGoods.size(); i++){
+			Point pickup = ShareARide.rejectPickupGoods.get(i);
+			Point delivery = ShareARide.pickup2Delivery.get(pickup);
+			
+			Point second_best_insertion_pickup = null;
+			Point second_best_insertion_delivery = null;
+			
+			double best_objective = Double.MAX_VALUE;
+			double second_best_objective = Double.MAX_VALUE;
+			
+			for(int k=1; k<=XR.getNbRoutes(); k++){
+				for(Point p = XR.getStartingPointOfRoute(k); p != XR.getTerminatingPointOfRoute(k); p = XR.next(p)){
+					//check constraint
+					if(ShareARide.pickup2DeliveryOfPeople.containsKey(p) || S.evaluateAddOnePoint(pickup, p) > 0)
+						continue;
+
+					for(Point q = p; q != XR.getTerminatingPointOfRoute(k); q = XR.next(q)){
+						if(ShareARide.pickup2DeliveryOfPeople.containsKey(q) || S.evaluateAddOnePoint(delivery, q) > 0)
+							continue;
+						if(S.evaluateAddTwoPoints(pickup, p, delivery, q) == 0){
+							double cost = objective.evaluateAddTwoPoints(pickup, p, delivery, q);
+							if(cost <= best_objective){
+								second_best_objective = best_objective;
+								best_objective = cost;
+							}else{
+								if(cost < second_best_objective){
+									second_best_objective = cost;
+									second_best_insertion_pickup = p;
+									second_best_insertion_delivery = q;
+								}
+							}
+						}
+					}
+				}
+			}
+			
+			if(second_best_insertion_pickup != null && second_best_insertion_delivery != null){
+				mgr.performAddTwoPoints(pickup, second_best_insertion_pickup, delivery, second_best_insertion_delivery);
+				ShareARide.rejectPickupGoods.remove(pickup);
+				ShareARide.rejectPoints.remove(pickup);
+				ShareARide.rejectPoints.remove(delivery);
+				i--;
+			}
+		}
+ 	}
+
+ 	private void second_best_insertion_noise_function(){
+ 		ShareARide.LOGGER.log(Level.INFO,"Inserting peoples to route");
+ 		
+ 		for(int i=0; i<ShareARide.rejectPickupPeoples.size(); i++){
+			Point pickup = ShareARide.rejectPickupPeoples.get(i);
+			Point delivery = ShareARide.pickup2Delivery.get(pickup);
+			
+			Point second_best_insertion_pickup = null;
+			Point second_best_insertion_delivery = null;
+			
+			double best_objective = Double.MAX_VALUE;
+			double second_best_objective = Double.MAX_VALUE;
+			
+			for(int k=1; k<=XR.getNbRoutes(); k++){
+				for(Point p = XR.getStartingPointOfRoute(k); p != XR.getTerminatingPointOfRoute(k); p = XR.next(p)){
+					//check constraint
+					if(ShareARide.pickup2DeliveryOfPeople.containsKey(p) || S.evaluateAddOnePoint(pickup, p) > 0)
+						continue;
+					
+					//check constraint
+					if(S.evaluateAddTwoPoints(pickup, p, delivery, p) == 0){
+						//cost improve
+						double cost = objective.evaluateAddTwoPoints(pickup, p, delivery, p);
+						double r = Math.random()*2-1;
+						cost += ShareARide.MAX_DISTANCE*0.1*r;
+						if( cost <= best_objective){
+							second_best_objective = best_objective;
+							best_objective = cost;
+						}else{
+							if(cost < second_best_objective){
+								second_best_objective = cost;
+								second_best_insertion_pickup = p;
+								second_best_insertion_delivery = p;
+							}
+						}
+					}
+				}
+			}
+			
+			if(second_best_insertion_pickup != null && second_best_insertion_delivery != null){
+				mgr.performAddTwoPoints(pickup, second_best_insertion_pickup, delivery, second_best_insertion_delivery);
+				ShareARide.rejectPickupPeoples.remove(pickup);
+				ShareARide.rejectPoints.remove(pickup);
+				ShareARide.rejectPoints.remove(delivery);
+				i--;
+			}
+		}
+ 		
+ 		ShareARide.LOGGER.log(Level.INFO,"Inserting goods to route");
+		
+ 		for(int i=0; i<ShareARide.rejectPickupGoods.size(); i++){
+			Point pickup = ShareARide.rejectPickupGoods.get(i);
+			Point delivery = ShareARide.pickup2Delivery.get(pickup);
+			
+			Point second_best_insertion_pickup = null;
+			Point second_best_insertion_delivery = null;
+			
+			double best_objective = Double.MAX_VALUE;
+			double second_best_objective = Double.MAX_VALUE;
+			
+			for(int k=1; k<=XR.getNbRoutes(); k++){
+				for(Point p = XR.getStartingPointOfRoute(k); p != XR.getTerminatingPointOfRoute(k); p = XR.next(p)){
+					//check constraint
+					if(ShareARide.pickup2DeliveryOfPeople.containsKey(p) || S.evaluateAddOnePoint(pickup, p) > 0)
+						continue;
+					
+					for(Point q = p; q != XR.getTerminatingPointOfRoute(k); q = XR.next(q)){
+						if(ShareARide.pickup2DeliveryOfPeople.containsKey(q) || S.evaluateAddOnePoint(delivery, q) > 0)
+							continue;
+						
+						if(S.evaluateAddTwoPoints(pickup, p, delivery, q) == 0){
+							
+							double cost = objective.evaluateAddTwoPoints(pickup, p, delivery, q);
+							double r = Math.random()*2-1;
+							cost += ShareARide.MAX_DISTANCE*0.1*r;
+							if(cost <= best_objective){
+								second_best_objective = best_objective;
+								best_objective = cost;
+							}else{
+								if(cost < second_best_objective){
+									second_best_objective = cost;
+									second_best_insertion_pickup = p;
+									second_best_insertion_delivery = q;
+								}
+							}
+						}
+					}
+				}
+			}
+			
+			if(second_best_insertion_pickup != null && second_best_insertion_delivery != null){
+				mgr.performAddTwoPoints(pickup, second_best_insertion_pickup, delivery, second_best_insertion_delivery);
+				ShareARide.rejectPickupGoods.remove(pickup);
+				ShareARide.rejectPoints.remove(pickup);
+				ShareARide.rejectPoints.remove(delivery);
+				i--;
+			}
+		}
+ 	}
+
+ 	private void regret_n_insertion(int n){
+ 		ShareARide.LOGGER.log(Level.INFO,"Inserting peoples to route");
+ 		
+		for(int i=0; i<ShareARide.rejectPickupPeoples.size(); i++){
+			Point pickup = ShareARide.rejectPickupPeoples.get(i);
+			Point delivery = ShareARide.pickup2Delivery.get(pickup);
+			
+			Point best_insertion_pickup = null;
+			Point best_insertion_delivery = null;
+			
+			double n_best_objective[] = new double[n];
+			double best_regret_value = Double.MIN_VALUE;
+			
+			for(int it=0; it<n; it++){
+				n_best_objective[it] = Double.MAX_VALUE;
+			}
+			
+			for(int k=1; k<=XR.getNbRoutes(); k++){
+				for(Point p = XR.getStartingPointOfRoute(k); p != XR.getTerminatingPointOfRoute(k); p = XR.next(p)){
+					//check constraint
+					if(ShareARide.pickup2DeliveryOfPeople.containsKey(p) || S.evaluateAddOnePoint(pickup, p) > 0)
+						continue;
+
+					if(S.evaluateAddTwoPoints(pickup, p, delivery, p) == 0){
+						//cost improve
+						double cost = objective.evaluateAddTwoPoints(pickup, p, delivery, p);
+						for(int it=0; it<n; it++){
+							if(n_best_objective[it] > cost){
+								for(int it2 = n-1; it2 > it; it2--){
+									n_best_objective[it2] = n_best_objective[it2-1];
+								}
+								n_best_objective[it] = cost;
+							}
+						}
+						double regret_value = 0;
+						for(int it=1; it<n; it++){
+							regret_value += Math.abs(n_best_objective[it] - n_best_objective[0]);
+						}
+						if(regret_value > best_regret_value){
+							best_regret_value = regret_value;
+							best_insertion_pickup = p;
+							best_insertion_delivery = p;
+						}
+					}
+				}
+			}
+			
+			if(best_insertion_pickup != null && best_insertion_delivery != null){
+				mgr.performAddTwoPoints(pickup, best_insertion_pickup, delivery, best_insertion_delivery);
+				ShareARide.rejectPickupPeoples.remove(pickup);
+				ShareARide.rejectPoints.remove(pickup);
+				ShareARide.rejectPoints.remove(delivery);
+				i--;
+			}
+		}
+		
+		ShareARide.LOGGER.log(Level.INFO,"Inserting goods to route");
+		
+		for(int i=0; i<ShareARide.rejectPickupGoods.size(); i++){
+			Point pickup = ShareARide.rejectPickupGoods.get(i);
+			Point delivery = ShareARide.pickup2Delivery.get(pickup);
+			
+			Point best_insertion_pickup = null;
+			Point best_insertion_delivery = null;
+			
+			double n_best_objective[] = new double[n];
+			double best_regret_value = Double.MIN_VALUE;
+			
+			for(int it=0; it<n; it++){
+				n_best_objective[it] = Double.MAX_VALUE;
+			}
+			
+			for(int k=1; k<=XR.getNbRoutes(); k++){
+				for(Point p = XR.getStartingPointOfRoute(k); p != XR.getTerminatingPointOfRoute(k); p = XR.next(p)){
+					//check constraint
+					if(ShareARide.pickup2DeliveryOfPeople.containsKey(p) || S.evaluateAddOnePoint(pickup, p) > 0)
+						continue;
+
+					for(Point q = p; q != XR.getTerminatingPointOfRoute(k); q = XR.next(q)){
+						if(ShareARide.pickup2DeliveryOfPeople.containsKey(q) || S.evaluateAddOnePoint(delivery, q) > 0)
+							continue;
+						if(S.evaluateAddTwoPoints(pickup, p, delivery, q) == 0){
+							double cost = objective.evaluateAddTwoPoints(pickup, p, delivery, q);
+							for(int it=0; it<n; it++){
+								if(n_best_objective[it] > cost){
+									for(int it2 = n-1; it2 > it; it2--){
+										n_best_objective[it2] = n_best_objective[it2-1];
+									}
+									n_best_objective[it] = cost;
+								}
+							}
+							double regret_value = 0;
+							for(int it=1; it<n; it++){
+								regret_value += Math.abs(n_best_objective[it] - n_best_objective[0]);
+							}
+							if(regret_value > best_regret_value){
+								best_regret_value = regret_value;
 								best_insertion_pickup = p;
 								best_insertion_delivery = q;
 							}
