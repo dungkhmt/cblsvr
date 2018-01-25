@@ -30,13 +30,13 @@ public class ALNSwithSA {
 	private int nInsertionOperators=2;
 	
 	//parameters
-	private int lower_removal = (int) 1*(ShareARide.nRequest)/100;
-	private int upper_removal = (int) 10*(ShareARide.nRequest)/100;
-	private int sigma1 = 1;
+	private int lower_removal = (int) 2*(ShareARide.nRequest)/100;
+	private int upper_removal = (int) 20*(ShareARide.nRequest)/100;
+	private int sigma1 = 5;
 	private int sigma2 = 3;
-	private int sigma3 = 5;
+	private int sigma3 = 1;
 	private double rp = 0.1;
-	private int nw = 5;
+	private int nw = 10;
 	private double shaw1st = 0.5;
 	private double shaw2nd = 0.2;
 	private double shaw3rd = 0.1;
@@ -184,14 +184,14 @@ public class ALNSwithSA {
 			if(it % nw == 0){
 				for(int i=0; i<nInsertionOperators; i++){
 					pti[i] = pti[i]*(1-rp) + rp*si[i]/wi[i];
-					wi[i] = 1;
-					si[i] = 0;
+					//wi[i] = 1;
+					//si[i] = 0;
 				}
 				
 				for(int i=0; i<nRemovalOperators; i++){
 					ptd[i] = ptd[i]*(1-rp) + rp*sd[i]/wd[i];
-					wd[i] = 1;
-					sd[i] = 0;
+					//wd[i] = 1;
+					//sd[i] = 0;
 				}
 			}
 		}
