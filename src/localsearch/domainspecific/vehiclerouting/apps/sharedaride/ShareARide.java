@@ -8,8 +8,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 import java.util.logging.FileHandler;
 import java.util.logging.Formatter;
 import java.util.logging.Handler;
@@ -18,7 +16,6 @@ import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
 import localsearch.domainspecific.vehiclerouting.apps.sharedaride.Search.ALNSwithSA;
-import localsearch.domainspecific.vehiclerouting.vrp.Constants;
 import localsearch.domainspecific.vehiclerouting.vrp.ConstraintSystemVR;
 import localsearch.domainspecific.vehiclerouting.vrp.IFunctionVR;
 import localsearch.domainspecific.vehiclerouting.vrp.VRManager;
@@ -41,8 +38,8 @@ public class ShareARide{
 	public static int GOOD = 0;
 	int scale = 100000;
 	ArrayList<Point> points;
-	ArrayList<Point> pickupPoints;
-	ArrayList<Point> deliveryPoints;
+	public static ArrayList<Point> pickupPoints;
+	public static ArrayList<Point> deliveryPoints;
 	ArrayList<Integer> type;
 	ArrayList<Point> startPoints;
 	ArrayList<Point> stopPoints;
@@ -400,7 +397,8 @@ public class ShareARide{
 	    	
 			fileHandler.setFormatter(simpleFormater);
 			
-			String description = "\n\n\t\t RUN WITH ROUTE_REMOVAL AND GREEDY_INSERTION \n\n";
+			String description = "\n\n\t\t RUN WITH 13 REMOVAL AND 14 INSERTION \n\n";
+
 			LOGGER.log(Level.INFO, description);
 			
 			LOGGER.log(Level.INFO, "Read data");
