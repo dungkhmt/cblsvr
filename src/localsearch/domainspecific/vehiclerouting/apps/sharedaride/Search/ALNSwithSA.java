@@ -2,6 +2,8 @@ package localsearch.domainspecific.vehiclerouting.apps.sharedaride.Search;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Random;
 import java.util.logging.Level;
 
@@ -24,8 +26,11 @@ public class ALNSwithSA {
 	private EarliestArrivalTimeVR eat;
 	private ArcWeightsManager awm;
 	
-	private int nRemovalOperators=7;
-	private int nInsertionOperators=6;
+	HashMap<Point, Integer> nChosed;
+	HashMap<Point, Boolean> removeAllowed;
+	
+	private int nRemovalOperators = 13;
+	private int nInsertionOperators = 14;
 	
 	//parameters
 	private int lower_removal = (int) 2*(ShareARide.nRequest)/100;
@@ -40,8 +45,8 @@ public class ALNSwithSA {
 	private double shaw3rd = 0.1;
 	private double temperature = 200;
 	private double cooling_rate = 0.9995;
-	//private double shaw4th = 0.2;
-	
+	private int nTabu = 5;
+	//private double shaw4th = 0.2; 
 	
 	public ALNSwithSA(VRManager mgr, IFunctionVR objective, ConstraintSystemVR S, EarliestArrivalTimeVR eat, ArcWeightsManager awm){
 		this.mgr = mgr;
@@ -50,6 +55,19 @@ public class ALNSwithSA {
 		this.S = S;
 		this.eat = eat;
 		this.awm = awm;
+		
+		nChosed = new HashMap<Point, Integer>();
+		removeAllowed = new HashMap<Point, Boolean>();
+		//ArrayList<Point> clientPoints = XR.getClientPoints();
+		for(int i=0; i<ShareARide.pickupPoints.size(); i++){
+			Point pi = ShareARide.pickupPoints.get(i);
+			nChosed.put(pi, 0);
+			removeAllowed.put(pi, true);
+			
+			Point pj = ShareARide.pickup2Delivery.get(pi);
+			nChosed.put(pj, 0);
+			removeAllowed.put(pj, true);
+		}
 	}
 	
 	public SolutionShareARide search(int maxIter, int timeLimit){
@@ -86,8 +104,7 @@ public class ALNSwithSA {
 		ShareARide.LOGGER.log(Level.INFO, "start search best_solution has cost = "+best_solution.get_cost()+"  number of rejected request of goods = "+best_solution.get_rejectPickupGoods().size()+"  number of rejected request of peoples = "+best_solution.get_rejectPickupPeoples().size());
 		
 		double start_search_time = System.currentTimeMillis();
-		double search_time = 0.0;
-		while( search_time < timeLimit && it++ < maxIter){
+		while( (System.currentTimeMillis()-start_search_time) < timeLimit && it++ < maxIter){
 			
 			double current_cost = objective.getValue();
 			SolutionShareARide current_solution = new SolutionShareARide(XR, ShareARide.rejectPoints, ShareARide.rejectPickupGoods, ShareARide.rejectPickupPeoples, current_cost);
@@ -109,6 +126,12 @@ public class ALNSwithSA {
 				case 4: proximity_based_removal(); break;
 				case 5: time_based_removal(); break;
 				case 6: worst_removal(); break;
+				case 7: forbidden_removal(0);; break;
+				case 8: forbidden_removal(1);; break;
+				case 9: forbidden_removal(2);; break;
+				case 10: forbidden_removal(3);; break;
+				case 11: forbidden_removal(4);; break;
+				case 12: forbidden_removal(5);; break;
 			}
 			//long timeRemoveEnd = System.currentTimeMillis();
 			//long timeRemove = timeRemoveEnd - timeRemoveStart;
@@ -128,6 +151,14 @@ public class ALNSwithSA {
 				case 3: second_best_insertion_noise_function(); break;
 				case 4: regret_n_insertion(2); break;
 				case 5: regret_n_insertion(3); break;
+				case 6: first_possible_insertion();break;
+				case 7: sort_before_insertion(0); break;
+				case 8: sort_before_insertion(1); break;
+				case 9: sort_before_insertion(2); break;
+				case 10: sort_before_insertion(3); break;
+				case 11: sort_before_insertion(4); break;
+				case 12: sort_before_insertion(5); break;
+				case 13: sort_before_insertion(6); break;
 			}
 			double new_cost = objective.getValue();
 			ShareARide.LOGGER.log(Level.INFO,"Iter "+it+" new_solution: has cost = "+new_cost+"  number of rejected request of goods = "+ShareARide.rejectPickupGoods.size()+"  number of rejected request of peoples = "+ShareARide.rejectPickupPeoples.size());
@@ -198,7 +229,6 @@ public class ALNSwithSA {
 					//sd[i] = 0;
 				}
 			}
-			search_time = System.currentTimeMillis() - start_search_time;
 		}
 		return best_solution;
 	}
@@ -216,6 +246,8 @@ public class ALNSwithSA {
 			if(inRemove == nRemove)
 				break;
 			Point pr1 = clientPoints.get(i);
+			if(!removeAllowed.get(pr1))
+				continue;
 			if(ShareARide.rejectPoints.contains(pr1))
 				continue;
 			//out.println("pr1 = "+pr1.getID());
@@ -242,6 +274,9 @@ public class ALNSwithSA {
 		
 			ShareARide.rejectPoints.add(pr1);
 			ShareARide.rejectPoints.add(pr2);
+			nChosed.put(pr1, nChosed.get(pr1)+1);
+			nChosed.put(pr2, nChosed.get(pr2)+1);
+			
 			if(pr2IsDelivery){
 				if(ShareARide.pickup2DeliveryOfPeople.containsKey(pr1)){
 					ShareARide.rejectPickupPeoples.add(pr1);
@@ -291,6 +326,7 @@ public class ALNSwithSA {
 				}
 			}
 			mgr.performRemoveOnePoint(x);
+			nChosed.put(x, nChosed.get(x)+1);
 		}	
 	}
 	
@@ -310,7 +346,8 @@ public class ALNSwithSA {
 			for(int k=1; k<=XR.getNbRoutes(); k++){
 				Point x = XR.getStartingPointOfRoute(k);
 				for(x = XR.next(x); x != XR.getTerminatingPointOfRoute(k); x = XR.next(x)){
-					
+					if(!removeAllowed.get(x))
+						continue;
 					Point dX = ShareARide.pickup2Delivery.get(x);
 					if(dX == null){
 						continue;
@@ -344,8 +381,14 @@ public class ALNSwithSA {
 				}
 			}
 			
+			if(removedPickup == null || removedDelivery == null)
+				break;
+			
 			ShareARide.rejectPoints.add(removedDelivery);
 			ShareARide.rejectPoints.add(removedPickup);
+			nChosed.put(removedDelivery, nChosed.get(removedDelivery)+1);
+			nChosed.put(removedPickup, nChosed.get(removedPickup)+1);
+			
 			if(ShareARide.pickup2DeliveryOfPeople.containsKey(removedPickup)){
 				ShareARide.rejectPickupPeoples.add(removedPickup);
 			}else if(ShareARide.pickup2DeliveryOfGood.containsKey(removedPickup)){
@@ -417,7 +460,7 @@ public class ALNSwithSA {
 		do{
 			ipRemove = R.nextInt(clientPoints.size());
 			r1 = clientPoints.get(ipRemove);	
-		}while(ShareARide.rejectPoints.contains(r1));
+		}while(ShareARide.rejectPoints.contains(r1) && !removeAllowed.get(r1));
 		
 		Point dr1;
 		boolean isPickup = ShareARide.pickup2Delivery.containsKey(r1);
@@ -433,7 +476,7 @@ public class ALNSwithSA {
 		 * Remove request most related with r1
 		 */
 		int inRemove = 0;
-		while(inRemove++ != nRemove){
+		while(inRemove++ != nRemove && r1 !=null && dr1 != null){
 			
 			Point removedPickup = null;
 			Point removedDelivery = null;
@@ -463,6 +506,9 @@ public class ALNSwithSA {
 			
 			ShareARide.rejectPoints.add(r1);
 			ShareARide.rejectPoints.add(dr1);
+			nChosed.put(r1, nChosed.get(r1)+1);
+			nChosed.put(dr1, nChosed.get(dr1)+1);
+			
 			if(ShareARide.pickup2DeliveryOfPeople.containsKey(r1)){
 				ShareARide.rejectPickupPeoples.add(r1);
 			}else if(ShareARide.pickup2DeliveryOfGood.containsKey(r1)){
@@ -480,6 +526,9 @@ public class ALNSwithSA {
 			for(int k=1; k<=XR.getNbRoutes(); k++){
 				Point x = XR.getStartingPointOfRoute(k);
 				for(x = XR.next(x); x != XR.getTerminatingPointOfRoute(k); x = XR.next(x)){
+					
+					if(!removeAllowed.get(x))
+						continue;
 					
 					Point dX = ShareARide.pickup2Delivery.get(x);
 					if(dX == null)
@@ -550,7 +599,7 @@ public class ALNSwithSA {
 		do{
 			ipRemove = R.nextInt(clientPoints.size());
 			r1 = clientPoints.get(ipRemove);	
-		}while(ShareARide.rejectPoints.contains(r1));
+		}while(ShareARide.rejectPoints.contains(r1) && !removeAllowed.get(r1));
 		
 		Point dr1;
 		boolean isPickup = ShareARide.pickup2Delivery.containsKey(r1);
@@ -566,7 +615,7 @@ public class ALNSwithSA {
 		 * Remove request most related with r1
 		 */
 		int inRemove = 0;
-		while(inRemove++ != nRemove){
+		while(inRemove++ != nRemove && r1 != null && dr1 != null){
 			
 			Point removedPickup = null;
 			Point removedDelivery = null;
@@ -574,6 +623,9 @@ public class ALNSwithSA {
 			
 			ShareARide.rejectPoints.add(r1);
 			ShareARide.rejectPoints.add(dr1);
+			nChosed.put(r1, nChosed.get(r1)+1);
+			nChosed.put(dr1, nChosed.get(dr1)+1);
+			
 			if(ShareARide.pickup2DeliveryOfPeople.containsKey(r1)){
 				ShareARide.rejectPickupPeoples.add(r1);
 			}else if(ShareARide.pickup2DeliveryOfGood.containsKey(r1)){
@@ -591,6 +643,8 @@ public class ALNSwithSA {
 			for(int k=1; k<=XR.getNbRoutes(); k++){
 				Point x = XR.getStartingPointOfRoute(k);
 				for(x = XR.next(x); x != XR.getTerminatingPointOfRoute(k); x = XR.next(x)){
+					if(!removeAllowed.get(x))
+						continue;
 					
 					Point dX = ShareARide.pickup2Delivery.get(x);
 					if(dX == null)
@@ -631,7 +685,7 @@ public class ALNSwithSA {
 		do{
 			ipRemove = R.nextInt(clientPoints.size());
 			r1 = clientPoints.get(ipRemove);	
-		}while(ShareARide.rejectPoints.contains(r1));
+		}while(ShareARide.rejectPoints.contains(r1) && !removeAllowed.get(r1));
 		
 		Point dr1;
 		boolean isPickup = ShareARide.pickup2Delivery.containsKey(r1);
@@ -647,7 +701,7 @@ public class ALNSwithSA {
 		 * Remove request most related with r1
 		 */
 		int inRemove = 0;
-		while(inRemove++ != nRemove){
+		while(inRemove++ != nRemove && r1 != null && dr1 != null){
 			
 			Point removedPickup = null;
 			Point removedDelivery = null;
@@ -676,6 +730,9 @@ public class ALNSwithSA {
 			
 			ShareARide.rejectPoints.add(r1);
 			ShareARide.rejectPoints.add(dr1);
+			nChosed.put(r1, nChosed.get(r1));
+			nChosed.put(dr1, nChosed.get(dr1));
+			
 			if(ShareARide.pickup2DeliveryOfPeople.containsKey(r1)){
 				ShareARide.rejectPickupPeoples.add(r1);
 			}else if(ShareARide.pickup2DeliveryOfGood.containsKey(r1)){
@@ -693,6 +750,9 @@ public class ALNSwithSA {
 			for(int k=1; k<=XR.getNbRoutes(); k++){
 				Point x = XR.getStartingPointOfRoute(k);
 				for(x = XR.next(x); x != XR.getTerminatingPointOfRoute(k); x = XR.next(x)){
+					
+					if(!removeAllowed.get(x))
+						continue;
 					
 					Point dX = ShareARide.pickup2Delivery.get(x);
 					if(dX == null)
@@ -755,6 +815,9 @@ public class ALNSwithSA {
 				Point x = XR.getStartingPointOfRoute(k);
 				for(x = XR.next(x); x != XR.getTerminatingPointOfRoute(k); x = XR.next(x)){
 					
+					if(!removeAllowed.get(x))
+						continue;
+					
 					Point dX = ShareARide.pickup2Delivery.get(x);
 					if(dX == null){
 						continue;
@@ -769,8 +832,14 @@ public class ALNSwithSA {
 				}
 			}
 			
+			if(removedDelivery == null || removedPickup == null)
+				break;
+			
 			ShareARide.rejectPoints.add(removedDelivery);
 			ShareARide.rejectPoints.add(removedPickup);
+			nChosed.put(removedDelivery, nChosed.get(removedDelivery)+1);
+			nChosed.put(removedPickup, nChosed.get(removedPickup)+1);
+			
 			if(ShareARide.pickup2DeliveryOfPeople.containsKey(removedPickup)){
 				ShareARide.rejectPickupPeoples.add(removedPickup);
 			}else if(ShareARide.pickup2DeliveryOfGood.containsKey(removedPickup)){
@@ -781,6 +850,37 @@ public class ALNSwithSA {
 			}
 			
 			mgr.performRemoveTwoPoints(removedPickup, removedDelivery);
+		}
+	}
+		
+	private void forbidden_removal(int nRemoval){
+		
+		ShareARide.LOGGER.log(Level.INFO,nChosed.toString());
+		
+		for(int i=0; i < ShareARide.pickupPoints.size(); i++){
+			Point pi = ShareARide.pickupPoints.get(i);
+			Point pj = ShareARide.pickup2Delivery.get(pi);
+			
+			if(nChosed.get(pi) > nTabu){
+				removeAllowed.put(pi, false);
+				removeAllowed.put(pj, false);
+			}
+		}
+		
+		switch(nRemoval){
+			case 0: random_removal(); break;
+			case 1: late_arrival_removal(); break;
+			case 2: shaw_removal(); break;
+			case 3: proximity_based_removal(); break;
+			case 4: time_based_removal(); break;
+			case 5: worst_removal(); break;
+		}
+		
+		for(int i=0; i < ShareARide.pickupPoints.size(); i++){
+			Point pi = ShareARide.pickupPoints.get(i);
+			removeAllowed.put(pi, true);
+			Point pj = ShareARide.pickup2Delivery.get(pi);
+			removeAllowed.put(pj, true);
 		}
 	}
 	
@@ -1262,6 +1362,151 @@ public class ALNSwithSA {
 		}
  	}
  	
+	private void first_possible_insertion(){
+		ShareARide.LOGGER.log(Level.INFO,"Inserting peoples to route");
+ 		
+		for(int i=0; i<ShareARide.rejectPickupPeoples.size(); i++){
+			Point pickup = ShareARide.rejectPickupPeoples.get(i);
+			Point delivery = ShareARide.pickup2Delivery.get(pickup);
+			boolean finded = false;
+			for(int k=1; k<=XR.getNbRoutes(); k++){
+				if(finded)
+					break;
+				for(Point p = XR.getStartingPointOfRoute(k); p != XR.getTerminatingPointOfRoute(k); p = XR.next(p)){
+					//check constraint
+					if(ShareARide.pickup2DeliveryOfPeople.containsKey(p) || S.evaluateAddOnePoint(pickup, p) > 0)
+						continue;
+
+					if(S.evaluateAddTwoPoints(pickup, p, delivery, p) == 0){
+						mgr.performAddTwoPoints(pickup, p, delivery, p);
+						ShareARide.rejectPickupPeoples.remove(pickup);
+						ShareARide.rejectPoints.remove(pickup);
+						ShareARide.rejectPoints.remove(delivery);
+						i--;
+						finded = true;
+						break;
+					}
+				}
+			}
+		}
+		
+		ShareARide.LOGGER.log(Level.INFO,"Inserting goods to route");
+		for(int i=0; i<ShareARide.rejectPickupGoods.size(); i++){
+			Point pickup = ShareARide.rejectPickupGoods.get(i);
+			Point delivery = ShareARide.pickup2Delivery.get(pickup);
+			
+			boolean finded = false;
+			for(int k=1; k<=XR.getNbRoutes(); k++){
+				if(finded)
+					break;
+				for(Point p = XR.getStartingPointOfRoute(k); p != XR.getTerminatingPointOfRoute(k); p = XR.next(p)){
+					//check constraint
+					if(finded)
+						break;
+					if(ShareARide.pickup2DeliveryOfPeople.containsKey(p) || S.evaluateAddOnePoint(pickup, p) > 0)
+						continue;
+
+					for(Point q = p; q != XR.getTerminatingPointOfRoute(k); q = XR.next(q)){
+						if(ShareARide.pickup2DeliveryOfPeople.containsKey(q) || S.evaluateAddOnePoint(delivery, q) > 0)
+							continue;
+						if(S.evaluateAddTwoPoints(pickup, p, delivery, q) == 0){
+							mgr.performAddTwoPoints(pickup, p, delivery, q);
+							ShareARide.rejectPickupGoods.remove(pickup);
+							ShareARide.rejectPoints.remove(pickup);
+							ShareARide.rejectPoints.remove(delivery);
+							i--;
+							finded = true;
+							break;
+						}
+					}
+				}
+			}
+		}
+	}
+ 	
+	private void sort_before_insertion(int iInsertion){
+		sort_reject_people();
+		sort_reject_good();
+		
+		switch(iInsertion){
+			case 0: greedy_insertion(); break;
+			case 1: greedy_insertion_noise_function(); break;
+			case 2: second_best_insertion(); break;
+			case 3: second_best_insertion_noise_function(); break;
+			case 4: regret_n_insertion(2); break;
+			case 5: regret_n_insertion(3); break;
+			case 6: first_possible_insertion(); break;
+		}
+		
+		Collections.shuffle(ShareARide.rejectPickupPeoples);
+		Collections.shuffle(ShareARide.rejectPickupGoods);
+	}
+	
+	private void sort_reject_people(){
+		HashMap<Point, Integer> time_flexibility_people = new HashMap<Point, Integer>();
+		
+		for(int i = 0; i < ShareARide.rejectPickupPeoples.size(); i++){
+			Point pickup = ShareARide.rejectPickupPeoples.get(i);
+			Point delivery = ShareARide.pickup2Delivery.get(pickup);
+			
+			int lp = ShareARide.lastestAllowedArrivalTime.get(pickup);
+			int ud = ShareARide.earliestAllowedArrivalTime.get(delivery);
+			
+			time_flexibility_people.put(pickup, ud-lp);
+		}
+		
+		List<Point> keys_people = new ArrayList<Point>(time_flexibility_people.keySet());
+		List<Integer> values_people = new ArrayList<Integer>(time_flexibility_people.values());
+		Collections.sort(values_people);
+		
+		ArrayList<Point> rejectPeopleSorted = new ArrayList<Point>();
+		for(int i = 0; i < values_people.size(); i++){
+			int v = values_people.get(i);
+			for(int j = 0; j < keys_people.size(); j++){
+				Point p = keys_people.get(j);
+				int vs = time_flexibility_people.get(p);
+				if(vs == v){
+					rejectPeopleSorted.add(p);
+					keys_people.remove(p);
+					break;
+				}
+			}
+		}
+		ShareARide.rejectPickupPeoples = rejectPeopleSorted;
+	}
+	
+	private void sort_reject_good(){
+		HashMap<Point, Integer> time_flexibility_good = new HashMap<Point, Integer>();
+		for(int i = 0; i < ShareARide.rejectPickupGoods.size(); i++){
+			Point pickup = ShareARide.rejectPickupGoods.get(i);
+			Point delivery = ShareARide.pickup2Delivery.get(pickup);
+			
+			int lp = ShareARide.lastestAllowedArrivalTime.get(pickup);
+			int ud = ShareARide.earliestAllowedArrivalTime.get(delivery);
+			
+			time_flexibility_good.put(pickup, ud-lp);
+		}
+		
+		List<Point> key_good = new ArrayList<Point>(time_flexibility_good.keySet());
+		List<Integer> value_good = new ArrayList<Integer>(time_flexibility_good.values());
+		Collections.sort(value_good);
+		
+		ArrayList<Point> rejectGoodSorted = new ArrayList<Point>();
+		for(int i = 0; i < value_good.size(); i++){
+			int v = value_good.get(i);
+			for(int j = 0; j < key_good.size(); j++){
+				Point p = key_good.get(j);
+				int vs = time_flexibility_good.get(p);
+				if(vs == v){
+					rejectGoodSorted.add(p);
+					key_good.remove(p);
+					break;
+				}
+			}
+		}
+		ShareARide.rejectPickupGoods = rejectGoodSorted;
+	}
+	
 	//roulette-wheel mechanism
  	private int get_operator(double[] p){
  		//String message = "probabilities input \n";
