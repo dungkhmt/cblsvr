@@ -86,14 +86,14 @@ public class ALNSwithSA {
 		ShareARide.LOGGER.log(Level.INFO, "start search best_solution has cost = "+best_solution.get_cost()+"  number of rejected request of goods = "+best_solution.get_rejectPickupGoods().size()+"  number of rejected request of peoples = "+best_solution.get_rejectPickupPeoples().size());
 		
 		double start_search_time = System.currentTimeMillis();
-		double search_time = 0.0;
-		while( search_time < timeLimit && it++ < maxIter){
+		while( (System.currentTimeMillis()- start_search_time) < timeLimit && it++ < maxIter){
 			
 			double current_cost = objective.getValue();
 			SolutionShareARide current_solution = new SolutionShareARide(XR, ShareARide.rejectPoints, ShareARide.rejectPickupGoods, ShareARide.rejectPickupPeoples, current_cost);
 			ShareARide.LOGGER.log(Level.INFO, "Iter "+it+" current_solution has cost = "+current_solution.get_cost()+"  number of rejected request of goods = "+current_solution.get_rejectPickupGoods().size()+"  number of rejected request of peoples = "+current_solution.get_rejectPickupPeoples().size());
 			
-			int i_selected_removal = get_operator(ptd);
+			//int i_selected_removal = get_operator(ptd);
+			int i_selected_removal = 1;
 			wd[i_selected_removal]++;
 			/*
 			 * Select remove operator
@@ -102,18 +102,19 @@ public class ALNSwithSA {
 			//long timeRemoveStart = System.currentTimeMillis();
 			switch(i_selected_removal){
 			
-				case 0: random_removal(); break;
+//				case 0: random_removal(); break;
 				case 1: route_removal(); break;
-				case 2: late_arrival_removal(); break;
-				case 3: shaw_removal(); break;
-				case 4: proximity_based_removal(); break;
-				case 5: time_based_removal(); break;
-				case 6: worst_removal(); break;
+//				case 2: late_arrival_removal(); break;
+//				case 3: shaw_removal(); break;
+//				case 4: proximity_based_removal(); break;
+//				case 5: time_based_removal(); break;
+//				case 6: worst_removal(); break;
 			}
 			//long timeRemoveEnd = System.currentTimeMillis();
 			//long timeRemove = timeRemoveEnd - timeRemoveStart;
 			
-			int i_selected_insertion = get_operator(pti);
+			//int i_selected_insertion = get_operator(pti);
+			int i_selected_insertion  = 0;
 			wi[i_selected_insertion]++;
 			ShareARide.LOGGER.log(Level.INFO,"selected insertion operator = "+i_selected_insertion);
 			/*
@@ -123,11 +124,11 @@ public class ALNSwithSA {
 			switch(i_selected_insertion){
 				
 				case 0: greedy_insertion(); break;
-				case 1: greedy_insertion_noise_function(); break;
-				case 2: second_best_insertion(); break;
-				case 3: second_best_insertion_noise_function(); break;
-				case 4: regret_n_insertion(2); break;
-				case 5: regret_n_insertion(3); break;
+//				case 1: greedy_insertion_noise_function(); break;
+//				case 2: second_best_insertion(); break;
+//				case 3: second_best_insertion_noise_function(); break;
+//				case 4: regret_n_insertion(2); break;
+//				case 5: regret_n_insertion(3); break;
 			}
 			double new_cost = objective.getValue();
 			ShareARide.LOGGER.log(Level.INFO,"Iter "+it+" new_solution: has cost = "+new_cost+"  number of rejected request of goods = "+ShareARide.rejectPickupGoods.size()+"  number of rejected request of peoples = "+ShareARide.rejectPickupPeoples.size());
@@ -198,7 +199,6 @@ public class ALNSwithSA {
 					//sd[i] = 0;
 				}
 			}
-			search_time = System.currentTimeMillis() - start_search_time;
 		}
 		return best_solution;
 	}

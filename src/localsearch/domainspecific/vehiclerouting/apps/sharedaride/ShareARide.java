@@ -382,7 +382,7 @@ public class ShareARide{
 	public static void main(String []args){
     	String inData = "data/SARP-offline/n12335r100_1.txt";
     	
-    	int timeLimit = 36000;
+    	int timeLimit = 36000000;
     	int nIter = 10000;
   
     	Handler fileHandler;
@@ -400,6 +400,9 @@ public class ShareARide{
 	    	
 			fileHandler.setFormatter(simpleFormater);
 			
+			String description = "\n\n\t\t RUN WITH ROUTE_REMOVAL AND GREEDY_INSERTION \n\n";
+			LOGGER.log(Level.INFO, description);
+			
 			LOGGER.log(Level.INFO, "Read data");
 			Info info = new Info(inData);
 			ShareARide sar = new ShareARide(info);
@@ -410,11 +413,13 @@ public class ShareARide{
 			LOGGER.log(Level.INFO, "Create model done --> Init solution");	
 			sar.InitSolutionByInsertGoodFirst();
 				
-			LOGGER.log(Level.INFO,"Init solution done. At start search number of reject points = "+rejectPoints.size()+"    violations = "+sar.S.violations()+"   cost = "+sar.objective.getValue());
+			LOGGER.log(Level.INFO,"Init solution done. At start search number of reject points = "+rejectPoints.size()/2+"    violations = "+sar.S.violations()+"   cost = "+sar.objective.getValue());
 			SolutionShareARide best_solution = sar.search(nIter, timeLimit);
 				
-			LOGGER.log(Level.INFO,"Search done. At end search number of reject points = "+best_solution.get_rejectPoints().size()+"   cost = "+best_solution.get_cost());
-		
+			LOGGER.log(Level.INFO,"Search done. At end search number of reject points = "+best_solution.get_rejectPoints().size()/2+"   cost = "+best_solution.get_cost());
+			
+			fileHandler.close();
+			
 		} catch (SecurityException | IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
