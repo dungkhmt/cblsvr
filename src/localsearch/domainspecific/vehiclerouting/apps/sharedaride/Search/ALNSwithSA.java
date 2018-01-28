@@ -463,7 +463,7 @@ public class ALNSwithSA {
 		do{
 			ipRemove = R.nextInt(clientPoints.size());
 			r1 = clientPoints.get(ipRemove);	
-		}while(ShareARide.rejectPoints.contains(r1) && !removeAllowed.get(r1));
+		}while(ShareARide.rejectPoints.contains(r1) || !removeAllowed.get(r1));
 		
 		Point dr1;
 		boolean isPickup = ShareARide.pickup2Delivery.containsKey(r1);
@@ -602,7 +602,7 @@ public class ALNSwithSA {
 		do{
 			ipRemove = R.nextInt(clientPoints.size());
 			r1 = clientPoints.get(ipRemove);	
-		}while(ShareARide.rejectPoints.contains(r1) && !removeAllowed.get(r1));
+		}while(ShareARide.rejectPoints.contains(r1) || !removeAllowed.get(r1));
 		
 		Point dr1;
 		boolean isPickup = ShareARide.pickup2Delivery.containsKey(r1);
@@ -688,7 +688,7 @@ public class ALNSwithSA {
 		do{
 			ipRemove = R.nextInt(clientPoints.size());
 			r1 = clientPoints.get(ipRemove);	
-		}while(ShareARide.rejectPoints.contains(r1) && !removeAllowed.get(r1));
+		}while(ShareARide.rejectPoints.contains(r1) || !removeAllowed.get(r1));
 		
 		Point dr1;
 		boolean isPickup = ShareARide.pickup2Delivery.containsKey(r1);
