@@ -1251,7 +1251,7 @@ public class ALNSwithSA {
  	}
 
  	private void regret_n_insertion(int n){
- 		ShareARide.LOGGER.log(Level.INFO,"Inserting peoples to route");
+ 		ShareARide.LOGGER.log(Level.INFO,"n = "+n+" ,Inserting peoples to route");
  		
 		for(int i=0; i<ShareARide.rejectPickupPeoples.size(); i++){
 			Point pickup = ShareARide.rejectPickupPeoples.get(i);
@@ -1282,6 +1282,7 @@ public class ALNSwithSA {
 									n_best_objective[it2] = n_best_objective[it2-1];
 								}
 								n_best_objective[it] = cost;
+								break;
 							}
 						}
 						double regret_value = 0;
@@ -1339,6 +1340,7 @@ public class ALNSwithSA {
 										n_best_objective[it2] = n_best_objective[it2-1];
 									}
 									n_best_objective[it] = cost;
+									break;
 								}
 							}
 							double regret_value = 0;
