@@ -121,7 +121,7 @@ public class ALNSwithSA {
 			//long timeRemoveStart = System.currentTimeMillis();
 			switch(i_selected_removal){
 			
-//				case 0: random_removal(); break;
+				case 0: random_removal(); break;
 				case 1: route_removal(); break;
 				case 2: late_arrival_removal(); break;
 				case 3: shaw_removal(); break;
@@ -858,7 +858,7 @@ public class ALNSwithSA {
 		
 	private void forbidden_removal(int nRemoval){
 		
-		ShareARide.LOGGER.log(Level.INFO,nChosed.toString());
+		//ShareARide.LOGGER.log(Level.INFO,nChosed.toString());
 		
 		for(int i=0; i < ShareARide.pickupPoints.size(); i++){
 			Point pi = ShareARide.pickupPoints.get(i);
