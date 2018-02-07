@@ -397,7 +397,7 @@ public class ShareARide{
 	    	
 			fileHandler.setFormatter(simpleFormater);
 			
-			String description = "\n\n\t\t RUN WITH 13 REMOVAL AND 14 INSERTION \n\n";
+			String description = "\n\n\t RUN WITH 13 REMOVAL AND 14 INSERTION (sigma1 = 3; sigma2 = 1; sigma3 = -5; nw = 3; 1-10% remove) \n\n";
 
 			LOGGER.log(Level.INFO, description);
 			
