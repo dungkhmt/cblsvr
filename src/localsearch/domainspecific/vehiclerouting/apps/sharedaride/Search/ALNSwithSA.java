@@ -43,8 +43,8 @@ public class ALNSwithSA {
 	private double shaw1st = 0.5;
 	private double shaw2nd = 0.2;
 	private double shaw3rd = 0.1;
-	private double temperature = 200;
-	private double cooling_rate = 0.9995;
+	//private double temperature = 200;
+	//private double cooling_rate = 0.9995;
 	private int nTabu = 5;
 	//private double shaw4th = 0.2; 
 	
@@ -205,18 +205,18 @@ public class ALNSwithSA {
 				si[i_selected_insertion] += sigma3;
 				sd[i_selected_removal] += sigma3;
 				
-				double v = Math.exp(-(new_cost-current_cost)/temperature);
-				double r = Math.random();
-				if(r >= v){
+				//double v = Math.exp(-(new_cost-current_cost)/temperature);
+				//double r = Math.random();
+				//if(r >= v){
 					ShareARide.LOGGER.log(Level.INFO,"The cost did not improve and reverse solution back to current solution");
 					current_solution.copy2XR(XR);
 					ShareARide.rejectPoints = current_solution.get_rejectPoints();
 					ShareARide.rejectPickupGoods = current_solution.get_rejectPickupGoods();
 					ShareARide.rejectPickupPeoples = current_solution.get_rejectPickupPeoples();
-				}
+				//}
 			}
 			
-			temperature = cooling_rate*temperature;
+			//temperature = cooling_rate*temperature;
 			
 			//update probabilities
 			if(it % nw == 0){
