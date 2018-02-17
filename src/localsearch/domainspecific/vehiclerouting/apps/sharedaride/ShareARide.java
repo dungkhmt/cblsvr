@@ -16,6 +16,7 @@ import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
 import localsearch.domainspecific.vehiclerouting.apps.sharedaride.Search.ALNSwithSA;
+import localsearch.domainspecific.vehiclerouting.vrp.Constants;
 import localsearch.domainspecific.vehiclerouting.vrp.ConstraintSystemVR;
 import localsearch.domainspecific.vehiclerouting.vrp.IFunctionVR;
 import localsearch.domainspecific.vehiclerouting.vrp.VRManager;
@@ -216,7 +217,6 @@ public class ShareARide{
 		mgr.close();
 	}
 	
-	/*
 	public void greedyInitSolution(){
 
 		for(int i = 0; i < pickupPoints.size(); i++){
@@ -265,11 +265,18 @@ public class ShareARide{
 					}
 				}
 			}
-			if((pre_pick == null || pre_delivery == null) && !rejectPickup.contains(pickup)){
+			
+			if((pre_pick == null || pre_delivery == null) && !rejectPoints.contains(pickup)){
 				rejectPoints.add(pickup);
 				rejectPoints.add(delivery);
-				rejectPickup.add(pickup);
-				rejectDelivery.add(delivery);
+				
+				if(isPeople){
+					rejectPickupPeoples.add(pickup);
+				}else{
+					rejectPickupGoods.add(pickup);
+				}
+				//rejectPickup.add(pickup);
+				//rejectDelivery.add(delivery);
 				//System.out.println("reject request: " + i + "reject size = " + rejectPickup.size());
 			}
 			else if(pre_pick != null && pre_delivery != null){
@@ -277,7 +284,7 @@ public class ShareARide{
 			}
 		}
 	}
-    */
+    
 	public void InitSolutionByInsertGoodFirst(){
 		
 		/*
@@ -409,8 +416,9 @@ public class ShareARide{
 			sar.stateModel();
 
 			LOGGER.log(Level.INFO, "Create model done --> Init solution");	
-			sar.InitSolutionByInsertGoodFirst();
-				
+			//sar.InitSolutionByInsertGoodFirst();
+			sar.greedyInitSolution();
+			
 			LOGGER.log(Level.INFO,"Init solution done. At start search number of reject points = "+rejectPoints.size()/2+"    violations = "+sar.S.violations()+"   cost = "+sar.objective.getValue());
 			SolutionShareARide best_solution = sar.search(nIter, timeLimit);
 				

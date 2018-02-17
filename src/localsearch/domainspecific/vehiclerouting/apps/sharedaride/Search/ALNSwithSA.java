@@ -888,6 +888,7 @@ public class ALNSwithSA {
 	}
 	
  	private void greedy_insertion(){
+ 		
  		ShareARide.LOGGER.log(Level.INFO,"Inserting peoples to route");
  		
 		for(int i=0; i<ShareARide.rejectPickupPeoples.size(); i++){
