@@ -397,7 +397,7 @@ public class ShareARide{
 			Date date = new Date();
 			//System.out.println(dateFormat.format(date));
 			
-			fileHandler = new FileHandler("data/output/SARP-offline/anhtu/n12335r100_1/"+dateFormat.format(date)+"_13Removal_14Insertion.txt");
+			fileHandler = new FileHandler("data/output/SARP-offline/anhtu/n12335r100_1/"+dateFormat.format(date)+"greedyInit_13Removal_14Insertion.txt");
 			simpleFormater = new SimpleFormatter();
 			
 			LOGGER.addHandler(fileHandler);
