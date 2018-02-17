@@ -390,14 +390,14 @@ public class ShareARide{
 			Date date = new Date();
 			//System.out.println(dateFormat.format(date));
 			
-			fileHandler = new FileHandler("data/output/SARP-offline/anhtu/n12335r100_1/"+dateFormat.format(date)+"_routeRemoval_greedyInsertion.txt");
+			fileHandler = new FileHandler("data/output/SARP-offline/anhtu/n12335r100_1/"+dateFormat.format(date)+"_13Removal_14Insertion.txt");
 			simpleFormater = new SimpleFormatter();
 			
 			LOGGER.addHandler(fileHandler);
 	    	
 			fileHandler.setFormatter(simpleFormater);
 			
-			String description = "\n\n\t RUN WITH Route REMOVAL AND greedy INSERTION \n\n";
+			String description = "\n\n\t RUN WITH 13 REMOVAL AND 14 INSERTION (3,1,-5,1) \n\n";
 
 			LOGGER.log(Level.INFO, description);
 			

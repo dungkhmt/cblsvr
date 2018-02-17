@@ -34,12 +34,12 @@ public class ALNSwithSA {
 	
 	//parameters
 	private int lower_removal = (int) 1*(ShareARide.nRequest)/100;
-	private int upper_removal = (int) 10*(ShareARide.nRequest)/100;
+	private int upper_removal = (int) 15*(ShareARide.nRequest)/100;
 	private int sigma1 = 3;
 	private int sigma2 = 1;
 	private int sigma3 = -5;
 	private double rp = 0.1;
-	private int nw = 3;
+	private int nw = 1;
 	private double shaw1st = 0.5;
 	private double shaw2nd = 0.2;
 	private double shaw3rd = 0.1;
@@ -111,8 +111,8 @@ public class ALNSwithSA {
 			SolutionShareARide current_solution = new SolutionShareARide(XR, ShareARide.rejectPoints, ShareARide.rejectPickupGoods, ShareARide.rejectPickupPeoples, current_cost);
 			ShareARide.LOGGER.log(Level.INFO, "Iter "+it+" current_solution has cost = "+current_solution.get_cost()+"  number of rejected request of goods = "+current_solution.get_rejectPickupGoods().size()+"  number of rejected request of peoples = "+current_solution.get_rejectPickupPeoples().size());
 			
-			//int i_selected_removal = get_operator(ptd);
-			int i_selected_removal = 1;
+			int i_selected_removal = get_operator(ptd);
+			//int i_selected_removal = 1;
 			wd[i_selected_removal]++;
 			/*
 			 * Select remove operator
@@ -121,25 +121,25 @@ public class ALNSwithSA {
 			//long timeRemoveStart = System.currentTimeMillis();
 			switch(i_selected_removal){
 			
-//				case 0: random_removal(); break;
+				case 0: random_removal(); break;
 				case 1: route_removal(); break;
-//				case 2: late_arrival_removal(); break;
-//				case 3: shaw_removal(); break;
-//				case 4: proximity_based_removal(); break;
-//				case 5: time_based_removal(); break;
-//				case 6: worst_removal(); break;
-//				case 7: forbidden_removal(0); break;
-//				case 8: forbidden_removal(1); break;
-//				case 9: forbidden_removal(2); break;
-//				case 10: forbidden_removal(3); break;
-//				case 11: forbidden_removal(4); break;
-//				case 12: forbidden_removal(5); break;
+				case 2: late_arrival_removal(); break;
+				case 3: shaw_removal(); break;
+				case 4: proximity_based_removal(); break;
+				case 5: time_based_removal(); break;
+				case 6: worst_removal(); break;
+				case 7: forbidden_removal(0); break;
+				case 8: forbidden_removal(1); break;
+				case 9: forbidden_removal(2); break;
+				case 10: forbidden_removal(3); break;
+				case 11: forbidden_removal(4); break;
+				case 12: forbidden_removal(5); break;
 			}
 			//long timeRemoveEnd = System.currentTimeMillis();
 			//long timeRemove = timeRemoveEnd - timeRemoveStart;
 			
-			//int i_selected_insertion = get_operator(pti);
-			int i_selected_insertion  = 0;
+			int i_selected_insertion = get_operator(pti);
+			//int i_selected_insertion  = 0;
 			wi[i_selected_insertion]++;
 			ShareARide.LOGGER.log(Level.INFO,"selected insertion operator = "+i_selected_insertion);
 			/*
@@ -149,19 +149,19 @@ public class ALNSwithSA {
 			switch(i_selected_insertion){
 				
 				case 0: greedy_insertion(); break;
-//				case 1: greedy_insertion_noise_function(); break;
-//				case 2: second_best_insertion(); break;
-//				case 3: second_best_insertion_noise_function(); break;
-//				case 4: regret_n_insertion(2); break;
-//				case 5: regret_n_insertion(3); break;
-//				case 6: first_possible_insertion();break;
-//				case 7: sort_before_insertion(0); break;
-//				case 8: sort_before_insertion(1); break;
-//				case 9: sort_before_insertion(2); break;
-//				case 10: sort_before_insertion(3); break;
-//				case 11: sort_before_insertion(4); break;
-//				case 12: sort_before_insertion(5); break;
-//				case 13: sort_before_insertion(6); break;
+				case 1: greedy_insertion_noise_function(); break;
+				case 2: second_best_insertion(); break;
+				case 3: second_best_insertion_noise_function(); break;
+				case 4: regret_n_insertion(2); break;
+				case 5: regret_n_insertion(3); break;
+				case 6: first_possible_insertion();break;
+				case 7: sort_before_insertion(0); break;
+				case 8: sort_before_insertion(1); break;
+				case 9: sort_before_insertion(2); break;
+				case 10: sort_before_insertion(3); break;
+				case 11: sort_before_insertion(4); break;
+				case 12: sort_before_insertion(5); break;
+				case 13: sort_before_insertion(6); break;
 			}
 			double new_cost = objective.getValue();
 			ShareARide.LOGGER.log(Level.INFO,"Iter "+it+" new_solution: has cost = "+new_cost+"  number of rejected request of goods = "+ShareARide.rejectPickupGoods.size()+"  number of rejected request of peoples = "+ShareARide.rejectPickupPeoples.size());
@@ -1514,28 +1514,28 @@ public class ALNSwithSA {
 	
 	//roulette-wheel mechanism
  	private int get_operator(double[] p){
- 		String message = "probabilities input \n";
+ 		//String message = "probabilities input \n";
  		
  		int n = p.length;
 		double[] s = new double[n];
 		s[0] = 0+p[0];
 		
-		String messagep = ("p = ["+p[0]+", ");
-		String messages = ("s = ["+s[0]+", ");
+		//String messagep = ("p = ["+p[0]+", ");
+		//String messages = ("s = ["+s[0]+", ");
 		
 		for(int i=1; i<n; i++){
-			messagep += (p[i]+", ");
+			//messagep += (p[i]+", ");
 			s[i] = s[i-1]+p[i]; 
-			messages += (s[i]+", ");
+			//messages += (s[i]+", ");
 		}
-		messagep += ("]");
-		messages += ("]");
+		//messagep += ("]");
+		//messages += ("]");
 		
 		double r = s[n-1]*Math.random();
-		String messr = ("radom value = " + r);
+		//String messr = ("radom value = " + r);
 		
-		message += (messagep +"\n" + messages + "\n" + messr);
-		ShareARide.LOGGER.log(Level.INFO,message);
+		//message += (messagep +"\n" + messages + "\n" + messr);
+		//ShareARide.LOGGER.log(Level.INFO,message);
 		
 		if(r>=0 && r <= s[0])
 			return 0;
