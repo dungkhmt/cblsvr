@@ -397,16 +397,16 @@ public class ShareARide{
 			Date date = new Date();
 			//System.out.println(dateFormat.format(date));
 			
-			fileHandler = new FileHandler("data/output/SARP-offline/anhtu/n12335r100_1/"+dateFormat.format(date)+"greedyInit_13Removal_14Insertion.txt");
+			fileHandler = new FileHandler("data/output/SARP-offline/anhtu/n12335r100_1/"+dateFormat.format(date)+"_randomRemoval_greedyInsertion.txt");
 			simpleFormater = new SimpleFormatter();
 			
 			LOGGER.addHandler(fileHandler);
 	    	
 			fileHandler.setFormatter(simpleFormater);
 			
-			String description = "\n\n\t RUN WITH 13 REMOVAL AND 14 INSERTION (3,1,-5,1) \n\n";
+			//String description = "\n\n\t RUN WITH 13 REMOVAL AND 4 INSERTION (3,1,-5,4) \n\n";
 
-			LOGGER.log(Level.INFO, description);
+			//LOGGER.log(Level.INFO, description);
 			
 			LOGGER.log(Level.INFO, "Read data");
 			Info info = new Info(inData);
@@ -416,8 +416,8 @@ public class ShareARide{
 			sar.stateModel();
 
 			LOGGER.log(Level.INFO, "Create model done --> Init solution");	
-			//sar.InitSolutionByInsertGoodFirst();
-			sar.greedyInitSolution();
+			sar.InitSolutionByInsertGoodFirst();
+			//sar.greedyInitSolution();
 			
 			LOGGER.log(Level.INFO,"Init solution done. At start search number of reject points = "+rejectPoints.size()/2+"    violations = "+sar.S.violations()+"   cost = "+sar.objective.getValue());
 			SolutionShareARide best_solution = sar.search(nIter, timeLimit);
