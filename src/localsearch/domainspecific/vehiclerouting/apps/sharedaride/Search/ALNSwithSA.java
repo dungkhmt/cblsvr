@@ -39,7 +39,7 @@ public class ALNSwithSA {
 	private int sigma2 = 1;
 	private int sigma3 = -5;
 	private double rp = 0.1;
-	private int nw = 4;
+	private int nw = 1;
 	private double shaw1st = 0.5;
 	private double shaw2nd = 0.2;
 	private double shaw3rd = 0.1;
@@ -111,8 +111,8 @@ public class ALNSwithSA {
 			SolutionShareARide current_solution = new SolutionShareARide(XR, ShareARide.rejectPoints, ShareARide.rejectPickupGoods, ShareARide.rejectPickupPeoples, current_cost);
 			ShareARide.LOGGER.log(Level.INFO, "Iter "+it+" current_solution has cost = "+current_solution.get_cost()+"  number of rejected request of goods = "+current_solution.get_rejectPickupGoods().size()+"  number of rejected request of peoples = "+current_solution.get_rejectPickupPeoples().size());
 			
-			//int i_selected_removal = get_operator(ptd);
-			int i_selected_removal = 0;
+			int i_selected_removal = get_operator(ptd);
+			//int i_selected_removal = 0;
 			wd[i_selected_removal]++;
 			/*
 			 * Select remove operator
@@ -138,8 +138,8 @@ public class ALNSwithSA {
 			//long timeRemoveEnd = System.currentTimeMillis();
 			//long timeRemove = timeRemoveEnd - timeRemoveStart;
 			
-			//int i_selected_insertion = get_operator(pti);
-			int i_selected_insertion  = 0;
+			int i_selected_insertion = get_operator(pti);
+			//int i_selected_insertion  = 0;
 			wi[i_selected_insertion]++;
 			ShareARide.LOGGER.log(Level.INFO,"selected insertion operator = "+i_selected_insertion);
 			/*

@@ -378,6 +378,68 @@ public class ShareARide{
 		}
 	}
 	
+	public void firstPossibleInit(){
+		
+		for(int i = 0; i < pickupPoints.size(); i++){
+			Point pickup = pickupPoints.get(i);
+			if(XR.route(pickup) != Constants.NULL_POINT)
+				continue;
+			Point delivery = deliveryPoints.get(i);
+			//add the request to route
+			
+			boolean isPeople = pickup2DeliveryOfPeople.containsKey(pickup);
+			boolean finded = false;
+			
+			for(int r = 1; r <= XR.getNbRoutes(); r++){
+				if(finded)
+					break;
+				
+				for(Point p = XR.getStartingPointOfRoute(r); p!= XR.getTerminatingPointOfRoute(r); p = XR.next(p)){
+					if(pickup2DeliveryOfPeople.containsKey(p) || S.evaluateAddOnePoint(pickup, p) > 0)
+						continue;
+					
+					if(finded)
+						break;
+					
+					if(isPeople){
+						//check constraint
+						if(S.evaluateAddTwoPoints(pickup, p, delivery, p) == 0){
+							//cost improve
+							mgr.performAddTwoPoints(pickup, p, delivery, p);
+							finded = true;
+						}
+					}
+					//point is good
+					else{
+						for(Point q = p; q != XR.getTerminatingPointOfRoute(r); q = XR.next(q)){
+							if(pickup2DeliveryOfPeople.containsKey(q) || S.evaluateAddOnePoint(delivery, q) > 0)
+								continue;
+							if(S.evaluateAddTwoPoints(pickup, p, delivery, q) == 0){
+								mgr.performAddTwoPoints(pickup, p, delivery, p);
+								finded = true;
+								break;
+							}
+						}
+					}
+				}
+			}
+			
+			if(!finded){
+				rejectPoints.add(pickup);
+				rejectPoints.add(delivery);
+				
+				if(isPeople){
+					rejectPickupPeoples.add(pickup);
+				}else{
+					rejectPickupGoods.add(pickup);
+				}
+				//rejectPickup.add(pickup);
+				//rejectDelivery.add(delivery);
+				//System.out.println("reject request: " + i + "reject size = " + rejectPickup.size());
+			}
+		}
+	}
+	
 	public SolutionShareARide search(int maxIter, int timeLimit){
 		ALNSwithSA alns = new ALNSwithSA(mgr, objective, S, eat, awm);
 		return alns.search(maxIter, timeLimit);
@@ -397,16 +459,16 @@ public class ShareARide{
 			Date date = new Date();
 			//System.out.println(dateFormat.format(date));
 			
-			fileHandler = new FileHandler("data/output/SARP-offline/anhtu/n12335r100_1/"+dateFormat.format(date)+"_randomRemoval_greedyInsertion.txt");
+			fileHandler = new FileHandler("data/output/SARP-offline/anhtu/n12335r100_1/"+dateFormat.format(date)+"_firstPossibleInit_13Removal_4Insertion.txt");
 			simpleFormater = new SimpleFormatter();
 			
 			LOGGER.addHandler(fileHandler);
 	    	
 			fileHandler.setFormatter(simpleFormater);
 			
-			//String description = "\n\n\t RUN WITH 13 REMOVAL AND 4 INSERTION (3,1,-5,4) \n\n";
+			String description = "\n\n\t RUN WITH 13 REMOVAL AND 4 INSERTION (3,1,-5,1) \n\n";
 
-			//LOGGER.log(Level.INFO, description);
+			LOGGER.log(Level.INFO, description);
 			
 			LOGGER.log(Level.INFO, "Read data");
 			Info info = new Info(inData);
@@ -416,8 +478,9 @@ public class ShareARide{
 			sar.stateModel();
 
 			LOGGER.log(Level.INFO, "Create model done --> Init solution");	
-			sar.InitSolutionByInsertGoodFirst();
+			//sar.InitSolutionByInsertGoodFirst();
 			//sar.greedyInitSolution();
+			sar.firstPossibleInit();
 			
 			LOGGER.log(Level.INFO,"Init solution done. At start search number of reject points = "+rejectPoints.size()/2+"    violations = "+sar.S.violations()+"   cost = "+sar.objective.getValue());
 			SolutionShareARide best_solution = sar.search(nIter, timeLimit);
