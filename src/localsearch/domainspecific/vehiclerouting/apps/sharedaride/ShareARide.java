@@ -377,7 +377,7 @@ public class ShareARide{
 			}
 		}
 	}
-	
+
 	public void firstPossibleInit(){
 		
 		for(int i = 0; i < pickupPoints.size(); i++){
@@ -415,7 +415,7 @@ public class ShareARide{
 							if(pickup2DeliveryOfPeople.containsKey(q) || S.evaluateAddOnePoint(delivery, q) > 0)
 								continue;
 							if(S.evaluateAddTwoPoints(pickup, p, delivery, q) == 0){
-								mgr.performAddTwoPoints(pickup, p, delivery, p);
+								mgr.performAddTwoPoints(pickup, p, delivery, q);
 								finded = true;
 								break;
 							}
@@ -523,54 +523,60 @@ public class ShareARide{
 		}
 	}
 	
-	public SolutionShareARide search(int maxIter, int timeLimit){
+	public SolutionShareARide search(int maxIter, int timeLimit, int i_remove, int i_insert){
 		ALNSwithSA alns = new ALNSwithSA(mgr, objective, S, eat, awm);
-		return alns.search(maxIter, timeLimit);
+		return alns.search(maxIter, timeLimit, i_remove, i_insert);
 	}
 	
 	public static void main(String []args){
     	String inData = "data/SARP-offline/n12335r100_1.txt";
     	
     	int timeLimit = 36000000;
-    	int nIter = 10000;
-  
+    	int nIter = 300;
+    	
     	Handler fileHandler;
     	Formatter simpleFormater;
-		try {
-			
-			DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
-			Date date = new Date();
-			//System.out.println(dateFormat.format(date));
-			
-			fileHandler = new FileHandler("data/output/SARP-offline/anhtu/n12335r100_1/"+dateFormat.format(date)+"_firstPossibleInit_13Removal_4Insertion.txt");
-			simpleFormater = new SimpleFormatter();
-			
-			LOGGER.addHandler(fileHandler);
-	    	
-			fileHandler.setFormatter(simpleFormater);
-			
-			String description = "\n\n\t RUN WITH 13 REMOVAL AND 4 INSERTION (3,1,-5,1) \n\n";
+    	
+    	try {		
+//			for(int i=0; i<13; i++){
+//				for(int j=0; j<14; j++){
+//					DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
+//					Date date = new Date();
+					//System.out.println(dateFormat.format(date));
+					
+					fileHandler = new FileHandler("data/output/SARP-offline/anhtu/n12335r100_1/InitPeopleFirst.txt");
+					simpleFormater = new SimpleFormatter();
+					
+					LOGGER.addHandler(fileHandler);
+			    	
+					fileHandler.setFormatter(simpleFormater);
+					
+//					String description = "\n\n\t RUN WITH 13 REMOVAL AND 14 INSERTION (3,1,-5,20) \n\n";
+//					LOGGER.log(Level.INFO, description);
+					
+					LOGGER.log(Level.INFO, "Read data");
+					Info info = new Info(inData);
+					ShareARide sar = new ShareARide(info);
+						
+					LOGGER.log(Level.INFO, "Read data done --> Create model");
+					sar.stateModel();
 
-			LOGGER.log(Level.INFO, description);
-			
-			LOGGER.log(Level.INFO, "Read data");
-			Info info = new Info(inData);
-			ShareARide sar = new ShareARide(info);
-				
-			LOGGER.log(Level.INFO, "Read data done --> Create model");
-			sar.stateModel();
-
-			LOGGER.log(Level.INFO, "Create model done --> Init solution");	
-			//sar.InitSolutionByInsertGoodFirst();
-			//sar.greedyInitSolution();
-			sar.firstPossibleInit();
-			
-			LOGGER.log(Level.INFO,"Init solution done. At start search number of reject points = "+rejectPoints.size()/2+"    violations = "+sar.S.violations()+"   cost = "+sar.objective.getValue());
-			SolutionShareARide best_solution = sar.search(nIter, timeLimit);
-				
-			LOGGER.log(Level.INFO,"Search done. At end search number of reject points = "+best_solution.get_rejectPoints().size()/2+"   cost = "+best_solution.get_cost());
-			
-			fileHandler.close();
+					LOGGER.log(Level.INFO, "Create model done --> Init solution");	
+					sar.InitSolutionByInsertGoodFirst();
+					//sar.greedyInitSolution();
+					//sar.firstPossibleInit();
+					//sar.firstPossible_insertGoodFirst_init();
+					
+					LOGGER.log(Level.INFO,"Init solution done. At start search number of reject points = "+rejectPoints.size()/2+"    violations = "+sar.S.violations()+"   cost = "+sar.objective.getValue());
+					SolutionShareARide best_solution = sar.search(nIter, timeLimit,0,0);
+						
+					LOGGER.log(Level.INFO,"Search done. At end search number of reject points = "+best_solution.get_rejectPoints().size()/2+"   cost = "+best_solution.get_cost());
+					
+					LOGGER.log(Level.INFO,best_solution.toString());
+					
+					fileHandler.close();
+				//}
+			//}
 			
 		} catch (SecurityException | IOException e) {
 			// TODO Auto-generated catch block

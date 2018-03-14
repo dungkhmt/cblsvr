@@ -30,7 +30,7 @@ public class ALNSwithSA {
 	HashMap<Point, Boolean> removeAllowed;
 	
 	private int nRemovalOperators = 13;
-	private int nInsertionOperators = 4;
+	private int nInsertionOperators = 14;
 	
 	//parameters
 	private int lower_removal = (int) 1*(ShareARide.nRequest)/100;
@@ -70,7 +70,7 @@ public class ALNSwithSA {
 		}
 	}
 	
-	public SolutionShareARide search(int maxIter, int timeLimit){
+	public SolutionShareARide search(int maxIter, int timeLimit, int i_remove, int i_insert){
 		//insertion operators selection probabilities
 		double[] pti = new double[nInsertionOperators];
 		//removal operators selection probabilities
@@ -111,8 +111,8 @@ public class ALNSwithSA {
 			SolutionShareARide current_solution = new SolutionShareARide(XR, ShareARide.rejectPoints, ShareARide.rejectPickupGoods, ShareARide.rejectPickupPeoples, current_cost);
 			ShareARide.LOGGER.log(Level.INFO, "Iter "+it+" current_solution has cost = "+current_solution.get_cost()+"  number of rejected request of goods = "+current_solution.get_rejectPickupGoods().size()+"  number of rejected request of peoples = "+current_solution.get_rejectPickupPeoples().size());
 			
-			int i_selected_removal = get_operator(ptd);
-			//int i_selected_removal = 0;
+			//int i_selected_removal = get_operator(ptd);
+			int i_selected_removal = i_remove;
 			wd[i_selected_removal]++;
 			/*
 			 * Select remove operator
@@ -138,8 +138,8 @@ public class ALNSwithSA {
 			//long timeRemoveEnd = System.currentTimeMillis();
 			//long timeRemove = timeRemoveEnd - timeRemoveStart;
 			
-			int i_selected_insertion = get_operator(pti);
-			//int i_selected_insertion  = 0;
+			//int i_selected_insertion = get_operator(pti);
+			int i_selected_insertion = i_insert;
 			wi[i_selected_insertion]++;
 			ShareARide.LOGGER.log(Level.INFO,"selected insertion operator = "+i_selected_insertion);
 			/*
@@ -149,19 +149,19 @@ public class ALNSwithSA {
 			switch(i_selected_insertion){
 				
 				case 0: greedy_insertion(); break;
-//				case 1: greedy_insertion_noise_function(); break;
-//				case 2: second_best_insertion(); break;
-//				case 3: second_best_insertion_noise_function(); break;
-//				case 4: regret_n_insertion(2); break;
-//				case 5: regret_n_insertion(3); break;
-				case 1: first_possible_insertion();break;
-				case 2: sort_before_insertion(0); break;
-//				case 8: sort_before_insertion(1); break;
-//				case 9: sort_before_insertion(2); break;
-//				case 10: sort_before_insertion(3); break;
-//				case 11: sort_before_insertion(4); break;
-//				case 12: sort_before_insertion(5); break;
-				case 3: sort_before_insertion(6); break;
+				case 1: greedy_insertion_noise_function(); break;
+				case 2: second_best_insertion(); break;
+				case 3: second_best_insertion_noise_function(); break;
+				case 4: regret_n_insertion(2); break;
+				case 5: regret_n_insertion(3); break;
+				case 6: first_possible_insertion();break;
+				case 7: sort_before_insertion(0); break;
+				case 8: sort_before_insertion(1); break;
+				case 9: sort_before_insertion(2); break;
+				case 10: sort_before_insertion(3); break;
+				case 11: sort_before_insertion(4); break;
+				case 12: sort_before_insertion(5); break;
+				case 13: sort_before_insertion(6); break;
 			}
 			double new_cost = objective.getValue();
 			ShareARide.LOGGER.log(Level.INFO,"Iter "+it+" new_solution: has cost = "+new_cost+"  number of rejected request of goods = "+ShareARide.rejectPickupGoods.size()+"  number of rejected request of peoples = "+ShareARide.rejectPickupPeoples.size());

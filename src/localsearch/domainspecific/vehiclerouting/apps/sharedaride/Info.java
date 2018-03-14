@@ -87,6 +87,7 @@ public class Info {
 			System.out.println(nX+"  "+nY);
 			p[i] = new Point(nX, nY);
 		}
+		fi.close();
     }
 
   
