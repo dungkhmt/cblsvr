@@ -217,6 +217,9 @@ public class ShareARide{
 		mgr.close();
 	}
 	
+	/*
+	 * Init
+	 */
 	public void greedyInitSolution(){
 
 		for(int i = 0; i < pickupPoints.size(); i++){
@@ -370,6 +373,98 @@ public class ShareARide{
 				rejectPoints.add(pickup);
 				rejectPoints.add(delivery);
 				rejectPickupPeoples.add(pickup);
+				//System.out.println("reject request: " + i + "reject size = " + rejectPickup.size());
+			}
+			else if(pre_pick != null && pre_delivery != null){
+				mgr.performAddTwoPoints(pickup, pre_pick, delivery, pre_delivery);
+			}
+		}
+	}
+	
+	public void InitSolutionByInsertPeopleFirst(){
+		/*
+		 * Insert people
+		 * 		find best route and best position in route to insert
+		 */
+
+		LOGGER.log(Level.INFO,"Insert people to route");
+		Iterator<Map.Entry<Point, Point>> it2 = pickup2DeliveryOfPeople.entrySet().iterator();
+
+		while(it2.hasNext()){
+			Map.Entry<Point,Point> requestOfPeople = it2.next();
+			Point pickup = requestOfPeople.getKey();
+			Point delivery = requestOfPeople.getValue();
+			
+			Point pre_pick = null;
+			Point pre_delivery = null;
+			double best_objective = Double.MAX_VALUE; 
+			
+			for(int r = 1; r <= XR.getNbRoutes(); r++){
+				for(Point p = XR.getStartingPointOfRoute(r); p!= XR.getTerminatingPointOfRoute(r); p = XR.next(p)){
+					if(S.evaluateAddOnePoint(pickup, p) > 0)
+						continue;
+					
+					if(S.evaluateAddTwoPoints(pickup, p, delivery, p) == 0){
+						//cost improve
+						double cost = objective.evaluateAddTwoPoints(pickup, p, delivery, p);
+						if( cost < best_objective){
+							best_objective = cost;
+							pre_pick = p;
+							pre_delivery = p;
+						}
+					}
+				}
+			}
+			if(pre_pick == null || pre_delivery == null){
+				rejectPoints.add(pickup);
+				rejectPoints.add(delivery);
+				rejectPickupPeoples.add(pickup);
+				//System.out.println("reject request: " + i + "reject size = " + rejectPickup.size());
+			}
+			else if(pre_pick != null && pre_delivery != null){
+				mgr.performAddTwoPoints(pickup, pre_pick, delivery, pre_delivery);
+			}
+		}
+		
+		/*
+		 * Insert good
+		 * 		find best route and best position in route to insert
+		 */
+		LOGGER.log(Level.INFO,"Insert good to route");
+		Iterator<Map.Entry<Point, Point>> it = pickup2DeliveryOfGood.entrySet().iterator();
+		
+		while(it.hasNext()){
+			Map.Entry<Point,Point> requestOfGood = it.next();
+			Point pickup = requestOfGood.getKey();
+			Point delivery = requestOfGood.getValue();
+			
+			Point pre_pick = null;
+			Point pre_delivery = null;
+			double best_objective = Double.MAX_VALUE; 
+			
+			for(int r = 1; r <= XR.getNbRoutes(); r++){
+				for(Point p = XR.getStartingPointOfRoute(r); p!= XR.getTerminatingPointOfRoute(r); p = XR.next(p)){
+					if(S.evaluateAddOnePoint(pickup, p) > 0)
+						continue;
+					
+					for(Point q = p; q != XR.getTerminatingPointOfRoute(r); q = XR.next(q)){
+						if(S.evaluateAddOnePoint(delivery, q) > 0)
+							continue;
+						if(S.evaluateAddTwoPoints(pickup, p, delivery, q) == 0){
+							double cost = objective.evaluateAddTwoPoints(pickup, p, delivery, q);
+							if(cost < best_objective){
+								best_objective = cost;
+								pre_pick = p;
+								pre_delivery = q;
+							}
+						}
+					}
+				}
+			}
+			if(pre_pick == null || pre_delivery == null){
+				rejectPoints.add(pickup);
+				rejectPoints.add(delivery);
+				rejectPickupGoods.add(pickup);
 				//System.out.println("reject request: " + i + "reject size = " + rejectPickup.size());
 			}
 			else if(pre_pick != null && pre_delivery != null){
@@ -540,19 +635,19 @@ public class ShareARide{
     	try {		
 //			for(int i=0; i<13; i++){
 //				for(int j=0; j<14; j++){
-//					DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
-//					Date date = new Date();
+					DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
+					Date date = new Date();
 					//System.out.println(dateFormat.format(date));
 					
-					fileHandler = new FileHandler("data/output/SARP-offline/anhtu/n12335r100_1/InitPeopleFirst.txt");
+					fileHandler = new FileHandler("data/output/SARP-offline/anhtu/n12335r100_1/"+dateFormat.format(date)+"_InitPeopleFirst_13Removal_14Insertion.txt");
 					simpleFormater = new SimpleFormatter();
 					
 					LOGGER.addHandler(fileHandler);
 			    	
 					fileHandler.setFormatter(simpleFormater);
 					
-//					String description = "\n\n\t RUN WITH 13 REMOVAL AND 14 INSERTION (3,1,-5,20) \n\n";
-//					LOGGER.log(Level.INFO, description);
+					String description = "\n\n\t RUN WITH 13 REMOVAL AND 14 INSERTION (3,1,-5,1) \n\n";
+					LOGGER.log(Level.INFO, description);
 					
 					LOGGER.log(Level.INFO, "Read data");
 					Info info = new Info(inData);
@@ -562,10 +657,11 @@ public class ShareARide{
 					sar.stateModel();
 
 					LOGGER.log(Level.INFO, "Create model done --> Init solution");	
-					sar.InitSolutionByInsertGoodFirst();
+					//sar.InitSolutionByInsertGoodFirst();
 					//sar.greedyInitSolution();
 					//sar.firstPossibleInit();
 					//sar.firstPossible_insertGoodFirst_init();
+					sar.InitSolutionByInsertPeopleFirst();
 					
 					LOGGER.log(Level.INFO,"Init solution done. At start search number of reject points = "+rejectPoints.size()/2+"    violations = "+sar.S.violations()+"   cost = "+sar.objective.getValue());
 					SolutionShareARide best_solution = sar.search(nIter, timeLimit,0,0);
@@ -576,8 +672,7 @@ public class ShareARide{
 					
 					fileHandler.close();
 				//}
-			//}
-			
+			//}			
 		} catch (SecurityException | IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
