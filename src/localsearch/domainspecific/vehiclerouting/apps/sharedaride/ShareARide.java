@@ -624,17 +624,16 @@ public class ShareARide{
 	}
 	
 	public static void main(String []args){
-    	String inData = "data/SARP-offline/n12335r100_1.txt";
-    	
-    	int timeLimit = 36000000;
-    	int nIter = 300;
-    	
-    	Handler fileHandler;
-    	Formatter simpleFormater;
-    	
     	try {		
-//			for(int i=0; i<13; i++){
-//				for(int j=0; j<14; j++){
+			for(int i=0; i<13; i++){
+				for(int j=0; j<14; j++){
+		    		String inData = "data/SARP-offline/n12335r100_1.txt";
+		        	
+		        	int timeLimit = 36000000;
+		        	int nIter = 300;
+		        	
+		        	Handler fileHandler;
+		        	Formatter simpleFormater;
 					DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
 					Date date = new Date();
 					//System.out.println(dateFormat.format(date));
@@ -674,8 +673,8 @@ public class ShareARide{
 					LOGGER.log(Level.INFO,best_solution.toString());
 					
 					fileHandler.close();
-				//}
-			//}			
+				}
+			}			
 		} catch (SecurityException | IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
