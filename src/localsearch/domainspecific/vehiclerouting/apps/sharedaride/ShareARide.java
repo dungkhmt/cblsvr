@@ -39,22 +39,22 @@ public class ShareARide{
 	public static int GOOD = 0;
 	int scale = 100000;
 	ArrayList<Point> points;
-	public static ArrayList<Point> pickupPoints;
-	public static ArrayList<Point> deliveryPoints;
+	public ArrayList<Point> pickupPoints;
+	public ArrayList<Point> deliveryPoints;
 	ArrayList<Integer> type;
 	ArrayList<Point> startPoints;
 	ArrayList<Point> stopPoints;
 	
-	public static ArrayList<Point> rejectPoints;
-	public static ArrayList<Point> rejectPickupGoods;
-	public static ArrayList<Point> rejectPickupPeoples;
-	public static HashMap<Point, Integer> earliestAllowedArrivalTime;
-	public static HashMap<Point, Integer> serviceDuration;
-	public static HashMap<Point, Integer> lastestAllowedArrivalTime;
-	public static HashMap<Point,Point> pickup2DeliveryOfGood;
-	public static HashMap<Point,Point> pickup2DeliveryOfPeople;
-	public static HashMap<Point, Point> pickup2Delivery;
-	public static HashMap<Point,Point> delivery2Pickup;
+	public ArrayList<Point> rejectPoints;
+	public ArrayList<Point> rejectPickupGoods;
+	public ArrayList<Point> rejectPickupPeoples;
+	public HashMap<Point, Integer> earliestAllowedArrivalTime;
+	public HashMap<Point, Integer> serviceDuration;
+	public HashMap<Point, Integer> lastestAllowedArrivalTime;
+	public HashMap<Point,Point> pickup2DeliveryOfGood;
+	public HashMap<Point,Point> pickup2DeliveryOfPeople;
+	public HashMap<Point, Point> pickup2Delivery;
+	public HashMap<Point,Point> delivery2Pickup;
 	public int nVehicle;
 	public static int nRequest;
 	public static double MAX_DISTANCE;
@@ -618,8 +618,8 @@ public class ShareARide{
 		}
 	}
 	
-	public SolutionShareARide search(int maxIter, int timeLimit, int i_remove, int i_insert){
-		ALNSwithSA alns = new ALNSwithSA(mgr, objective, S, eat, awm);
+	public SolutionShareARide search(int maxIter, int timeLimit, int i_remove, int i_insert, SearchInput si){
+		ALNSwithSA alns = new ALNSwithSA(mgr, objective, S, eat, awm, si);
 		return alns.search(maxIter, timeLimit, i_remove, i_insert);
 	}
 	
@@ -663,8 +663,11 @@ public class ShareARide{
 					//sar.firstPossible_insertGoodFirst_init();
 					sar.InitSolutionByInsertPeopleFirst();
 					
-					LOGGER.log(Level.INFO,"Init solution done. At start search number of reject points = "+rejectPoints.size()/2+"    violations = "+sar.S.violations()+"   cost = "+sar.objective.getValue());
-					SolutionShareARide best_solution = sar.search(nIter, timeLimit,0,0);
+					LOGGER.log(Level.INFO,"Init solution done. At start search number of reject points = "+sar.rejectPoints.size()/2+"    violations = "+sar.S.violations()+"   cost = "+sar.objective.getValue());
+					SearchInput si = new SearchInput(sar.pickupPoints, sar.deliveryPoints, sar.rejectPoints, 
+							sar.rejectPickupGoods, sar.rejectPickupPeoples, sar.earliestAllowedArrivalTime, sar.serviceDuration, 
+							sar.lastestAllowedArrivalTime, sar.pickup2DeliveryOfGood, sar.pickup2DeliveryOfPeople, sar.pickup2Delivery, sar.delivery2Pickup);
+					SolutionShareARide best_solution = sar.search(nIter, timeLimit,0,0,si);
 						
 					LOGGER.log(Level.INFO,"Search done. At end search number of reject points = "+best_solution.get_rejectPoints().size()/2+"   cost = "+best_solution.get_cost());
 					
