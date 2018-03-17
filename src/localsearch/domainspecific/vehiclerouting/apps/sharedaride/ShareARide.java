@@ -627,26 +627,26 @@ public class ShareARide{
     	try {		
 			for(int i=0; i<13; i++){
 				for(int j=0; j<14; j++){
-		    		String inData = "data/SARP-offline/n12335r100_1.txt";
+		    		String inData = "data/SARP-offline/n2466r20_1_24h.txt";
 		        	
 		        	int timeLimit = 36000000;
 		        	int nIter = 300;
 		        	
 		        	Handler fileHandler;
 		        	Formatter simpleFormater;
-					DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
-					Date date = new Date();
+					//DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
+					//Date date = new Date();
 					//System.out.println(dateFormat.format(date));
 					
-					fileHandler = new FileHandler("data/output/SARP-offline/anhtu/n12335r100_1/"+dateFormat.format(date)+"_InitPeopleFirst_13Removal_14Insertion.txt");
+					fileHandler = new FileHandler("data/output/SARP-offline/anhtu/n2466r20_1_24h/Removal_"+i+"_Insertion_"+j+".txt");
 					simpleFormater = new SimpleFormatter();
 					
 					LOGGER.addHandler(fileHandler);
 			    	
 					fileHandler.setFormatter(simpleFormater);
 					
-					String description = "\n\n\t RUN WITH 13 REMOVAL AND 14 INSERTION (3,1,-5,1) \n\n";
-					LOGGER.log(Level.INFO, description);
+//					String description = "\n\n\t RUN WITH 13 REMOVAL AND 14 INSERTION (3,1,-5,1) \n\n";
+//					LOGGER.log(Level.INFO, description);
 					
 					LOGGER.log(Level.INFO, "Read data");
 					Info info = new Info(inData);
@@ -659,8 +659,8 @@ public class ShareARide{
 					//sar.InitSolutionByInsertGoodFirst();
 					//sar.greedyInitSolution();
 					//sar.firstPossibleInit();
-					//sar.firstPossible_insertGoodFirst_init();
-					sar.InitSolutionByInsertPeopleFirst();
+					sar.firstPossible_insertGoodFirst_init();
+					//sar.InitSolutionByInsertPeopleFirst();
 					
 					LOGGER.log(Level.INFO,"Init solution done. At start search number of reject points = "+sar.rejectPoints.size()/2+"    violations = "+sar.S.violations()+"   cost = "+sar.objective.getValue());
 					SearchInput si = new SearchInput(sar.pickupPoints, sar.deliveryPoints, sar.rejectPoints, 
