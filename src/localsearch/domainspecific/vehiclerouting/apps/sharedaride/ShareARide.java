@@ -618,6 +618,90 @@ public class ShareARide{
 		}
 	}
 	
+	public void firstPossible_insertPeopleFirst_init(){
+		
+		/*
+		 * Insert people
+		 * 		find best route and best position in route to insert
+		 */
+
+		LOGGER.log(Level.INFO,"Insert people to route");
+		Iterator<Map.Entry<Point, Point>> it2 = pickup2DeliveryOfPeople.entrySet().iterator();
+
+		while(it2.hasNext()){
+			Map.Entry<Point,Point> requestOfPeople = it2.next();
+			Point pickup = requestOfPeople.getKey();
+			Point delivery = requestOfPeople.getValue();
+			
+			boolean finded = false;
+			
+			for(int r = 1; r <= XR.getNbRoutes(); r++){
+				if(finded)
+					break;
+				
+				for(Point p = XR.getStartingPointOfRoute(r); p!= XR.getTerminatingPointOfRoute(r); p = XR.next(p)){
+					if(S.evaluateAddOnePoint(pickup, p) > 0)
+						continue;
+					
+					if(S.evaluateAddTwoPoints(pickup, p, delivery, p) == 0){
+						mgr.performAddTwoPoints(pickup, p, delivery, p);
+						finded = true;
+						break;
+					}
+				}
+			}
+			if(!finded){
+				rejectPoints.add(pickup);
+				rejectPoints.add(delivery);
+				rejectPickupPeoples.add(pickup);
+				//System.out.println("reject request: " + i + "reject size = " + rejectPickup.size());
+			}
+		}
+		
+		/*
+		 * Insert good
+		 * 		find best route and best position in route to insert
+		 */
+		LOGGER.log(Level.INFO,"Insert good to route");
+		Iterator<Map.Entry<Point, Point>> it = pickup2DeliveryOfGood.entrySet().iterator();
+		
+		while(it.hasNext()){
+			Map.Entry<Point,Point> requestOfGood = it.next();
+			Point pickup = requestOfGood.getKey();
+			Point delivery = requestOfGood.getValue();
+			boolean finded = false;
+			
+			for(int r = 1; r <= XR.getNbRoutes(); r++){
+				if(finded)
+					break;
+				
+				for(Point p = XR.getStartingPointOfRoute(r); p!= XR.getTerminatingPointOfRoute(r); p = XR.next(p)){
+					if(finded)
+						break;
+					
+					if(S.evaluateAddOnePoint(pickup, p) > 0)
+						continue;
+					
+					for(Point q = p; q != XR.getTerminatingPointOfRoute(r); q = XR.next(q)){
+						if(S.evaluateAddOnePoint(delivery, q) > 0)
+							continue;
+						if(S.evaluateAddTwoPoints(pickup, p, delivery, q) == 0){
+							mgr.performAddTwoPoints(pickup, p, delivery, q);
+							finded = true;
+							break;
+						}
+					}
+				}
+			}
+			if(!finded){
+				rejectPoints.add(pickup);
+				rejectPoints.add(delivery);
+				rejectPickupGoods.add(pickup);
+				//System.out.println("reject request: " + i + "reject size = " + rejectPickup.size());
+			}
+		}
+	}
+	
 	public SolutionShareARide search(int maxIter, int timeLimit, int i_remove, int i_insert, SearchInput si){
 		ALNSwithSA alns = new ALNSwithSA(mgr, objective, S, eat, awm, si);
 		return alns.search(maxIter, timeLimit, i_remove, i_insert);
