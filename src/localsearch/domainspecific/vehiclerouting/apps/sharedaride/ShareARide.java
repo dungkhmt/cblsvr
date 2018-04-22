@@ -29,6 +29,7 @@ import localsearch.domainspecific.vehiclerouting.vrp.functions.AccumulatedEdgeWe
 import localsearch.domainspecific.vehiclerouting.vrp.functions.TotalCostVR;
 import localsearch.domainspecific.vehiclerouting.vrp.invariants.AccumulatedWeightEdgesVR;
 import localsearch.domainspecific.vehiclerouting.vrp.invariants.EarliestArrivalTimeVR;
+import localsearch.domainspecific.vehiclerouting.vrp.invariants.RelatedPointBuckets;
 
 
 public class ShareARide{
@@ -73,6 +74,7 @@ public class ShareARide{
 	LexMultiValues valueSolution;
 	EarliestArrivalTimeVR eat;
 	CEarliestArrivalTimeVR cEarliest;
+	RelatedPointBuckets buckets;
 	
 	AccumulatedWeightEdgesVR accDisInvr;
 	HashMap<Point, IFunctionVR> accDisF;
@@ -209,6 +211,7 @@ public class ShareARide{
 			accDisF.put(p, f);
 		}
 		S.post(cEarliest);
+		buckets = new RelatedPointBuckets(XR, eat.getEarliestArrivalTime(), lastestAllowedArrivalTime, serviceDuration, 7200);
 		objective = new TotalCostVR(XR,awm);
 		valueSolution = new LexMultiValues();
 		valueSolution.add(S.violations());
@@ -221,7 +224,7 @@ public class ShareARide{
 	 * Init
 	 */
 	public void greedyInitSolution(){
-
+		double currtime = System.currentTimeMillis();
 		for(int i = 0; i < pickupPoints.size(); i++){
 			Point pickup = pickupPoints.get(i);
 			if(XR.route(pickup) != Constants.NULL_POINT)
@@ -234,8 +237,18 @@ public class ShareARide{
 			
 			boolean isPeople = pickup2DeliveryOfPeople.containsKey(pickup);
 			
-			for(int r = 1; r <= XR.getNbRoutes(); r++){
-				for(Point p = XR.getStartingPointOfRoute(r); p!= XR.getTerminatingPointOfRoute(r); p = XR.next(p)){
+			int minRelatedBucketId = (int)(earliestAllowedArrivalTime.get(pickup) / buckets.getDelta());
+			int maxRelatedBucketId = (int)(lastestAllowedArrivalTime.get(pickup) / buckets.getDelta());;
+			ArrayList<Point> marks = new ArrayList<Point>();
+			if(maxRelatedBucketId >= buckets.nbBuckets)
+				maxRelatedBucketId = buckets.nbBuckets - 1;
+			while(minRelatedBucketId <= maxRelatedBucketId){
+				ArrayList<Point> bk = buckets.getBucketWithIndex(minRelatedBucketId);
+				//System.out.println("minRB = " + minRelatedBucketId + ", bk size = " + bk.size());
+				for(Point p : bk){
+					if(marks.contains(p))
+						continue;
+					marks.add(p);
 					if(pickup2DeliveryOfPeople.containsKey(p) || S.evaluateAddOnePoint(pickup, p) > 0)
 						continue;
 					
@@ -253,6 +266,7 @@ public class ShareARide{
 					}
 					//point is good
 					else{
+						int r = XR.route(p);
 						for(Point q = p; q != XR.getTerminatingPointOfRoute(r); q = XR.next(q)){
 							if(pickup2DeliveryOfPeople.containsKey(q) || S.evaluateAddOnePoint(delivery, q) > 0)
 								continue;
@@ -267,6 +281,7 @@ public class ShareARide{
 						}
 					}
 				}
+				minRelatedBucketId++;
 			}
 			
 			if((pre_pick == null || pre_delivery == null) && !rejectPoints.contains(pickup)){
@@ -286,6 +301,7 @@ public class ShareARide{
 				mgr.performAddTwoPoints(pickup, pre_pick, delivery, pre_delivery);
 			}
 		}
+		LOGGER.log(Level.INFO,"people reject = " + rejectPoints.size()/2 + ", time for inserting reqs = " + (System.currentTimeMillis() - currtime)/1000);
 	}
     
 	public void InitSolutionByInsertGoodFirst(){
@@ -294,6 +310,7 @@ public class ShareARide{
 		 * Insert good first
 		 * 		find best route and best position in route to insert
 		 */
+		double currtime = System.currentTimeMillis();
 		LOGGER.log(Level.INFO,"Insert good to route");
 		Iterator<Map.Entry<Point, Point>> it = pickup2DeliveryOfGood.entrySet().iterator();
 		
@@ -306,11 +323,21 @@ public class ShareARide{
 			Point pre_delivery = null;
 			double best_objective = Double.MAX_VALUE; 
 			
-			for(int r = 1; r <= XR.getNbRoutes(); r++){
-				for(Point p = XR.getStartingPointOfRoute(r); p!= XR.getTerminatingPointOfRoute(r); p = XR.next(p)){
+			int minRelatedBucketId = (int)(earliestAllowedArrivalTime.get(pickup) / buckets.getDelta());
+			int maxRelatedBucketId = (int)(lastestAllowedArrivalTime.get(pickup) / buckets.getDelta());;
+			ArrayList<Point> marks = new ArrayList<Point>();
+			if(maxRelatedBucketId >= buckets.nbBuckets)
+				maxRelatedBucketId = buckets.nbBuckets - 1;
+			while(minRelatedBucketId <= maxRelatedBucketId){
+				ArrayList<Point> bk = buckets.getBucketWithIndex(minRelatedBucketId);
+				//System.out.println("minRB = " + minRelatedBucketId + ", bk size = " + bk.size());
+				for(Point p : bk){
+					if(marks.contains(p))
+						continue;
+					marks.add(p);
 					if(S.evaluateAddOnePoint(pickup, p) > 0)
 						continue;
-					
+					int r = XR.route(p);
 					for(Point q = p; q != XR.getTerminatingPointOfRoute(r); q = XR.next(q)){
 						if(S.evaluateAddOnePoint(delivery, q) > 0)
 							continue;
@@ -324,6 +351,7 @@ public class ShareARide{
 						}
 					}
 				}
+				minRelatedBucketId++;
 			}
 			if(pre_pick == null || pre_delivery == null){
 				rejectPoints.add(pickup);
@@ -336,11 +364,14 @@ public class ShareARide{
 			}
 		}
 		
+		LOGGER.log(Level.INFO,"good reject = " + rejectPoints.size()/2 + ", time for inserting good reqs = " + (System.currentTimeMillis() - currtime)/1000);
+		currtime = System.currentTimeMillis();
+		
 		/*
 		 * Insert people
 		 * 		find best route and best position in route to insert
 		 */
-
+		
 		LOGGER.log(Level.INFO,"Insert people to route");
 		Iterator<Map.Entry<Point, Point>> it2 = pickup2DeliveryOfPeople.entrySet().iterator();
 
@@ -353,8 +384,18 @@ public class ShareARide{
 			Point pre_delivery = null;
 			double best_objective = Double.MAX_VALUE; 
 			
-			for(int r = 1; r <= XR.getNbRoutes(); r++){
-				for(Point p = XR.getStartingPointOfRoute(r); p!= XR.getTerminatingPointOfRoute(r); p = XR.next(p)){
+			int minRelatedBucketId = (int)(earliestAllowedArrivalTime.get(pickup) / buckets.getDelta());
+			int maxRelatedBucketId = (int)(lastestAllowedArrivalTime.get(pickup) / buckets.getDelta());;
+			ArrayList<Point> marks = new ArrayList<Point>();
+			if(maxRelatedBucketId >= buckets.nbBuckets)
+				maxRelatedBucketId = buckets.nbBuckets - 1;
+			while(minRelatedBucketId <= maxRelatedBucketId){
+				ArrayList<Point> bk = buckets.getBucketWithIndex(minRelatedBucketId);
+				//System.out.println("minRB = " + minRelatedBucketId + ", bk size = " + bk.size());
+				for(Point p : bk){
+					if(marks.contains(p))
+						continue;
+					marks.add(p);
 					if(S.evaluateAddOnePoint(pickup, p) > 0)
 						continue;
 					
@@ -368,6 +409,7 @@ public class ShareARide{
 						}
 					}
 				}
+				minRelatedBucketId++;
 			}
 			if(pre_pick == null || pre_delivery == null){
 				rejectPoints.add(pickup);
@@ -379,6 +421,7 @@ public class ShareARide{
 				mgr.performAddTwoPoints(pickup, pre_pick, delivery, pre_delivery);
 			}
 		}
+		LOGGER.log(Level.INFO,"time for inserting people reqs = " + (System.currentTimeMillis() - currtime)/1000);
 	}
 	
 	public void InitSolutionByInsertPeopleFirst(){
@@ -386,7 +429,7 @@ public class ShareARide{
 		 * Insert people
 		 * 		find best route and best position in route to insert
 		 */
-
+		double currtime = System.currentTimeMillis();
 		LOGGER.log(Level.INFO,"Insert people to route");
 		Iterator<Map.Entry<Point, Point>> it2 = pickup2DeliveryOfPeople.entrySet().iterator();
 
@@ -397,10 +440,19 @@ public class ShareARide{
 			
 			Point pre_pick = null;
 			Point pre_delivery = null;
-			double best_objective = Double.MAX_VALUE; 
+			double best_objective = Double.MAX_VALUE;
 			
-			for(int r = 1; r <= XR.getNbRoutes(); r++){
-				for(Point p = XR.getStartingPointOfRoute(r); p!= XR.getTerminatingPointOfRoute(r); p = XR.next(p)){
+			int i = (int)(earliestAllowedArrivalTime.get(pickup) / buckets.getDelta());
+			int maxRelatedBucketId = (int)(lastestAllowedArrivalTime.get(pickup) / buckets.getDelta());;
+			ArrayList<Point> marks = new ArrayList<Point>();
+			if(maxRelatedBucketId >= buckets.nbBuckets)
+				maxRelatedBucketId = buckets.nbBuckets - 1;
+			while(i <= maxRelatedBucketId){
+				ArrayList<Point> bk = buckets.getBucketWithIndex(i);
+				for(Point p : bk){
+					if(marks.contains(p))
+						continue;
+					marks.add(p);
 					if(S.evaluateAddOnePoint(pickup, p) > 0)
 						continue;
 					
@@ -414,6 +466,7 @@ public class ShareARide{
 						}
 					}
 				}
+				i++;
 			}
 			if(pre_pick == null || pre_delivery == null){
 				rejectPoints.add(pickup);
@@ -425,7 +478,8 @@ public class ShareARide{
 				mgr.performAddTwoPoints(pickup, pre_pick, delivery, pre_delivery);
 			}
 		}
-		
+		LOGGER.log(Level.INFO,"people reject = " + rejectPoints.size()/2 + ", time for inserting people reqs = " + (System.currentTimeMillis() - currtime)/1000);
+		currtime = System.currentTimeMillis();
 		/*
 		 * Insert good
 		 * 		find best route and best position in route to insert
@@ -440,13 +494,22 @@ public class ShareARide{
 			
 			Point pre_pick = null;
 			Point pre_delivery = null;
-			double best_objective = Double.MAX_VALUE; 
+			double best_objective = Double.MAX_VALUE;
+			int i = (int)(earliestAllowedArrivalTime.get(pickup) / buckets.getDelta());
+			int maxRelatedBucketId = (int)(lastestAllowedArrivalTime.get(pickup) / buckets.getDelta());
+			ArrayList<Point> marks = new ArrayList<Point>();
 			
-			for(int r = 1; r <= XR.getNbRoutes(); r++){
-				for(Point p = XR.getStartingPointOfRoute(r); p!= XR.getTerminatingPointOfRoute(r); p = XR.next(p)){
+			if(maxRelatedBucketId >= buckets.nbBuckets)
+				maxRelatedBucketId = buckets.nbBuckets - 1;
+			while(i <= maxRelatedBucketId){
+				ArrayList<Point> bk = buckets.getBucketWithIndex(i);
+				for(Point p : bk){
+					if(marks.contains(p))
+						continue;
+					marks.add(p);
 					if(S.evaluateAddOnePoint(pickup, p) > 0)
 						continue;
-					
+					int r = XR.route(p);
 					for(Point q = p; q != XR.getTerminatingPointOfRoute(r); q = XR.next(q)){
 						if(S.evaluateAddOnePoint(delivery, q) > 0)
 							continue;
@@ -460,6 +523,7 @@ public class ShareARide{
 						}
 					}
 				}
+				i++;
 			}
 			if(pre_pick == null || pre_delivery == null){
 				rejectPoints.add(pickup);
@@ -471,10 +535,11 @@ public class ShareARide{
 				mgr.performAddTwoPoints(pickup, pre_pick, delivery, pre_delivery);
 			}
 		}
+		LOGGER.log(Level.INFO,"time for inserting good reqs = " + (System.currentTimeMillis() - currtime)/1000);
 	}
 
 	public void firstPossibleInit(){
-		
+		double currtime = System.currentTimeMillis();
 		for(int i = 0; i < pickupPoints.size(); i++){
 			Point pickup = pickupPoints.get(i);
 			if(XR.route(pickup) != Constants.NULL_POINT)
@@ -485,11 +550,19 @@ public class ShareARide{
 			boolean isPeople = pickup2DeliveryOfPeople.containsKey(pickup);
 			boolean finded = false;
 			
-			for(int r = 1; r <= XR.getNbRoutes(); r++){
+			int minbkId = (int)(earliestAllowedArrivalTime.get(pickup) / buckets.getDelta());
+			int maxRelatedBucketId = (int)(lastestAllowedArrivalTime.get(pickup) / buckets.getDelta());;
+			ArrayList<Point> marks = new ArrayList<Point>();
+			if(maxRelatedBucketId >= buckets.nbBuckets)
+				maxRelatedBucketId = buckets.nbBuckets - 1;
+			while(minbkId <= maxRelatedBucketId){
 				if(finded)
 					break;
-				
-				for(Point p = XR.getStartingPointOfRoute(r); p!= XR.getTerminatingPointOfRoute(r); p = XR.next(p)){
+				ArrayList<Point> bk = buckets.getBucketWithIndex(minbkId);
+				for(Point p : bk){
+					if(marks.contains(p))
+						continue;
+					marks.add(p);
 					if(finded)
 						break;
 					
@@ -506,6 +579,7 @@ public class ShareARide{
 					}
 					//point is good
 					else{
+						int r = XR.route(p);
 						for(Point q = p; q != XR.getTerminatingPointOfRoute(r); q = XR.next(q)){
 							if(pickup2DeliveryOfPeople.containsKey(q) || S.evaluateAddOnePoint(delivery, q) > 0)
 								continue;
@@ -517,6 +591,7 @@ public class ShareARide{
 						}
 					}
 				}
+				minbkId++;
 			}
 			
 			if(!finded){
@@ -533,6 +608,7 @@ public class ShareARide{
 				//System.out.println("reject request: " + i + "reject size = " + rejectPickup.size());
 			}
 		}
+		LOGGER.log(Level.INFO,"time for inserting reqs = " + (System.currentTimeMillis() - currtime)/1000);
 	}
 	
 	public void firstPossible_insertGoodFirst_init(){
@@ -540,6 +616,7 @@ public class ShareARide{
 		 * Insert good first
 		 * 		find best route and best position in route to insert
 		 */
+		double currtime = System.currentTimeMillis();
 		LOGGER.log(Level.INFO,"Insert good to route");
 		Iterator<Map.Entry<Point, Point>> it = pickup2DeliveryOfGood.entrySet().iterator();
 		
@@ -549,17 +626,26 @@ public class ShareARide{
 			Point delivery = requestOfGood.getValue();
 			boolean finded = false;
 			
-			for(int r = 1; r <= XR.getNbRoutes(); r++){
+			int minRelatedBucketId = (int)(earliestAllowedArrivalTime.get(pickup) / buckets.getDelta());
+			int maxRelatedBucketId = (int)(lastestAllowedArrivalTime.get(pickup) / buckets.getDelta());;
+			ArrayList<Point> marks = new ArrayList<Point>();
+			if(maxRelatedBucketId >= buckets.nbBuckets)
+				maxRelatedBucketId = buckets.nbBuckets - 1;
+			while(minRelatedBucketId <= maxRelatedBucketId){
 				if(finded)
 					break;
-				
-				for(Point p = XR.getStartingPointOfRoute(r); p!= XR.getTerminatingPointOfRoute(r); p = XR.next(p)){
+				ArrayList<Point> bk = buckets.getBucketWithIndex(minRelatedBucketId);
+				//System.out.println("minRB = " + minRelatedBucketId + ", bk size = " + bk.size());
+				for(Point p : bk){
+					if(marks.contains(p))
+						continue;
+					marks.add(p);
 					if(finded)
 						break;
 					
 					if(S.evaluateAddOnePoint(pickup, p) > 0)
 						continue;
-					
+					int r = XR.route(p);
 					for(Point q = p; q != XR.getTerminatingPointOfRoute(r); q = XR.next(q)){
 						if(S.evaluateAddOnePoint(delivery, q) > 0)
 							continue;
@@ -570,6 +656,7 @@ public class ShareARide{
 						}
 					}
 				}
+				minRelatedBucketId++;
 			}
 			if(!finded){
 				rejectPoints.add(pickup);
@@ -578,7 +665,8 @@ public class ShareARide{
 				//System.out.println("reject request: " + i + "reject size = " + rejectPickup.size());
 			}
 		}
-		
+		LOGGER.log(Level.INFO,"good reject = " + rejectPoints.size()/2 + ", time for inserting good reqs = " + (System.currentTimeMillis() - currtime)/1000);
+		currtime = System.currentTimeMillis();
 		/*
 		 * Insert people
 		 * 		find best route and best position in route to insert
@@ -616,6 +704,7 @@ public class ShareARide{
 				//System.out.println("reject request: " + i + "reject size = " + rejectPickup.size());
 			}
 		}
+		LOGGER.log(Level.INFO,"time for inserting people reqs = " + (System.currentTimeMillis() - currtime)/1000);
 	}
 	
 	public void firstPossible_insertPeopleFirst_init(){
@@ -624,7 +713,7 @@ public class ShareARide{
 		 * Insert people
 		 * 		find best route and best position in route to insert
 		 */
-
+		double currtime = System.currentTimeMillis();
 		LOGGER.log(Level.INFO,"Insert people to route");
 		Iterator<Map.Entry<Point, Point>> it2 = pickup2DeliveryOfPeople.entrySet().iterator();
 
@@ -635,11 +724,20 @@ public class ShareARide{
 			
 			boolean finded = false;
 			
-			for(int r = 1; r <= XR.getNbRoutes(); r++){
+			int minRelatedBucketId = (int)(earliestAllowedArrivalTime.get(pickup) / buckets.getDelta());
+			int maxRelatedBucketId = (int)(lastestAllowedArrivalTime.get(pickup) / buckets.getDelta());;
+			ArrayList<Point> marks = new ArrayList<Point>();
+			if(maxRelatedBucketId >= buckets.nbBuckets)
+				maxRelatedBucketId = buckets.nbBuckets - 1;
+			while(minRelatedBucketId <= maxRelatedBucketId){
 				if(finded)
 					break;
-				
-				for(Point p = XR.getStartingPointOfRoute(r); p!= XR.getTerminatingPointOfRoute(r); p = XR.next(p)){
+				ArrayList<Point> bk = buckets.getBucketWithIndex(minRelatedBucketId);
+				//System.out.println("minRB = " + minRelatedBucketId + ", bk size = " + bk.size());
+				for(Point p : bk){
+					if(marks.contains(p))
+						continue;
+					marks.add(p);
 					if(S.evaluateAddOnePoint(pickup, p) > 0)
 						continue;
 					
@@ -649,6 +747,7 @@ public class ShareARide{
 						break;
 					}
 				}
+				minRelatedBucketId++;
 			}
 			if(!finded){
 				rejectPoints.add(pickup);
@@ -657,7 +756,8 @@ public class ShareARide{
 				//System.out.println("reject request: " + i + "reject size = " + rejectPickup.size());
 			}
 		}
-		
+		LOGGER.log(Level.INFO,"people reject = " + rejectPoints.size()/2 + ", time for inserting people reqs = " + (System.currentTimeMillis() - currtime)/1000);
+		currtime = System.currentTimeMillis();
 		/*
 		 * Insert good
 		 * 		find best route and best position in route to insert
@@ -671,17 +771,26 @@ public class ShareARide{
 			Point delivery = requestOfGood.getValue();
 			boolean finded = false;
 			
-			for(int r = 1; r <= XR.getNbRoutes(); r++){
+			int minRelatedBucketId = (int)(earliestAllowedArrivalTime.get(pickup) / buckets.getDelta());
+			int maxRelatedBucketId = (int)(lastestAllowedArrivalTime.get(pickup) / buckets.getDelta());;
+			ArrayList<Point> marks = new ArrayList<Point>();
+			if(maxRelatedBucketId >= buckets.nbBuckets)
+				maxRelatedBucketId = buckets.nbBuckets - 1;
+			while(minRelatedBucketId <= maxRelatedBucketId){
 				if(finded)
 					break;
-				
-				for(Point p = XR.getStartingPointOfRoute(r); p!= XR.getTerminatingPointOfRoute(r); p = XR.next(p)){
+				ArrayList<Point> bk = buckets.getBucketWithIndex(minRelatedBucketId);
+				//System.out.println("minRB = " + minRelatedBucketId + ", bk size = " + bk.size());
+				for(Point p : bk){
+					if(marks.contains(p))
+						continue;
+					marks.add(p);
 					if(finded)
 						break;
 					
 					if(S.evaluateAddOnePoint(pickup, p) > 0)
 						continue;
-					
+					int r = XR.route(p);
 					for(Point q = p; q != XR.getTerminatingPointOfRoute(r); q = XR.next(q)){
 						if(S.evaluateAddOnePoint(delivery, q) > 0)
 							continue;
@@ -692,6 +801,7 @@ public class ShareARide{
 						}
 					}
 				}
+				minRelatedBucketId++;
 			}
 			if(!finded){
 				rejectPoints.add(pickup);
@@ -700,10 +810,11 @@ public class ShareARide{
 				//System.out.println("reject request: " + i + "reject size = " + rejectPickup.size());
 			}
 		}
+		LOGGER.log(Level.INFO,"time for inserting good reqs = " + (System.currentTimeMillis() - currtime)/1000);
 	}
 	
 	public SolutionShareARide search(int maxIter, int timeLimit, int i_remove, int i_insert, SearchInput si){
-		ALNSwithSA alns = new ALNSwithSA(mgr, objective, S, eat, awm, si);
+		ALNSwithSA alns = new ALNSwithSA(buckets, mgr, objective, S, eat, awm, si);
 		return alns.search(maxIter, timeLimit, i_remove, i_insert);
 	}
 	
@@ -711,18 +822,18 @@ public class ShareARide{
     	try {		
 			for(int i=0; i<13; i++){
 				for(int j=0; j<14; j++){
-		    		String inData = "data/SARP-offline/n2466r20_1_24h.txt";
+		    		String inData = "data/SARP-offline/n1232r10_1.txt";
 		        	
 		        	int timeLimit = 36000000;
 		        	int nIter = 300;
 		        	
 		        	Handler fileHandler;
 		        	Formatter simpleFormater;
-					//DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
-					//Date date = new Date();
-					//System.out.println(dateFormat.format(date));
+					DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
+					Date date = new Date();
+					System.out.println(dateFormat.format(date));
 					
-					fileHandler = new FileHandler("data/output/SARP-offline/anhtu/n2466r20_1_24h/Removal_"+i+"_Insertion_"+j+".txt");
+					fileHandler = new FileHandler("data/output/SARP-offline/n1232r10/" + dateFormat.format(date) + "greedyInit_12Removal_12Insertion.txt");
 					simpleFormater = new SimpleFormatter();
 					
 					LOGGER.addHandler(fileHandler);
@@ -739,14 +850,17 @@ public class ShareARide{
 					LOGGER.log(Level.INFO, "Read data done --> Create model");
 					sar.stateModel();
 
-					LOGGER.log(Level.INFO, "Create model done --> Init solution");	
+					LOGGER.log(Level.INFO, "Create model done --> Init solution");
+					double currTime = System.currentTimeMillis();
 					//sar.InitSolutionByInsertGoodFirst();
 					//sar.greedyInitSolution();
 					//sar.firstPossibleInit();
-					sar.firstPossible_insertGoodFirst_init();
-					//sar.InitSolutionByInsertPeopleFirst();
+					//sar.firstPossible_insertGoodFirst_init();
+					sar.InitSolutionByInsertPeopleFirst();
+					//sar.InitSolutionByInsertPeopleFirstGreedyLoopAll();
 					
-					LOGGER.log(Level.INFO,"Init solution done. At start search number of reject points = "+sar.rejectPoints.size()/2+"    violations = "+sar.S.violations()+"   cost = "+sar.objective.getValue());
+					LOGGER.log(Level.INFO,"Init solution done. At start search number of reject points = "+sar.rejectPoints.size()/2
+							+"    violations = "+sar.S.violations()+"   cost = "+sar.objective.getValue() + ", init time = " + (System.currentTimeMillis() - currTime)/1000);
 					SearchInput si = new SearchInput(sar.pickupPoints, sar.deliveryPoints, sar.rejectPoints, 
 							sar.rejectPickupGoods, sar.rejectPickupPeoples, sar.earliestAllowedArrivalTime, sar.serviceDuration, 
 							sar.lastestAllowedArrivalTime, sar.pickup2DeliveryOfGood, sar.pickup2DeliveryOfPeople, sar.pickup2Delivery, sar.delivery2Pickup);

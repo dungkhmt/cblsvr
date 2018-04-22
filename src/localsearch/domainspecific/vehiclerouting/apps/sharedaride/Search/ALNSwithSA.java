@@ -17,6 +17,7 @@ import localsearch.domainspecific.vehiclerouting.vrp.VarRoutesVR;
 import localsearch.domainspecific.vehiclerouting.vrp.entities.ArcWeightsManager;
 import localsearch.domainspecific.vehiclerouting.vrp.entities.Point;
 import localsearch.domainspecific.vehiclerouting.vrp.invariants.EarliestArrivalTimeVR;
+import localsearch.domainspecific.vehiclerouting.vrp.invariants.RelatedPointBuckets;
 
 public class ALNSwithSA {
 	
@@ -49,8 +50,10 @@ public class ALNSwithSA {
 	private int nTabu = 5;
 	//private double shaw4th = 0.2;
 	private SearchInput search_input;
+	public RelatedPointBuckets buckets;
 	
-	public ALNSwithSA(VRManager mgr, IFunctionVR objective, ConstraintSystemVR S, EarliestArrivalTimeVR eat, ArcWeightsManager awm, SearchInput si){
+	public ALNSwithSA(RelatedPointBuckets buckets, VRManager mgr, IFunctionVR objective, ConstraintSystemVR S, EarliestArrivalTimeVR eat, ArcWeightsManager awm, SearchInput si){
+		this.buckets = buckets;
 		this.mgr = mgr;
 		this.objective = objective;
 		this.XR = mgr.getVarRoutesVR();
@@ -113,8 +116,8 @@ public class ALNSwithSA {
 			SolutionShareARide current_solution = new SolutionShareARide(XR, search_input.rejectPoints, search_input.rejectPickupGoods, search_input.rejectPickupPeoples, current_cost);
 			ShareARide.LOGGER.log(Level.INFO, "Iter "+it+" current_solution has cost = "+current_solution.get_cost()+"  number of rejected request of goods = "+current_solution.get_rejectPickupGoods().size()+"  number of rejected request of peoples = "+current_solution.get_rejectPickupPeoples().size());
 			
-			//int i_selected_removal = get_operator(ptd);
-			int i_selected_removal = i_remove;
+			int i_selected_removal = get_operator(ptd);
+			//int i_selected_removal = i_remove;
 			wd[i_selected_removal]++;
 			/*
 			 * Select remove operator
@@ -124,24 +127,24 @@ public class ALNSwithSA {
 			switch(i_selected_removal){
 			
 				case 0: random_removal(); break;
-				case 1: route_removal(); break;
-				case 2: late_arrival_removal(); break;
-				case 3: shaw_removal(); break;
-				case 4: proximity_based_removal(); break;
-				case 5: time_based_removal(); break;
-				case 6: worst_removal(); break;
-				case 7: forbidden_removal(0); break;
-				case 8: forbidden_removal(1); break;
-				case 9: forbidden_removal(2); break;
-				case 10: forbidden_removal(3); break;
-				case 11: forbidden_removal(4); break;
-				case 12: forbidden_removal(5); break;
+				//case 1: route_removal(); break;
+				case 1: late_arrival_removal(); break;
+				case 2: shaw_removal(); break;
+				case 3: proximity_based_removal(); break;
+				case 4: time_based_removal(); break;
+				case 5: worst_removal(); break;
+				case 6: forbidden_removal(0); break;
+				case 7: forbidden_removal(1); break;
+				case 8: forbidden_removal(2); break;
+				case 9: forbidden_removal(3); break;
+				case 10: forbidden_removal(4); break;
+				case 11: forbidden_removal(5); break;
 			}
 			//long timeRemoveEnd = System.currentTimeMillis();
 			//long timeRemove = timeRemoveEnd - timeRemoveStart;
 			
-			//int i_selected_insertion = get_operator(pti);
-			int i_selected_insertion = i_insert;
+			int i_selected_insertion = get_operator(pti);
+			//int i_selected_insertion = i_insert;
 			wi[i_selected_insertion]++;
 			ShareARide.LOGGER.log(Level.INFO,"selected insertion operator = "+i_selected_insertion);
 			/*
@@ -154,16 +157,16 @@ public class ALNSwithSA {
 				case 1: greedy_insertion_noise_function(); break;
 				case 2: second_best_insertion(); break;
 				case 3: second_best_insertion_noise_function(); break;
-				case 4: regret_n_insertion(2); break;
-				case 5: regret_n_insertion(3); break;
-				case 6: first_possible_insertion();break;
-				case 7: sort_before_insertion(0); break;
-				case 8: sort_before_insertion(1); break;
-				case 9: sort_before_insertion(2); break;
-				case 10: sort_before_insertion(3); break;
-				case 11: sort_before_insertion(4); break;
-				case 12: sort_before_insertion(5); break;
-				case 13: sort_before_insertion(6); break;
+				//case 4: regret_n_insertion(2); break;
+				case 4: regret_n_insertion(3); break;
+				case 5: first_possible_insertion();break;
+				case 6: sort_before_insertion(0); break;
+				case 7: sort_before_insertion(1); break;
+				case 8: sort_before_insertion(2); break;
+				case 9: sort_before_insertion(3); break;
+				case 10: sort_before_insertion(4); break;
+				case 11: sort_before_insertion(5); break;
+				//case 12: sort_before_insertion(6); break;
 			}
 			double new_cost = objective.getValue();
 			ShareARide.LOGGER.log(Level.INFO,"Iter "+it+" new_solution: has cost = "+new_cost+"  number of rejected request of goods = "+search_input.rejectPickupGoods.size()+"  number of rejected request of peoples = "+search_input.rejectPickupPeoples.size());
@@ -891,7 +894,7 @@ public class ALNSwithSA {
 	
  	private void greedy_insertion(){
  		
- 		ShareARide.LOGGER.log(Level.INFO,"Inserting peoples to route");
+ 		ShareARide.LOGGER.log(Level.INFO,"Inserting peoples to route");		
  		
 		for(int i=0; i<search_input.rejectPickupPeoples.size(); i++){
 			Point pickup = search_input.rejectPickupPeoples.get(i);
@@ -902,9 +905,22 @@ public class ALNSwithSA {
 			
 			double best_objective = Double.MAX_VALUE;
 			
-			for(int k=1; k<=XR.getNbRoutes(); k++){
-				for(Point p = XR.getStartingPointOfRoute(k); p != XR.getTerminatingPointOfRoute(k); p = XR.next(p)){
+			int minRelatedBucketId = (int)(search_input.earliestAllowedArrivalTime.get(pickup) / buckets.getDelta());
+			int maxRelatedBucketId = (int)(search_input.lastestAllowedArrivalTime.get(pickup) / buckets.getDelta());;
+			ArrayList<Point> marks = new ArrayList<Point>();
+			if(maxRelatedBucketId >= buckets.nbBuckets)
+				maxRelatedBucketId = buckets.nbBuckets - 1;
+			while(minRelatedBucketId <= maxRelatedBucketId){
+				ArrayList<Point> bk = buckets.getBucketWithIndex(minRelatedBucketId);
+				//System.out.println("minRB = " + minRelatedBucketId + ", bk size = " + bk.size());
+				for(Point p : bk){
+					if(marks.contains(p))
+						continue;
+					marks.add(p);
 					//check constraint
+					//System.out.println("p = " + p.ID + ", pickup = " + pickup + ", route pick = " + XR.route(p));
+					//for(Point t = p; t != XR.getTerminatingPointOfRoute(XR.route(p)); t = XR.next(t))
+					//	System.out.println(t.ID);
 					if(search_input.pickup2DeliveryOfPeople.containsKey(p) || S.evaluateAddOnePoint(pickup, p) > 0)
 						continue;
 
@@ -918,6 +934,7 @@ public class ALNSwithSA {
 						}
 					}
 				}
+				minRelatedBucketId++;
 			}
 			
 			if(best_insertion_pickup != null && best_insertion_delivery != null){
@@ -940,12 +957,21 @@ public class ALNSwithSA {
 			
 			double best_objective = Double.MAX_VALUE;
 			
-			for(int k=1; k<=XR.getNbRoutes(); k++){
-				for(Point p = XR.getStartingPointOfRoute(k); p != XR.getTerminatingPointOfRoute(k); p = XR.next(p)){
+			int minRelatedBucketId = (int)(search_input.earliestAllowedArrivalTime.get(pickup) / buckets.getDelta());
+			int maxRelatedBucketId = (int)(search_input.lastestAllowedArrivalTime.get(pickup) / buckets.getDelta());;
+			ArrayList<Point> marks = new ArrayList<Point>();
+			if(maxRelatedBucketId >= buckets.nbBuckets)
+				maxRelatedBucketId = buckets.nbBuckets - 1;
+			while(minRelatedBucketId <= maxRelatedBucketId){
+				ArrayList<Point> bk = buckets.getBucketWithIndex(minRelatedBucketId);
+				for(Point p : bk){
+					if(marks.contains(p))
+						continue;
+					marks.add(p);
 					//check constraint
 					if(search_input.pickup2DeliveryOfPeople.containsKey(p) || S.evaluateAddOnePoint(pickup, p) > 0)
 						continue;
-
+					int k = XR.route(p);
 					for(Point q = p; q != XR.getTerminatingPointOfRoute(k); q = XR.next(q)){
 						if(search_input.pickup2DeliveryOfPeople.containsKey(q) || S.evaluateAddOnePoint(delivery, q) > 0)
 							continue;
@@ -959,6 +985,7 @@ public class ALNSwithSA {
 						}
 					}
 				}
+				minRelatedBucketId++;
 			}
 			
 			if(best_insertion_pickup != null && best_insertion_delivery != null){
@@ -984,8 +1011,17 @@ public class ALNSwithSA {
 			
 			double best_objective = Double.MAX_VALUE;
 			
-			for(int k=1; k<=XR.getNbRoutes(); k++){
-				for(Point p = XR.getStartingPointOfRoute(k); p != XR.getTerminatingPointOfRoute(k); p = XR.next(p)){
+			int minRelatedBucketId = (int)(search_input.earliestAllowedArrivalTime.get(pickup) / buckets.getDelta());
+			int maxRelatedBucketId = (int)(search_input.lastestAllowedArrivalTime.get(pickup) / buckets.getDelta());;
+			ArrayList<Point> marks = new ArrayList<Point>();
+			if(maxRelatedBucketId >= buckets.nbBuckets)
+				maxRelatedBucketId = buckets.nbBuckets - 1;
+			while(minRelatedBucketId <= maxRelatedBucketId){
+				ArrayList<Point> bk = buckets.getBucketWithIndex(minRelatedBucketId);
+				for(Point p : bk){
+					if(marks.contains(p))
+						continue;
+					marks.add(p);
 					//check constraint
 					if(search_input.pickup2DeliveryOfPeople.containsKey(p) || S.evaluateAddOnePoint(pickup, p) > 0)
 						continue;
@@ -1003,6 +1039,7 @@ public class ALNSwithSA {
 						}
 					}
 				}
+				minRelatedBucketId++;
 			}
 			
 			if(best_insertion_pickup != null && best_insertion_delivery != null){
@@ -1025,12 +1062,21 @@ public class ALNSwithSA {
 			
 			double best_objective = Double.MAX_VALUE;
 			
-			for(int k=1; k<=XR.getNbRoutes(); k++){
-				for(Point p = XR.getStartingPointOfRoute(k); p != XR.getTerminatingPointOfRoute(k); p = XR.next(p)){
+			int minRelatedBucketId = (int)(search_input.earliestAllowedArrivalTime.get(pickup) / buckets.getDelta());
+			int maxRelatedBucketId = (int)(search_input.lastestAllowedArrivalTime.get(pickup) / buckets.getDelta());;
+			ArrayList<Point> marks = new ArrayList<Point>();
+			if(maxRelatedBucketId >= buckets.nbBuckets)
+				maxRelatedBucketId = buckets.nbBuckets - 1;
+			while(minRelatedBucketId <= maxRelatedBucketId){
+				ArrayList<Point> bk = buckets.getBucketWithIndex(minRelatedBucketId);
+				for(Point p : bk){
+					if(marks.contains(p))
+						continue;
+					marks.add(p);
 					//check constraint
 					if(search_input.pickup2DeliveryOfPeople.containsKey(p) || S.evaluateAddOnePoint(pickup, p) > 0)
 						continue;
-					
+					int k = XR.route(p);
 					for(Point q = p; q != XR.getTerminatingPointOfRoute(k); q = XR.next(q)){
 						if(search_input.pickup2DeliveryOfPeople.containsKey(q) || S.evaluateAddOnePoint(delivery, q) > 0)
 							continue;
@@ -1048,6 +1094,7 @@ public class ALNSwithSA {
 						}
 					}
 				}
+				minRelatedBucketId++;
 			}
 			
 			if(best_insertion_pickup != null && best_insertion_delivery != null){
@@ -1073,8 +1120,17 @@ public class ALNSwithSA {
 			double best_objective = Double.MAX_VALUE;
 			double second_best_objective = Double.MAX_VALUE;
 			
-			for(int k=1; k<=XR.getNbRoutes(); k++){
-				for(Point p = XR.getStartingPointOfRoute(k); p != XR.getTerminatingPointOfRoute(k); p = XR.next(p)){
+			int minRelatedBucketId = (int)(search_input.earliestAllowedArrivalTime.get(pickup) / buckets.getDelta());
+			int maxRelatedBucketId = (int)(search_input.lastestAllowedArrivalTime.get(pickup) / buckets.getDelta());;
+			ArrayList<Point> marks = new ArrayList<Point>();
+			if(maxRelatedBucketId >= buckets.nbBuckets)
+				maxRelatedBucketId = buckets.nbBuckets - 1;
+			while(minRelatedBucketId <= maxRelatedBucketId){
+				ArrayList<Point> bk = buckets.getBucketWithIndex(minRelatedBucketId);
+				for(Point p : bk){
+					if(marks.contains(p))
+						continue;
+					marks.add(p);
 					//check constraint
 					if(search_input.pickup2DeliveryOfPeople.containsKey(p) || S.evaluateAddOnePoint(pickup, p) > 0)
 						continue;
@@ -1094,6 +1150,7 @@ public class ALNSwithSA {
 						}
 					}
 				}
+				minRelatedBucketId++;
 			}
 			
 			if(second_best_insertion_pickup != null && second_best_insertion_delivery != null){
@@ -1117,12 +1174,21 @@ public class ALNSwithSA {
 			double best_objective = Double.MAX_VALUE;
 			double second_best_objective = Double.MAX_VALUE;
 			
-			for(int k=1; k<=XR.getNbRoutes(); k++){
-				for(Point p = XR.getStartingPointOfRoute(k); p != XR.getTerminatingPointOfRoute(k); p = XR.next(p)){
+			int minRelatedBucketId = (int)(search_input.earliestAllowedArrivalTime.get(pickup) / buckets.getDelta());
+			int maxRelatedBucketId = (int)(search_input.lastestAllowedArrivalTime.get(pickup) / buckets.getDelta());;
+			ArrayList<Point> marks = new ArrayList<Point>();
+			if(maxRelatedBucketId >= buckets.nbBuckets)
+				maxRelatedBucketId = buckets.nbBuckets - 1;
+			while(minRelatedBucketId <= maxRelatedBucketId){
+				ArrayList<Point> bk = buckets.getBucketWithIndex(minRelatedBucketId);
+				for(Point p : bk){
+					if(marks.contains(p))
+						continue;
+					marks.add(p);
 					//check constraint
 					if(search_input.pickup2DeliveryOfPeople.containsKey(p) || S.evaluateAddOnePoint(pickup, p) > 0)
 						continue;
-
+					int k = XR.route(p);
 					for(Point q = p; q != XR.getTerminatingPointOfRoute(k); q = XR.next(q)){
 						if(search_input.pickup2DeliveryOfPeople.containsKey(q) || S.evaluateAddOnePoint(delivery, q) > 0)
 							continue;
@@ -1141,6 +1207,7 @@ public class ALNSwithSA {
 						}
 					}
 				}
+				minRelatedBucketId++;
 			}
 			
 			if(second_best_insertion_pickup != null && second_best_insertion_delivery != null){
@@ -1166,8 +1233,17 @@ public class ALNSwithSA {
 			double best_objective = Double.MAX_VALUE;
 			double second_best_objective = Double.MAX_VALUE;
 			
-			for(int k=1; k<=XR.getNbRoutes(); k++){
-				for(Point p = XR.getStartingPointOfRoute(k); p != XR.getTerminatingPointOfRoute(k); p = XR.next(p)){
+			int minRelatedBucketId = (int)(search_input.earliestAllowedArrivalTime.get(pickup) / buckets.getDelta());
+			int maxRelatedBucketId = (int)(search_input.lastestAllowedArrivalTime.get(pickup) / buckets.getDelta());;
+			ArrayList<Point> marks = new ArrayList<Point>();
+			if(maxRelatedBucketId >= buckets.nbBuckets)
+				maxRelatedBucketId = buckets.nbBuckets - 1;
+			while(minRelatedBucketId <= maxRelatedBucketId){
+				ArrayList<Point> bk = buckets.getBucketWithIndex(minRelatedBucketId);
+				for(Point p : bk){
+					if(marks.contains(p))
+						continue;
+					marks.add(p);
 					//check constraint
 					if(search_input.pickup2DeliveryOfPeople.containsKey(p) || S.evaluateAddOnePoint(pickup, p) > 0)
 						continue;
@@ -1190,6 +1266,7 @@ public class ALNSwithSA {
 						}
 					}
 				}
+				minRelatedBucketId++;
 			}
 			
 			if(second_best_insertion_pickup != null && second_best_insertion_delivery != null){
@@ -1213,12 +1290,21 @@ public class ALNSwithSA {
 			double best_objective = Double.MAX_VALUE;
 			double second_best_objective = Double.MAX_VALUE;
 			
-			for(int k=1; k<=XR.getNbRoutes(); k++){
-				for(Point p = XR.getStartingPointOfRoute(k); p != XR.getTerminatingPointOfRoute(k); p = XR.next(p)){
+			int minRelatedBucketId = (int)(search_input.earliestAllowedArrivalTime.get(pickup) / buckets.getDelta());
+			int maxRelatedBucketId = (int)(search_input.lastestAllowedArrivalTime.get(pickup) / buckets.getDelta());;
+			ArrayList<Point> marks = new ArrayList<Point>();
+			if(maxRelatedBucketId >= buckets.nbBuckets)
+				maxRelatedBucketId = buckets.nbBuckets - 1;
+			while(minRelatedBucketId <= maxRelatedBucketId){
+				ArrayList<Point> bk = buckets.getBucketWithIndex(minRelatedBucketId);
+				for(Point p : bk){
+					if(marks.contains(p))
+						continue;
+					marks.add(p);
 					//check constraint
 					if(search_input.pickup2DeliveryOfPeople.containsKey(p) || S.evaluateAddOnePoint(pickup, p) > 0)
 						continue;
-					
+					int k = XR.route(p);
 					for(Point q = p; q != XR.getTerminatingPointOfRoute(k); q = XR.next(q)){
 						if(search_input.pickup2DeliveryOfPeople.containsKey(q) || S.evaluateAddOnePoint(delivery, q) > 0)
 							continue;
@@ -1241,6 +1327,7 @@ public class ALNSwithSA {
 						}
 					}
 				}
+				minRelatedBucketId++;
 			}
 			
 			if(second_best_insertion_pickup != null && second_best_insertion_delivery != null){
@@ -1270,8 +1357,17 @@ public class ALNSwithSA {
 				n_best_objective[it] = Double.MAX_VALUE;
 			}
 			
-			for(int k=1; k<=XR.getNbRoutes(); k++){
-				for(Point p = XR.getStartingPointOfRoute(k); p != XR.getTerminatingPointOfRoute(k); p = XR.next(p)){
+			int minRelatedBucketId = (int)(search_input.earliestAllowedArrivalTime.get(pickup) / buckets.getDelta());
+			int maxRelatedBucketId = (int)(search_input.lastestAllowedArrivalTime.get(pickup) / buckets.getDelta());;
+			ArrayList<Point> marks = new ArrayList<Point>();
+			if(maxRelatedBucketId >= buckets.nbBuckets)
+				maxRelatedBucketId = buckets.nbBuckets - 1;
+			while(minRelatedBucketId <= maxRelatedBucketId){
+				ArrayList<Point> bk = buckets.getBucketWithIndex(minRelatedBucketId);
+				for(Point p : bk){
+					if(marks.contains(p))
+						continue;
+					marks.add(p);
 					//check constraint
 					if(search_input.pickup2DeliveryOfPeople.containsKey(p) || S.evaluateAddOnePoint(pickup, p) > 0)
 						continue;
@@ -1299,6 +1395,7 @@ public class ALNSwithSA {
 						}
 					}
 				}
+				minRelatedBucketId++;
 			}
 			
 			if(best_insertion_pickup != null && best_insertion_delivery != null){
@@ -1326,12 +1423,21 @@ public class ALNSwithSA {
 				n_best_objective[it] = Double.MAX_VALUE;
 			}
 			
-			for(int k=1; k<=XR.getNbRoutes(); k++){
-				for(Point p = XR.getStartingPointOfRoute(k); p != XR.getTerminatingPointOfRoute(k); p = XR.next(p)){
+			int minRelatedBucketId = (int)(search_input.earliestAllowedArrivalTime.get(pickup) / buckets.getDelta());
+			int maxRelatedBucketId = (int)(search_input.lastestAllowedArrivalTime.get(pickup) / buckets.getDelta());;
+			ArrayList<Point> marks = new ArrayList<Point>();
+			if(maxRelatedBucketId >= buckets.nbBuckets)
+				maxRelatedBucketId = buckets.nbBuckets - 1;
+			while(minRelatedBucketId <= maxRelatedBucketId){
+				ArrayList<Point> bk = buckets.getBucketWithIndex(minRelatedBucketId);
+				for(Point p : bk){
+					if(marks.contains(p))
+						continue;
+					marks.add(p);
 					//check constraint
 					if(search_input.pickup2DeliveryOfPeople.containsKey(p) || S.evaluateAddOnePoint(pickup, p) > 0)
 						continue;
-
+					int k = XR.route(p);
 					for(Point q = p; q != XR.getTerminatingPointOfRoute(k); q = XR.next(q)){
 						if(search_input.pickup2DeliveryOfPeople.containsKey(q) || S.evaluateAddOnePoint(delivery, q) > 0)
 							continue;
@@ -1358,6 +1464,7 @@ public class ALNSwithSA {
 						}
 					}
 				}
+				minRelatedBucketId++;
 			}
 			
 			if(best_insertion_pickup != null && best_insertion_delivery != null){
@@ -1377,10 +1484,20 @@ public class ALNSwithSA {
 			Point pickup = search_input.rejectPickupPeoples.get(i);
 			Point delivery = search_input.pickup2Delivery.get(pickup);
 			boolean finded = false;
-			for(int k=1; k<=XR.getNbRoutes(); k++){
+			
+			int minRelatedBucketId = (int)(search_input.earliestAllowedArrivalTime.get(pickup) / buckets.getDelta());
+			int maxRelatedBucketId = (int)(search_input.lastestAllowedArrivalTime.get(pickup) / buckets.getDelta());;
+			ArrayList<Point> marks = new ArrayList<Point>();
+			if(maxRelatedBucketId >= buckets.nbBuckets)
+				maxRelatedBucketId = buckets.nbBuckets - 1;
+			while(minRelatedBucketId <= maxRelatedBucketId){
 				if(finded)
 					break;
-				for(Point p = XR.getStartingPointOfRoute(k); p != XR.getTerminatingPointOfRoute(k); p = XR.next(p)){
+				ArrayList<Point> bk = buckets.getBucketWithIndex(minRelatedBucketId);
+				for(Point p : bk){
+					if(marks.contains(p))
+						continue;
+					marks.add(p);
 					//check constraint
 					if(search_input.pickup2DeliveryOfPeople.containsKey(p) || S.evaluateAddOnePoint(pickup, p) > 0)
 						continue;
@@ -1395,6 +1512,7 @@ public class ALNSwithSA {
 						break;
 					}
 				}
+				minRelatedBucketId++;
 			}
 		}
 		
@@ -1404,16 +1522,25 @@ public class ALNSwithSA {
 			Point delivery = search_input.pickup2Delivery.get(pickup);
 			
 			boolean finded = false;
-			for(int k=1; k<=XR.getNbRoutes(); k++){
+			int minRelatedBucketId = (int)(search_input.earliestAllowedArrivalTime.get(pickup) / buckets.getDelta());
+			int maxRelatedBucketId = (int)(search_input.lastestAllowedArrivalTime.get(pickup) / buckets.getDelta());;
+			ArrayList<Point> marks = new ArrayList<Point>();
+			if(maxRelatedBucketId >= buckets.nbBuckets)
+				maxRelatedBucketId = buckets.nbBuckets - 1;
+			while(minRelatedBucketId <= maxRelatedBucketId){
 				if(finded)
 					break;
-				for(Point p = XR.getStartingPointOfRoute(k); p != XR.getTerminatingPointOfRoute(k); p = XR.next(p)){
-					//check constraint
+				ArrayList<Point> bk = buckets.getBucketWithIndex(minRelatedBucketId);
+				for(Point p : bk){
 					if(finded)
 						break;
+					if(marks.contains(p))
+						continue;
+					marks.add(p);
+					//check constraint
 					if(search_input.pickup2DeliveryOfPeople.containsKey(p) || S.evaluateAddOnePoint(pickup, p) > 0)
 						continue;
-
+					int k = XR.route(p);
 					for(Point q = p; q != XR.getTerminatingPointOfRoute(k); q = XR.next(q)){
 						if(search_input.pickup2DeliveryOfPeople.containsKey(q) || S.evaluateAddOnePoint(delivery, q) > 0)
 							continue;
@@ -1428,6 +1555,7 @@ public class ALNSwithSA {
 						}
 					}
 				}
+				minRelatedBucketId++;
 			}
 		}
 	}
@@ -1441,9 +1569,9 @@ public class ALNSwithSA {
 			case 1: greedy_insertion_noise_function(); break;
 			case 2: second_best_insertion(); break;
 			case 3: second_best_insertion_noise_function(); break;
-			case 4: regret_n_insertion(2); break;
-			case 5: regret_n_insertion(3); break;
-			case 6: first_possible_insertion(); break;
+			//case 4: regret_n_insertion(2); break;
+			case 4: regret_n_insertion(3); break;
+			case 5: first_possible_insertion(); break;
 		}
 		
 		Collections.shuffle(search_input.rejectPickupPeoples);

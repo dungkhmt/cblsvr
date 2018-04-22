@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import localsearch.domainspecific.vehiclerouting.vrp.entities.Point;
+import localsearch.domainspecific.vehiclerouting.vrp.invariants.RelatedPointBuckets;
 
 public class SearchInput {
 	public ArrayList<Point> pickupPoints;
