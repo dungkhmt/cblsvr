@@ -911,7 +911,7 @@ public class ALNSwithSA {
 			if(maxRelatedBucketId >= buckets.nbBuckets)
 				maxRelatedBucketId = buckets.nbBuckets - 1;
 			while(minRelatedBucketId <= maxRelatedBucketId){
-				ArrayList<Point> bk = buckets.getBucketWithIndex(minRelatedBucketId);
+				ArrayList<Point> bk = new ArrayList<Point>(buckets.getBucketWithIndex(minRelatedBucketId));
 				//System.out.println("minRB = " + minRelatedBucketId + ", bk size = " + bk.size());
 				for(Point p : bk){
 					if(marks.contains(p))
@@ -963,7 +963,7 @@ public class ALNSwithSA {
 			if(maxRelatedBucketId >= buckets.nbBuckets)
 				maxRelatedBucketId = buckets.nbBuckets - 1;
 			while(minRelatedBucketId <= maxRelatedBucketId){
-				ArrayList<Point> bk = buckets.getBucketWithIndex(minRelatedBucketId);
+				ArrayList<Point> bk = new ArrayList<Point>(buckets.getBucketWithIndex(minRelatedBucketId));
 				for(Point p : bk){
 					if(marks.contains(p))
 						continue;
@@ -1017,7 +1017,7 @@ public class ALNSwithSA {
 			if(maxRelatedBucketId >= buckets.nbBuckets)
 				maxRelatedBucketId = buckets.nbBuckets - 1;
 			while(minRelatedBucketId <= maxRelatedBucketId){
-				ArrayList<Point> bk = buckets.getBucketWithIndex(minRelatedBucketId);
+				ArrayList<Point> bk = new ArrayList<Point>(buckets.getBucketWithIndex(minRelatedBucketId));
 				for(Point p : bk){
 					if(marks.contains(p))
 						continue;
@@ -1068,7 +1068,7 @@ public class ALNSwithSA {
 			if(maxRelatedBucketId >= buckets.nbBuckets)
 				maxRelatedBucketId = buckets.nbBuckets - 1;
 			while(minRelatedBucketId <= maxRelatedBucketId){
-				ArrayList<Point> bk = buckets.getBucketWithIndex(minRelatedBucketId);
+				ArrayList<Point> bk = new ArrayList<Point>(buckets.getBucketWithIndex(minRelatedBucketId));
 				for(Point p : bk){
 					if(marks.contains(p))
 						continue;
@@ -1126,7 +1126,7 @@ public class ALNSwithSA {
 			if(maxRelatedBucketId >= buckets.nbBuckets)
 				maxRelatedBucketId = buckets.nbBuckets - 1;
 			while(minRelatedBucketId <= maxRelatedBucketId){
-				ArrayList<Point> bk = buckets.getBucketWithIndex(minRelatedBucketId);
+				ArrayList<Point> bk = new ArrayList<Point>(buckets.getBucketWithIndex(minRelatedBucketId));
 				for(Point p : bk){
 					if(marks.contains(p))
 						continue;
@@ -1180,7 +1180,7 @@ public class ALNSwithSA {
 			if(maxRelatedBucketId >= buckets.nbBuckets)
 				maxRelatedBucketId = buckets.nbBuckets - 1;
 			while(minRelatedBucketId <= maxRelatedBucketId){
-				ArrayList<Point> bk = buckets.getBucketWithIndex(minRelatedBucketId);
+				ArrayList<Point> bk = new ArrayList<Point>(buckets.getBucketWithIndex(minRelatedBucketId));
 				for(Point p : bk){
 					if(marks.contains(p))
 						continue;
@@ -1239,7 +1239,7 @@ public class ALNSwithSA {
 			if(maxRelatedBucketId >= buckets.nbBuckets)
 				maxRelatedBucketId = buckets.nbBuckets - 1;
 			while(minRelatedBucketId <= maxRelatedBucketId){
-				ArrayList<Point> bk = buckets.getBucketWithIndex(minRelatedBucketId);
+				ArrayList<Point> bk = new ArrayList<Point>(buckets.getBucketWithIndex(minRelatedBucketId));
 				for(Point p : bk){
 					if(marks.contains(p))
 						continue;
@@ -1296,7 +1296,7 @@ public class ALNSwithSA {
 			if(maxRelatedBucketId >= buckets.nbBuckets)
 				maxRelatedBucketId = buckets.nbBuckets - 1;
 			while(minRelatedBucketId <= maxRelatedBucketId){
-				ArrayList<Point> bk = buckets.getBucketWithIndex(minRelatedBucketId);
+				ArrayList<Point> bk = new ArrayList<Point>(buckets.getBucketWithIndex(minRelatedBucketId));
 				for(Point p : bk){
 					if(marks.contains(p))
 						continue;
@@ -1363,7 +1363,7 @@ public class ALNSwithSA {
 			if(maxRelatedBucketId >= buckets.nbBuckets)
 				maxRelatedBucketId = buckets.nbBuckets - 1;
 			while(minRelatedBucketId <= maxRelatedBucketId){
-				ArrayList<Point> bk = buckets.getBucketWithIndex(minRelatedBucketId);
+				ArrayList<Point> bk = new ArrayList<Point>(buckets.getBucketWithIndex(minRelatedBucketId));
 				for(Point p : bk){
 					if(marks.contains(p))
 						continue;
@@ -1429,7 +1429,7 @@ public class ALNSwithSA {
 			if(maxRelatedBucketId >= buckets.nbBuckets)
 				maxRelatedBucketId = buckets.nbBuckets - 1;
 			while(minRelatedBucketId <= maxRelatedBucketId){
-				ArrayList<Point> bk = buckets.getBucketWithIndex(minRelatedBucketId);
+				ArrayList<Point> bk = new ArrayList<Point>(buckets.getBucketWithIndex(minRelatedBucketId));
 				for(Point p : bk){
 					if(marks.contains(p))
 						continue;
@@ -1493,7 +1493,7 @@ public class ALNSwithSA {
 			while(minRelatedBucketId <= maxRelatedBucketId){
 				if(finded)
 					break;
-				ArrayList<Point> bk = buckets.getBucketWithIndex(minRelatedBucketId);
+				ArrayList<Point> bk = new ArrayList<Point>(buckets.getBucketWithIndex(minRelatedBucketId));
 				for(Point p : bk){
 					if(marks.contains(p))
 						continue;
@@ -1530,7 +1530,7 @@ public class ALNSwithSA {
 			while(minRelatedBucketId <= maxRelatedBucketId){
 				if(finded)
 					break;
-				ArrayList<Point> bk = buckets.getBucketWithIndex(minRelatedBucketId);
+				ArrayList<Point> bk = new ArrayList<Point>(buckets.getBucketWithIndex(minRelatedBucketId));
 				for(Point p : bk){
 					if(finded)
 						break;
