@@ -908,8 +908,8 @@ public class ALNSwithSA {
 			int minRelatedBucketId = (int)(search_input.earliestAllowedArrivalTime.get(pickup) / buckets.getDelta());
 			int maxRelatedBucketId = (int)(search_input.lastestAllowedArrivalTime.get(pickup) / buckets.getDelta());;
 			ArrayList<Point> marks = new ArrayList<Point>();
-			if(maxRelatedBucketId >= buckets.nbBuckets)
-				maxRelatedBucketId = buckets.nbBuckets - 1;
+			//if(maxRelatedBucketId >= buckets.nbBuckets)
+				//maxRelatedBucketId = buckets.nbBuckets - 1;
 			while(minRelatedBucketId <= maxRelatedBucketId){
 				ArrayList<Point> bk = new ArrayList<Point>(buckets.getBucketWithIndex(minRelatedBucketId));
 				//System.out.println("minRB = " + minRelatedBucketId + ", bk size = " + bk.size());
@@ -960,8 +960,8 @@ public class ALNSwithSA {
 			int minRelatedBucketId = (int)(search_input.earliestAllowedArrivalTime.get(pickup) / buckets.getDelta());
 			int maxRelatedBucketId = (int)(search_input.lastestAllowedArrivalTime.get(pickup) / buckets.getDelta());;
 			ArrayList<Point> marks = new ArrayList<Point>();
-			if(maxRelatedBucketId >= buckets.nbBuckets)
-				maxRelatedBucketId = buckets.nbBuckets - 1;
+			//if(maxRelatedBucketId >= buckets.nbBuckets)
+				//maxRelatedBucketId = buckets.nbBuckets - 1;
 			while(minRelatedBucketId <= maxRelatedBucketId){
 				ArrayList<Point> bk = new ArrayList<Point>(buckets.getBucketWithIndex(minRelatedBucketId));
 				for(Point p : bk){
@@ -1014,8 +1014,8 @@ public class ALNSwithSA {
 			int minRelatedBucketId = (int)(search_input.earliestAllowedArrivalTime.get(pickup) / buckets.getDelta());
 			int maxRelatedBucketId = (int)(search_input.lastestAllowedArrivalTime.get(pickup) / buckets.getDelta());;
 			ArrayList<Point> marks = new ArrayList<Point>();
-			if(maxRelatedBucketId >= buckets.nbBuckets)
-				maxRelatedBucketId = buckets.nbBuckets - 1;
+			//if(maxRelatedBucketId >= buckets.nbBuckets)
+				//maxRelatedBucketId = buckets.nbBuckets - 1;
 			while(minRelatedBucketId <= maxRelatedBucketId){
 				ArrayList<Point> bk = new ArrayList<Point>(buckets.getBucketWithIndex(minRelatedBucketId));
 				for(Point p : bk){
@@ -1065,8 +1065,8 @@ public class ALNSwithSA {
 			int minRelatedBucketId = (int)(search_input.earliestAllowedArrivalTime.get(pickup) / buckets.getDelta());
 			int maxRelatedBucketId = (int)(search_input.lastestAllowedArrivalTime.get(pickup) / buckets.getDelta());;
 			ArrayList<Point> marks = new ArrayList<Point>();
-			if(maxRelatedBucketId >= buckets.nbBuckets)
-				maxRelatedBucketId = buckets.nbBuckets - 1;
+			//if(maxRelatedBucketId >= buckets.nbBuckets)
+				//maxRelatedBucketId = buckets.nbBuckets - 1;
 			while(minRelatedBucketId <= maxRelatedBucketId){
 				ArrayList<Point> bk = new ArrayList<Point>(buckets.getBucketWithIndex(minRelatedBucketId));
 				for(Point p : bk){
@@ -1123,8 +1123,8 @@ public class ALNSwithSA {
 			int minRelatedBucketId = (int)(search_input.earliestAllowedArrivalTime.get(pickup) / buckets.getDelta());
 			int maxRelatedBucketId = (int)(search_input.lastestAllowedArrivalTime.get(pickup) / buckets.getDelta());;
 			ArrayList<Point> marks = new ArrayList<Point>();
-			if(maxRelatedBucketId >= buckets.nbBuckets)
-				maxRelatedBucketId = buckets.nbBuckets - 1;
+			//if(maxRelatedBucketId >= buckets.nbBuckets)
+				//maxRelatedBucketId = buckets.nbBuckets - 1;
 			while(minRelatedBucketId <= maxRelatedBucketId){
 				ArrayList<Point> bk = new ArrayList<Point>(buckets.getBucketWithIndex(minRelatedBucketId));
 				for(Point p : bk){
@@ -1177,8 +1177,8 @@ public class ALNSwithSA {
 			int minRelatedBucketId = (int)(search_input.earliestAllowedArrivalTime.get(pickup) / buckets.getDelta());
 			int maxRelatedBucketId = (int)(search_input.lastestAllowedArrivalTime.get(pickup) / buckets.getDelta());;
 			ArrayList<Point> marks = new ArrayList<Point>();
-			if(maxRelatedBucketId >= buckets.nbBuckets)
-				maxRelatedBucketId = buckets.nbBuckets - 1;
+			//if(maxRelatedBucketId >= buckets.nbBuckets)
+				//maxRelatedBucketId = buckets.nbBuckets - 1;
 			while(minRelatedBucketId <= maxRelatedBucketId){
 				ArrayList<Point> bk = new ArrayList<Point>(buckets.getBucketWithIndex(minRelatedBucketId));
 				for(Point p : bk){
@@ -1236,8 +1236,8 @@ public class ALNSwithSA {
 			int minRelatedBucketId = (int)(search_input.earliestAllowedArrivalTime.get(pickup) / buckets.getDelta());
 			int maxRelatedBucketId = (int)(search_input.lastestAllowedArrivalTime.get(pickup) / buckets.getDelta());;
 			ArrayList<Point> marks = new ArrayList<Point>();
-			if(maxRelatedBucketId >= buckets.nbBuckets)
-				maxRelatedBucketId = buckets.nbBuckets - 1;
+			//if(maxRelatedBucketId >= buckets.nbBuckets)
+				//maxRelatedBucketId = buckets.nbBuckets - 1;
 			while(minRelatedBucketId <= maxRelatedBucketId){
 				ArrayList<Point> bk = new ArrayList<Point>(buckets.getBucketWithIndex(minRelatedBucketId));
 				for(Point p : bk){
@@ -1293,8 +1293,8 @@ public class ALNSwithSA {
 			int minRelatedBucketId = (int)(search_input.earliestAllowedArrivalTime.get(pickup) / buckets.getDelta());
 			int maxRelatedBucketId = (int)(search_input.lastestAllowedArrivalTime.get(pickup) / buckets.getDelta());;
 			ArrayList<Point> marks = new ArrayList<Point>();
-			if(maxRelatedBucketId >= buckets.nbBuckets)
-				maxRelatedBucketId = buckets.nbBuckets - 1;
+			//if(maxRelatedBucketId >= buckets.nbBuckets)
+				//maxRelatedBucketId = buckets.nbBuckets - 1;
 			while(minRelatedBucketId <= maxRelatedBucketId){
 				ArrayList<Point> bk = new ArrayList<Point>(buckets.getBucketWithIndex(minRelatedBucketId));
 				for(Point p : bk){
@@ -1360,8 +1360,8 @@ public class ALNSwithSA {
 			int minRelatedBucketId = (int)(search_input.earliestAllowedArrivalTime.get(pickup) / buckets.getDelta());
 			int maxRelatedBucketId = (int)(search_input.lastestAllowedArrivalTime.get(pickup) / buckets.getDelta());;
 			ArrayList<Point> marks = new ArrayList<Point>();
-			if(maxRelatedBucketId >= buckets.nbBuckets)
-				maxRelatedBucketId = buckets.nbBuckets - 1;
+			//if(maxRelatedBucketId >= buckets.nbBuckets)
+				//maxRelatedBucketId = buckets.nbBuckets - 1;
 			while(minRelatedBucketId <= maxRelatedBucketId){
 				ArrayList<Point> bk = new ArrayList<Point>(buckets.getBucketWithIndex(minRelatedBucketId));
 				for(Point p : bk){
@@ -1426,8 +1426,8 @@ public class ALNSwithSA {
 			int minRelatedBucketId = (int)(search_input.earliestAllowedArrivalTime.get(pickup) / buckets.getDelta());
 			int maxRelatedBucketId = (int)(search_input.lastestAllowedArrivalTime.get(pickup) / buckets.getDelta());;
 			ArrayList<Point> marks = new ArrayList<Point>();
-			if(maxRelatedBucketId >= buckets.nbBuckets)
-				maxRelatedBucketId = buckets.nbBuckets - 1;
+			//if(maxRelatedBucketId >= buckets.nbBuckets)
+				//maxRelatedBucketId = buckets.nbBuckets - 1;
 			while(minRelatedBucketId <= maxRelatedBucketId){
 				ArrayList<Point> bk = new ArrayList<Point>(buckets.getBucketWithIndex(minRelatedBucketId));
 				for(Point p : bk){
@@ -1488,8 +1488,8 @@ public class ALNSwithSA {
 			int minRelatedBucketId = (int)(search_input.earliestAllowedArrivalTime.get(pickup) / buckets.getDelta());
 			int maxRelatedBucketId = (int)(search_input.lastestAllowedArrivalTime.get(pickup) / buckets.getDelta());;
 			ArrayList<Point> marks = new ArrayList<Point>();
-			if(maxRelatedBucketId >= buckets.nbBuckets)
-				maxRelatedBucketId = buckets.nbBuckets - 1;
+			//if(maxRelatedBucketId >= buckets.nbBuckets)
+			//	maxRelatedBucketId = buckets.nbBuckets - 1;
 			while(minRelatedBucketId <= maxRelatedBucketId){
 				if(finded)
 					break;
@@ -1525,8 +1525,8 @@ public class ALNSwithSA {
 			int minRelatedBucketId = (int)(search_input.earliestAllowedArrivalTime.get(pickup) / buckets.getDelta());
 			int maxRelatedBucketId = (int)(search_input.lastestAllowedArrivalTime.get(pickup) / buckets.getDelta());;
 			ArrayList<Point> marks = new ArrayList<Point>();
-			if(maxRelatedBucketId >= buckets.nbBuckets)
-				maxRelatedBucketId = buckets.nbBuckets - 1;
+			//if(maxRelatedBucketId >= buckets.nbBuckets)
+			//	maxRelatedBucketId = buckets.nbBuckets - 1;
 			while(minRelatedBucketId <= maxRelatedBucketId){
 				if(finded)
 					break;

@@ -240,8 +240,8 @@ public class ShareARide{
 			int minRelatedBucketId = (int)(earliestAllowedArrivalTime.get(pickup) / buckets.getDelta());
 			int maxRelatedBucketId = (int)(lastestAllowedArrivalTime.get(pickup) / buckets.getDelta());;
 			ArrayList<Point> marks = new ArrayList<Point>();
-			if(maxRelatedBucketId >= buckets.nbBuckets)
-				maxRelatedBucketId = buckets.nbBuckets - 1;
+			//if(maxRelatedBucketId >= buckets.nbBuckets)
+				//maxRelatedBucketId = buckets.nbBuckets - 1;
 			while(minRelatedBucketId <= maxRelatedBucketId){
 				ArrayList<Point> bk = buckets.getBucketWithIndex(minRelatedBucketId);
 				//System.out.println("minRB = " + minRelatedBucketId + ", bk size = " + bk.size());
@@ -326,8 +326,8 @@ public class ShareARide{
 			int minRelatedBucketId = (int)(earliestAllowedArrivalTime.get(pickup) / buckets.getDelta());
 			int maxRelatedBucketId = (int)(lastestAllowedArrivalTime.get(pickup) / buckets.getDelta());;
 			ArrayList<Point> marks = new ArrayList<Point>();
-			if(maxRelatedBucketId >= buckets.nbBuckets)
-				maxRelatedBucketId = buckets.nbBuckets - 1;
+			//if(maxRelatedBucketId >= buckets.nbBuckets)
+				//maxRelatedBucketId = buckets.nbBuckets - 1;
 			while(minRelatedBucketId <= maxRelatedBucketId){
 				ArrayList<Point> bk = buckets.getBucketWithIndex(minRelatedBucketId);
 				//System.out.println("minRB = " + minRelatedBucketId + ", bk size = " + bk.size());
@@ -387,8 +387,8 @@ public class ShareARide{
 			int minRelatedBucketId = (int)(earliestAllowedArrivalTime.get(pickup) / buckets.getDelta());
 			int maxRelatedBucketId = (int)(lastestAllowedArrivalTime.get(pickup) / buckets.getDelta());;
 			ArrayList<Point> marks = new ArrayList<Point>();
-			if(maxRelatedBucketId >= buckets.nbBuckets)
-				maxRelatedBucketId = buckets.nbBuckets - 1;
+			//if(maxRelatedBucketId >= buckets.nbBuckets)
+				//maxRelatedBucketId = buckets.nbBuckets - 1;
 			while(minRelatedBucketId <= maxRelatedBucketId){
 				ArrayList<Point> bk = buckets.getBucketWithIndex(minRelatedBucketId);
 				//System.out.println("minRB = " + minRelatedBucketId + ", bk size = " + bk.size());
@@ -442,11 +442,13 @@ public class ShareARide{
 			Point pre_delivery = null;
 			double best_objective = Double.MAX_VALUE;
 			
-			int i = (int)(earliestAllowedArrivalTime.get(pickup) / buckets.getDelta());
-			int maxRelatedBucketId = (int)(lastestAllowedArrivalTime.get(pickup) / buckets.getDelta());;
+			int ear = earliestAllowedArrivalTime.get(pickup);
+			int late = lastestAllowedArrivalTime.get(pickup);
+			int i = (int)(ear / buckets.getDelta());
+			int maxRelatedBucketId = (int)(late / buckets.getDelta());;
 			ArrayList<Point> marks = new ArrayList<Point>();
-			if(maxRelatedBucketId >= buckets.nbBuckets)
-				maxRelatedBucketId = buckets.nbBuckets - 1;
+			//if(maxRelatedBucketId >= buckets.nbBuckets)
+				//maxRelatedBucketId = buckets.nbBuckets - 1;
 			while(i <= maxRelatedBucketId){
 				ArrayList<Point> bk = buckets.getBucketWithIndex(i);
 				for(Point p : bk){
@@ -499,8 +501,8 @@ public class ShareARide{
 			int maxRelatedBucketId = (int)(lastestAllowedArrivalTime.get(pickup) / buckets.getDelta());
 			ArrayList<Point> marks = new ArrayList<Point>();
 			
-			if(maxRelatedBucketId >= buckets.nbBuckets)
-				maxRelatedBucketId = buckets.nbBuckets - 1;
+			//if(maxRelatedBucketId >= buckets.nbBuckets)
+			//	maxRelatedBucketId = buckets.nbBuckets - 1;
 			while(i <= maxRelatedBucketId){
 				ArrayList<Point> bk = buckets.getBucketWithIndex(i);
 				for(Point p : bk){
@@ -553,8 +555,8 @@ public class ShareARide{
 			int minbkId = (int)(earliestAllowedArrivalTime.get(pickup) / buckets.getDelta());
 			int maxRelatedBucketId = (int)(lastestAllowedArrivalTime.get(pickup) / buckets.getDelta());;
 			ArrayList<Point> marks = new ArrayList<Point>();
-			if(maxRelatedBucketId >= buckets.nbBuckets)
-				maxRelatedBucketId = buckets.nbBuckets - 1;
+			//if(maxRelatedBucketId >= buckets.nbBuckets)
+				//maxRelatedBucketId = buckets.nbBuckets - 1;
 			while(minbkId <= maxRelatedBucketId){
 				if(finded)
 					break;
@@ -629,8 +631,8 @@ public class ShareARide{
 			int minRelatedBucketId = (int)(earliestAllowedArrivalTime.get(pickup) / buckets.getDelta());
 			int maxRelatedBucketId = (int)(lastestAllowedArrivalTime.get(pickup) / buckets.getDelta());;
 			ArrayList<Point> marks = new ArrayList<Point>();
-			if(maxRelatedBucketId >= buckets.nbBuckets)
-				maxRelatedBucketId = buckets.nbBuckets - 1;
+			//if(maxRelatedBucketId >= buckets.nbBuckets)
+				//maxRelatedBucketId = buckets.nbBuckets - 1;
 			while(minRelatedBucketId <= maxRelatedBucketId){
 				if(finded)
 					break;
@@ -682,11 +684,20 @@ public class ShareARide{
 			
 			boolean finded = false;
 			
-			for(int r = 1; r <= XR.getNbRoutes(); r++){
+			int minRelatedBucketId = (int)(earliestAllowedArrivalTime.get(pickup) / buckets.getDelta());
+			int maxRelatedBucketId = (int)(lastestAllowedArrivalTime.get(pickup) / buckets.getDelta());;
+			ArrayList<Point> marks = new ArrayList<Point>();
+			//if(maxRelatedBucketId >= buckets.nbBuckets)
+				//maxRelatedBucketId = buckets.nbBuckets - 1;
+			while(minRelatedBucketId <= maxRelatedBucketId){
 				if(finded)
 					break;
-				
-				for(Point p = XR.getStartingPointOfRoute(r); p!= XR.getTerminatingPointOfRoute(r); p = XR.next(p)){
+				ArrayList<Point> bk = buckets.getBucketWithIndex(minRelatedBucketId);
+				//System.out.println("minRB = " + minRelatedBucketId + ", bk size = " + bk.size());
+				for(Point p : bk){
+					if(marks.contains(p))
+						continue;
+					marks.add(p);
 					if(S.evaluateAddOnePoint(pickup, p) > 0)
 						continue;
 					
@@ -727,8 +738,8 @@ public class ShareARide{
 			int minRelatedBucketId = (int)(earliestAllowedArrivalTime.get(pickup) / buckets.getDelta());
 			int maxRelatedBucketId = (int)(lastestAllowedArrivalTime.get(pickup) / buckets.getDelta());;
 			ArrayList<Point> marks = new ArrayList<Point>();
-			if(maxRelatedBucketId >= buckets.nbBuckets)
-				maxRelatedBucketId = buckets.nbBuckets - 1;
+			//if(maxRelatedBucketId >= buckets.nbBuckets)
+				//maxRelatedBucketId = buckets.nbBuckets - 1;
 			while(minRelatedBucketId <= maxRelatedBucketId){
 				if(finded)
 					break;
@@ -774,8 +785,8 @@ public class ShareARide{
 			int minRelatedBucketId = (int)(earliestAllowedArrivalTime.get(pickup) / buckets.getDelta());
 			int maxRelatedBucketId = (int)(lastestAllowedArrivalTime.get(pickup) / buckets.getDelta());;
 			ArrayList<Point> marks = new ArrayList<Point>();
-			if(maxRelatedBucketId >= buckets.nbBuckets)
-				maxRelatedBucketId = buckets.nbBuckets - 1;
+			//if(maxRelatedBucketId >= buckets.nbBuckets)
+				//maxRelatedBucketId = buckets.nbBuckets - 1;
 			while(minRelatedBucketId <= maxRelatedBucketId){
 				if(finded)
 					break;
@@ -822,7 +833,7 @@ public class ShareARide{
     	try {		
 			for(int i=0; i<13; i++){
 				for(int j=0; j<14; j++){
-		    		String inData = "data/SARP-offline/n1232r10_1.txt";
+		    		String inData = "data/SARP-offline/n12335r100_1.txt";
 		        	
 		        	int timeLimit = 36000000;
 		        	int nIter = 300;
@@ -833,7 +844,7 @@ public class ShareARide{
 					Date date = new Date();
 					System.out.println(dateFormat.format(date));
 					
-					fileHandler = new FileHandler("data/output/SARP-offline/n1232r10/" + dateFormat.format(date) + "greedyInit_12Removal_12Insertion.txt");
+					fileHandler = new FileHandler("data/output/SARP-offline/n12335r100/" + dateFormat.format(date) + "greedyInit_12Removal_12Insertion.txt");
 					simpleFormater = new SimpleFormatter();
 					
 					LOGGER.addHandler(fileHandler);

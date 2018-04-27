@@ -65,7 +65,8 @@ public class RelatedPointBuckets implements InvariantVR {
 		
 		ArrayList<Point> startingpoint = XR.getStartingPoints();
 		for(int i = 0; i < startingpoint.size(); i++){
-			startingpoint.get(i).setBucketIDs(bucketID);
+			ArrayList<Integer> bkIds = new ArrayList<Integer>(bucketID);
+			startingpoint.get(i).setBucketIDs(bkIds);
 		}
 	}
 	/***
@@ -103,7 +104,7 @@ public class RelatedPointBuckets implements InvariantVR {
 				bks.put(i, bk);
 				BucketIDsOfPointP.add(i);
 			}
-			p.setBucketIDs(BucketIDsOfPointP);
+			//p.setBucketIDs(BucketIDsOfPointP);
 		}
 	}
 
