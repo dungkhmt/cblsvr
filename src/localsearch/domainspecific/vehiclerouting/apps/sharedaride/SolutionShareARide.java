@@ -1,10 +1,12 @@
 package localsearch.domainspecific.vehiclerouting.apps.sharedaride;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import localsearch.domainspecific.vehiclerouting.vrp.VRManager;
 import localsearch.domainspecific.vehiclerouting.vrp.VarRoutesVR;
 import localsearch.domainspecific.vehiclerouting.vrp.entities.Point;
+import localsearch.domainspecific.vehiclerouting.vrp.invariants.RelatedPointBuckets;
 
 public class SolutionShareARide {
 	
@@ -13,9 +15,10 @@ public class SolutionShareARide {
 	private ArrayList<Point> _rejectPickupGoods;
 	private ArrayList<Point> _rejectPickupPeoples;
 	private double _cost;
+	private HashMap<Integer, ArrayList<Point>> _bks;
 	
-	public SolutionShareARide(VarRoutesVR XR, ArrayList<Point> rejectPoints, ArrayList<Point> rejectPickupGoods, ArrayList<Point> rejectPickupPeoples, double cost){
-		
+	public SolutionShareARide(RelatedPointBuckets buckets, VarRoutesVR XR, ArrayList<Point> rejectPoints, ArrayList<Point> rejectPickupGoods, ArrayList<Point> rejectPickupPeoples, double cost){
+		_bks = new HashMap<Integer, ArrayList<Point>>(buckets.getBuckets());
 		_rejectPoints = new ArrayList<Point>();
 		_rejectPickupGoods = new ArrayList<Point>();
 		_rejectPickupPeoples = new ArrayList<Point>();
@@ -47,6 +50,14 @@ public class SolutionShareARide {
 		}
 		
 		this._cost = cost;
+	}
+	
+	public void set_buckets(HashMap<Integer, ArrayList<Point>> bks) {
+		this._bks = bks;
+	}
+	
+	public HashMap<Integer, ArrayList<Point>> get_buckets(){
+		return _bks;
 	}
 	
 	public ArrayList<ArrayList<Point>> get_route() {

@@ -243,7 +243,7 @@ public class ShareARide{
 			//if(maxRelatedBucketId >= buckets.nbBuckets)
 				//maxRelatedBucketId = buckets.nbBuckets - 1;
 			while(minRelatedBucketId <= maxRelatedBucketId){
-				ArrayList<Point> bk = buckets.getBucketWithIndex(minRelatedBucketId);
+				ArrayList<Point> bk = new ArrayList<Point>(buckets.getBucketWithIndex(minRelatedBucketId));
 				//System.out.println("minRB = " + minRelatedBucketId + ", bk size = " + bk.size());
 				for(Point p : bk){
 					if(marks.contains(p))
@@ -329,7 +329,7 @@ public class ShareARide{
 			//if(maxRelatedBucketId >= buckets.nbBuckets)
 				//maxRelatedBucketId = buckets.nbBuckets - 1;
 			while(minRelatedBucketId <= maxRelatedBucketId){
-				ArrayList<Point> bk = buckets.getBucketWithIndex(minRelatedBucketId);
+				ArrayList<Point> bk = new ArrayList<Point>(buckets.getBucketWithIndex(minRelatedBucketId));
 				//System.out.println("minRB = " + minRelatedBucketId + ", bk size = " + bk.size());
 				for(Point p : bk){
 					if(marks.contains(p))
@@ -390,7 +390,7 @@ public class ShareARide{
 			//if(maxRelatedBucketId >= buckets.nbBuckets)
 				//maxRelatedBucketId = buckets.nbBuckets - 1;
 			while(minRelatedBucketId <= maxRelatedBucketId){
-				ArrayList<Point> bk = buckets.getBucketWithIndex(minRelatedBucketId);
+				ArrayList<Point> bk = new ArrayList<Point>(buckets.getBucketWithIndex(minRelatedBucketId));
 				//System.out.println("minRB = " + minRelatedBucketId + ", bk size = " + bk.size());
 				for(Point p : bk){
 					if(marks.contains(p))
@@ -450,7 +450,7 @@ public class ShareARide{
 			//if(maxRelatedBucketId >= buckets.nbBuckets)
 				//maxRelatedBucketId = buckets.nbBuckets - 1;
 			while(i <= maxRelatedBucketId){
-				ArrayList<Point> bk = buckets.getBucketWithIndex(i);
+				ArrayList<Point> bk = new ArrayList<Point>(buckets.getBucketWithIndex(i));
 				for(Point p : bk){
 					if(marks.contains(p))
 						continue;
@@ -504,7 +504,7 @@ public class ShareARide{
 			//if(maxRelatedBucketId >= buckets.nbBuckets)
 			//	maxRelatedBucketId = buckets.nbBuckets - 1;
 			while(i <= maxRelatedBucketId){
-				ArrayList<Point> bk = buckets.getBucketWithIndex(i);
+				ArrayList<Point> bk = new ArrayList<Point>(buckets.getBucketWithIndex(i));
 				for(Point p : bk){
 					if(marks.contains(p))
 						continue;
@@ -560,7 +560,7 @@ public class ShareARide{
 			while(minbkId <= maxRelatedBucketId){
 				if(finded)
 					break;
-				ArrayList<Point> bk = buckets.getBucketWithIndex(minbkId);
+				ArrayList<Point> bk = new ArrayList<Point>(buckets.getBucketWithIndex(minbkId));
 				for(Point p : bk){
 					if(marks.contains(p))
 						continue;
@@ -636,7 +636,7 @@ public class ShareARide{
 			while(minRelatedBucketId <= maxRelatedBucketId){
 				if(finded)
 					break;
-				ArrayList<Point> bk = buckets.getBucketWithIndex(minRelatedBucketId);
+				ArrayList<Point> bk = new ArrayList<Point>(buckets.getBucketWithIndex(minRelatedBucketId));
 				//System.out.println("minRB = " + minRelatedBucketId + ", bk size = " + bk.size());
 				for(Point p : bk){
 					if(marks.contains(p))
@@ -692,7 +692,7 @@ public class ShareARide{
 			while(minRelatedBucketId <= maxRelatedBucketId){
 				if(finded)
 					break;
-				ArrayList<Point> bk = buckets.getBucketWithIndex(minRelatedBucketId);
+				ArrayList<Point> bk = new ArrayList<Point>(buckets.getBucketWithIndex(minRelatedBucketId));
 				//System.out.println("minRB = " + minRelatedBucketId + ", bk size = " + bk.size());
 				for(Point p : bk){
 					if(marks.contains(p))
@@ -743,7 +743,7 @@ public class ShareARide{
 			while(minRelatedBucketId <= maxRelatedBucketId){
 				if(finded)
 					break;
-				ArrayList<Point> bk = buckets.getBucketWithIndex(minRelatedBucketId);
+				ArrayList<Point> bk = new ArrayList<Point>(buckets.getBucketWithIndex(minRelatedBucketId));
 				//System.out.println("minRB = " + minRelatedBucketId + ", bk size = " + bk.size());
 				for(Point p : bk){
 					if(marks.contains(p))
@@ -790,7 +790,7 @@ public class ShareARide{
 			while(minRelatedBucketId <= maxRelatedBucketId){
 				if(finded)
 					break;
-				ArrayList<Point> bk = buckets.getBucketWithIndex(minRelatedBucketId);
+				ArrayList<Point> bk = new ArrayList<Point>(buckets.getBucketWithIndex(minRelatedBucketId));
 				//System.out.println("minRB = " + minRelatedBucketId + ", bk size = " + bk.size());
 				for(Point p : bk){
 					if(marks.contains(p))
@@ -831,8 +831,8 @@ public class ShareARide{
 	
 	public static void main(String []args){
     	try {		
-			for(int i=0; i<13; i++){
-				for(int j=0; j<14; j++){
+			for(int i=0; i<1; i++){
+				for(int j=0; j<1; j++){
 		    		String inData = "data/SARP-offline/n12335r100_1.txt";
 		        	
 		        	int timeLimit = 36000000;

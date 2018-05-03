@@ -37,12 +37,16 @@ public class RelatedPointBuckets implements InvariantVR {
 		// TODO Auto-generated method stub
 		return mgr;
 	}
+	
 	public HashMap<Integer, ArrayList<Point>> getBuckets(){
-		return bks;
+		return this.bks;
 	}
 	
+	public void setBuckets(HashMap<Integer, ArrayList<Point>> bks) {
+		this.bks = bks;
+	}
 	public ArrayList<Point> getBucketWithIndex(int idx){
-		return bks.get(idx);
+		return this.bks.get(idx);
 	}
 	
 	public int getDelta(){
@@ -91,13 +95,11 @@ public class RelatedPointBuckets implements InvariantVR {
 			double eatX = eat.get(p);
 			int stIdx = (int)eatX/delta;
 			int endIdx = stIdx;
-			if(XR.next(p) == XR.getTerminatingPointOfRoute(XR.route(p)))
+			//double flexTime = latestAllowedArrivalTime.get(XR.next(p)) - eat.get(XR.next(p));
+			//endIdx = (int)(eatX + serviceDuration.get(p) + flexTime)/delta;
+			endIdx = latestAllowedArrivalTime.get(XR.next(p))/delta + 1;
+			if(endIdx > 86400/delta - 1)
 				endIdx = 86400/delta - 1;
-			else{
-				//double flexTime = latestAllowedArrivalTime.get(XR.next(p)) - eat.get(XR.next(p));
-				//endIdx = (int)(eatX + serviceDuration.get(p) + flexTime)/delta;
-				endIdx = latestAllowedArrivalTime.get(XR.next(p))/delta;
-			}
 			for(int i = stIdx; i <= endIdx; i++){	
 				ArrayList<Point> bk = bks.get(i);
 				bk.add(p);
@@ -266,7 +268,7 @@ public class RelatedPointBuckets implements InvariantVR {
 	@Override
 	public void propagateAddOnePoint(Point x, Point y) {
 		// TODO Auto-generated method stub
-		propagate(y);
+		propagate(x);
 
 	}
 
@@ -289,7 +291,7 @@ public class RelatedPointBuckets implements InvariantVR {
 	@Override
 	public void propagateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
 		// TODO Auto-generated method stub
-		propagate(y1);
+		propagate(x1);
 	}
 
 	@Override

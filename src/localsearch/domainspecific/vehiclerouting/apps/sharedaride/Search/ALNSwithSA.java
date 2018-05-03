@@ -105,7 +105,7 @@ public class ALNSwithSA {
 		int it = 0;
 		
 		double best_cost = objective.getValue();
-		SolutionShareARide best_solution = new SolutionShareARide(XR, search_input.rejectPoints, search_input.rejectPickupGoods, search_input.rejectPickupPeoples, best_cost);
+		SolutionShareARide best_solution = new SolutionShareARide(buckets, XR, search_input.rejectPoints, search_input.rejectPickupGoods, search_input.rejectPickupPeoples, best_cost);
 		ShareARide.LOGGER.log(Level.INFO, "start search best_solution has cost = "+best_solution.get_cost()+"  number of rejected request of goods = "+best_solution.get_rejectPickupGoods().size()+"  number of rejected request of peoples = "+best_solution.get_rejectPickupPeoples().size());
 		
 		double start_search_time = System.currentTimeMillis();
@@ -113,11 +113,11 @@ public class ALNSwithSA {
 		while( (System.currentTimeMillis()-start_search_time) < timeLimit && it++ < maxIter){
 			
 			double current_cost = objective.getValue();
-			SolutionShareARide current_solution = new SolutionShareARide(XR, search_input.rejectPoints, search_input.rejectPickupGoods, search_input.rejectPickupPeoples, current_cost);
+			SolutionShareARide current_solution = new SolutionShareARide(buckets, XR, search_input.rejectPoints, search_input.rejectPickupGoods, search_input.rejectPickupPeoples, current_cost);
 			ShareARide.LOGGER.log(Level.INFO, "Iter "+it+" current_solution has cost = "+current_solution.get_cost()+"  number of rejected request of goods = "+current_solution.get_rejectPickupGoods().size()+"  number of rejected request of peoples = "+current_solution.get_rejectPickupPeoples().size());
 			
-			int i_selected_removal = get_operator(ptd);
-			//int i_selected_removal = i_remove;
+			//int i_selected_removal = get_operator(ptd);
+			int i_selected_removal = i_remove;
 			wd[i_selected_removal]++;
 			/*
 			 * Select remove operator
@@ -143,8 +143,8 @@ public class ALNSwithSA {
 			//long timeRemoveEnd = System.currentTimeMillis();
 			//long timeRemove = timeRemoveEnd - timeRemoveStart;
 			
-			int i_selected_insertion = get_operator(pti);
-			//int i_selected_insertion = i_insert;
+			//int i_selected_insertion = get_operator(pti);
+			int i_selected_insertion = i_insert;
 			wi[i_selected_insertion]++;
 			ShareARide.LOGGER.log(Level.INFO,"selected insertion operator = "+i_selected_insertion);
 			/*
@@ -189,7 +189,7 @@ public class ALNSwithSA {
 						|| (new_nb_reject_points == best_nb_reject_points && new_cost < best_cost)){
 					
 					best_cost = new_cost;
-					best_solution = new SolutionShareARide(XR, search_input.rejectPoints, search_input.rejectPickupGoods, search_input.rejectPickupPeoples, best_cost);
+					best_solution = new SolutionShareARide(buckets, XR, search_input.rejectPoints, search_input.rejectPickupGoods, search_input.rejectPickupPeoples, best_cost);
 					
 					ShareARide.LOGGER.log(Level.INFO,"Iter "+it+" find the best solution with number of rejected of goods  = "+best_solution.get_rejectPickupGoods().size()+" number of rejected of peoples  = "+best_solution.get_rejectPickupPeoples().size()+"  cost = "+best_solution.get_cost());
 					
@@ -218,6 +218,7 @@ public class ALNSwithSA {
 					search_input.rejectPoints = current_solution.get_rejectPoints();
 					search_input.rejectPickupGoods = current_solution.get_rejectPickupGoods();
 					search_input.rejectPickupPeoples = current_solution.get_rejectPickupPeoples();
+					buckets.setBuckets(current_solution.get_buckets());
 				//}
 			}
 			
