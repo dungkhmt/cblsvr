@@ -193,6 +193,17 @@ public class Implicate implements IConstraintVR {
 		initPropagation();
 	}
 
+	//@Override
+	public void propagateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
+		// TODO Auto-generated method stub
+		initPropagation();
+	}
+	//@Override
+	public void propagateRemoveTwoPoints(Point x1, Point x2) {
+		// TODO Auto-generated method stub
+		initPropagation();
+	}
+	
 	@Override
 	public void propagateAddRemovePoints(Point x, Point y, Point z) {
 		// TODO Auto-generated method stub
@@ -455,6 +466,24 @@ public class Implicate implements IConstraintVR {
 		// TODO Auto-generated method stub
 		int v1 = c1.evaluateRemoveOnePoint(x) + c1.violations();
 		int v2 = c2.evaluateRemoveOnePoint(x) + c2.violations();
+		int v = v1 > 0 ? 0 : v2;
+		return v - violations;
+	}
+	
+	//@Override
+	public int evaluateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
+		// TODO Auto-generated method stub
+		int v1 = c1.evaluateAddTwoPoints(x1, y1, x2, y2) + c1.violations();
+		int v2 = c2.evaluateAddTwoPoints(x1, y1, x2, y2) + c2.violations();
+		int v = v1 > 0 ? 0 : v2;
+		return v - violations;
+	}
+	
+	//@Override
+	public int evaluateRemoveTwoPoints(Point x1, Point x2) {
+		// TODO Auto-generated method stub
+		int v1 = c1.evaluateRemoveTwoPoints(x1, x2) + c1.violations();
+		int v2 = c2.evaluateRemoveTwoPoints(x1, x2) + c2.violations();
 		int v = v1 > 0 ? 0 : v2;
 		return v - violations;
 	}

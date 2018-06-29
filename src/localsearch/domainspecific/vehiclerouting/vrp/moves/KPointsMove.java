@@ -25,6 +25,14 @@ public class KPointsMove implements IVRMove {
 		this.y = y;
 		this.NE = null;
 	}
+	
+	public KPointsMove(VRManager mgr, ArrayList<Point> x, ArrayList<Point> y){
+		this.mgr = mgr;
+		this.eval = null;
+		this.x = x;
+		this.y = y;
+		this.NE = null;
+	}
 	public String name(){
 		return "KPointsMove";
 	}

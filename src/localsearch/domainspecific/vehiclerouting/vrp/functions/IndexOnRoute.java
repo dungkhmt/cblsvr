@@ -965,6 +965,20 @@ public class IndexOnRoute implements IFunctionVR {
 
 	}
 
+	
+	public void propagateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
+		// TODO Auto-generated method stub
+		System.out.println("IndexOnRoute::propagateAddTwoPoints HAS NOT BEEN IMPLEMENTED YET");
+		System.exit(-1);
+	}
+
+	
+	public void propagateRemoveTwoPoints(Point x1, Point x2) {
+		// TODO Auto-generated method stub
+		System.out.println("IndexOnRoute::propagateRemoveTwoPoints HAS NOT BEEN IMPLEMENTED YET");
+		System.exit(-1);		
+	}
+	
 	private void swap(Point[] a, int i, int j) {
 		Point tmp = a[i];
 		a[i] = a[j];
@@ -1187,8 +1201,13 @@ public class IndexOnRoute implements IFunctionVR {
 			}
 		}
 		return eval;
+<<<<<<< HEAD
 	}
 
+=======
+	}	
+	
+>>>>>>> b97c149ce61245b5939125dd91b667aebcb11466
 	public double evaluateAddOnePoint(Point x, Point y) {
 		// TODO Auto-generated method stub
 		if (!XR.checkPerformAddOnePoint(x, y)) {
@@ -1204,7 +1223,11 @@ public class IndexOnRoute implements IFunctionVR {
 		}
 		return 0;
 	}
+<<<<<<< HEAD
 
+=======
+	
+>>>>>>> b97c149ce61245b5939125dd91b667aebcb11466
 	public double evaluateRemoveOnePoint(Point x) {
 		// TODO Auto-generated method stub
 		if (!XR.checkPerformRemoveOnePoint(x)) {
@@ -1221,6 +1244,53 @@ public class IndexOnRoute implements IFunctionVR {
 		return 0;
 	}
 
+<<<<<<< HEAD
+=======
+	public double evaluateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
+		// TODO Auto-generated method stub
+		if (!XR.checkPerformAddTwoPoints(x1, y1, x2, y2)) {
+			System.out.println(name() + ":: Error evaluateAddTwoPoints: " + x1 + " " + y1 + " " + x2 + " " + y2 + "\n" + XR.toString());
+    		System.exit(-1);
+		}
+		if (v == x1)
+			return XR.index(y1) + 1 - XR.index(x1);
+
+		if(v == x2){
+			if(y1 == y2)
+				return XR.index(y1) + 2 - XR.index(x2);
+			else
+				return XR.index(y2) + 1 - XR.index(x2);
+		}
+		
+		if (XR.isBefore(y1, v) && !XR.isBefore(y2, v))
+			return 1;
+		
+		if(XR.isBefore(y2, v))
+			return 2;
+		return 0;
+	}
+	
+	public double evaluateRemoveTwoPoints(Point x1, Point x2) {
+		// TODO Auto-generated method stub
+		if (!XR.checkPerformRemoveTwoPoints(x1, x2)) {
+			System.out.println(name() + ":: Error evaluateRemoveTwoPoints: " + x1 + " " + x2 + "\n" + XR.toString());
+    		System.exit(-1);
+		}
+		if (v == x1)
+			return -XR.index(x1) + Constants.NULL_POINT;
+
+		if (v == x2)
+			return -XR.index(x2) + Constants.NULL_POINT;
+
+		if (XR.isBefore(x1, v) && !XR.isBefore(x2, v))
+			return -1;
+		
+		if(XR.isBefore(x2, v))
+			return -2;
+		return 0;
+	}
+	
+>>>>>>> b97c149ce61245b5939125dd91b667aebcb11466
 	public void propagateAddRemovePoints(Point x, Point y, Point z) {
 		// TODO Auto-generated method stub
 

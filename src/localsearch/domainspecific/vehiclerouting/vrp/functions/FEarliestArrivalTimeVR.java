@@ -202,6 +202,20 @@ public class FEarliestArrivalTimeVR implements IFunctionVR {
 		// TODO Auto-generated method stub
 		earliestArrivalTime = eat.getEarliestArrivalTime(calPoint);
 	}
+	
+	@Override
+	public void propagateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
+		// TODO Auto-generated method stub
+		//System.out.println("FEarliestArrivalTimeVR::propagateRemoveTwoPoints HAS NOT BEEN IMPLEMENTED YET");
+		earliestArrivalTime = eat.getEarliestArrivalTime(calPoint);
+	}
+
+	@Override
+	public void propagateRemoveTwoPoints(Point x1, Point x2) {
+		// TODO Auto-generated method stub
+		//System.out.println("FEarliestArrivalTimeVR::propagateRemoveTwoPoints HAS NOT BEEN IMPLEMENTED YET");
+		earliestArrivalTime = eat.getEarliestArrivalTime(calPoint);
+	}
 
 	@Override
 	public void propagateAddRemovePoints(Point x, Point y, Point z) {
@@ -1044,6 +1058,62 @@ public class FEarliestArrivalTimeVR implements IFunctionVR {
 		System.exit(-1);
 	}
 
+	@Override
+	public double evaluateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
+		// TODO Auto-generated method stub
+		int k = XR.route(y1);
+		int kv = XR.route(calPoint);
+		if(k!=kv){
+			System.out.println("FEarliestArrivalTimeVR::evaluateAddTwoPoints calPoint and y1 and y2 are not on the same route");
+			return 0;
+		}
+		Point ny1 = XR.next(y1);
+		t_next.put(y1, x1);
+		if(y1 != y2){
+			t_next.put(x1, ny1);
+			getSegment(ny1, y2);
+			Point ny2 = XR.next(y2);
+			t_next.put(y2, x2);
+			t_next.put(x2, ny2);
+			getSegment(ny2, XR.getTerminatingPointOfRoute(k));
+		}
+		else{
+			t_next.put(x1, x2);
+			t_next.put(x2, ny1);
+			getSegment(ny1, XR.getTerminatingPointOfRoute(k));
+		}
+
+		return calDeltaSegment(y1, XR.getTerminatingPointOfRoute(k));
+	}
+	
+	@Override
+	public double evaluateRemoveTwoPoints(Point x1, Point x2) {
+		// TODO Auto-generated method stub
+		int k = XR.route(x1);
+		int kv = XR.route(calPoint);
+		if(k!=kv){
+			System.out.println("FEarliestArrivalTimeVR::evaluateAddTwoPoints calPoint and y1 and y2 are not on the same route");
+			return 0;
+		}
+		
+		Point px1 = XR.prev(x1);
+		Point nx1 = XR.next(x1);
+		Point px2 = XR.prev(x2);
+		Point nx2 = XR.next(x2);
+		if(x2 == nx1){
+			t_next.put(px1, nx2);
+			getSegment(nx2, XR.getTerminatingPointOfRoute(k));
+		}
+		else{
+			t_next.put(px1, nx1);
+			getSegment(nx1, px2);
+			t_next.put(px2, nx2);
+			getSegment(nx2, XR.getTerminatingPointOfRoute(k));
+		}
+		
+		return calDeltaSegment(px1, XR.getTerminatingPointOfRoute(k));
+	}
+	
 	@Override
 	public void propagateKPointsMove(ArrayList<Point> x, ArrayList<Point> y) {
 		// TODO Auto-generated method stub

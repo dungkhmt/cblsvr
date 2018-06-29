@@ -212,15 +212,27 @@ public interface InvariantVR {
 	// re-insert x[i] right-after y[i], forall i = 0,...,x.size()-1
 	// application: Large Neighborhood Search
 	// if y[i] = CBLSVR.NULL_POINT, then x[i] is removed from current routes
-	void propagateKPointsMove(ArrayList<Point> x, ArrayList<Point> y);
-
-	// add the poPoint x between y and next[y]
-	public void propagateAddOnePoint(Point x, Point y);
-
-	// remove the poPoint x from its current route
-	public void propagateRemoveOnePoint(Point x);
-
-	public void propagateAddRemovePoints(Point x, Point y, Point z);
-
-	public String name();
+    void propagateKPointsMove(ArrayList<Point> x, ArrayList<Point> y);
+    
+    // add the Point x between y and next[y]
+    public void propagateAddOnePoint(Point x, Point y);
+    
+    // remove the Point x from its current route
+    public void propagateRemoveOnePoint(Point x);
+    
+    // add the Point x1 between y1 and next[y1]
+    // add the Point x2 between y2 and next[y2]
+    // y1 and y2 are on the same route and index[y1] < index[y2]
+    // if y1 == y2, the Point x2 is added right-after the Point x1.
+    public void propagateAddTwoPoints(Point x1, Point y1, Point x2, Point y2);
+    
+    // remove two points x1 and x2 from its current route
+    // x1 and x2 are on the same route and index[x1] < index[x2]
+    public void propagateRemoveTwoPoints(Point x1, Point x2);
+    
+    public void propagateAddRemovePoints(Point x, Point y, Point z);
+    
+    
+    
+    public String name();
 }

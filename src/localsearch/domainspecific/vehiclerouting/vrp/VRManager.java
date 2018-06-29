@@ -379,6 +379,20 @@ public class VRManager {
 			f.propagateRemoveOnePoint(x);
 		}
 	}
+	
+	public void performAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
+		X.performAddTwoPoints(x1, y1, x2, y2);
+		for (InvariantVR f : invariants) {
+			f.propagateAddTwoPoints(x1, y1, x2, y2);
+		}
+	}
+
+	public void performRemoveTwoPoints(Point x1, Point x2) {
+		X.performRemoveTwoPoints(x1, x2);
+		for (InvariantVR f : invariants) {
+			f.propagateRemoveTwoPoints(x1, x2);
+		}
+	}
 
 	public void performAddRemovePoints(Point x, Point y, Point z) {
 		X.performAddRemovePoints(x, y, z);

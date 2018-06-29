@@ -257,12 +257,128 @@ public class DataConverter {
 		}
 	}
 	
+	public void convertFisher(){
+		int np = 135;
+		int cap = 2210;
+		String dir = "data/MinMaxVRP/F-VRP/";
+		String fni = dir + "/original/F-n" + np + "-k7.vrp";
+		String s = "";
+		for(int vh = 7; vh <= 8; vh++){
+			try{
+				Scanner in = new Scanner(new File(fni));
+				String fno = dir + "/std_all/F-n" + np + "-m" + vh + ".vrp";
+				PrintWriter out = new PrintWriter(fno);
+				
+				int nbVehicles = vh;
+				int nbPoints = np;
+				int depot = 1;
+				int capacity = cap;
+				double[] x = new double[nbPoints+1];
+				double[] y = new double[nbPoints+1];
+				s = in.nextLine();
+				s = in.nextLine();
+				s = in.nextLine();
+				s = in.nextLine();
+				s = in.nextLine();
+				s = in.nextLine();
+				s = in.nextLine();
+				for(int i = 1; i <= nbPoints; i++){
+					int id = in.nextInt();
+					x[id] = in.nextDouble();
+					y[id] = in.nextDouble();
+				}
+				s = in.nextLine();
+				s = in.nextLine();
+				int[] demand = new int[nbPoints+1];
+				for(int i = 1; i <= nbPoints; i++){
+					int id = in.nextInt();
+					demand[id] = in.nextInt();
+				}
+				
+				in.close();
+				
+				double[][] c = new double[nbPoints+1][nbPoints+1];
+				for(int i = 1; i <= nbPoints; i++){
+					for(int j = 1; j <= nbPoints; j++){
+						double d = (x[i] - x[j])*(x[i] - x[j]) + (y[i] - y[j])*(y[i] - y[j]);
+						double d2 = Math.sqrt(d);
+						c[i][j] = (int)(d2);
+					}
+				}
+				out.println(nbVehicles + " " + nbPoints);
+				out.println(depot + " " + capacity);
+				for(int i = 1; i <= nbPoints; i++)
+					out.println(i + " " + demand[i]);
+				for(int i = 1; i <= nbPoints; i++)
+					for(int j = 1; j <= nbPoints; j++)
+						out.println(i + " " + j + " " + c[i][j]);
+				out.close();
+			}catch(Exception ex){
+				ex.printStackTrace();
+			}
+		}
+	}
+	
+	public void convertCMT(){
+		String dir = "data/MinMaxVRP/CMT/";
+		int iFile = 12;
+		String s = "";
+		for(int vh = 10; vh <= 11; vh++){
+			try{
+				String fni = dir + "/original/vrpnc" + iFile + ".txt";
+				Scanner in = new Scanner(new File(fni));
+				String fno = dir + "/std_all/vrpnc" + iFile + "-m" + vh + ".txt";
+				PrintWriter out = new PrintWriter(fno);
+				int nbVehicles = vh;
+				int nbPoints = in.nextInt() + 1;
+				int capacity = in.nextInt();
+				
+				s = in.nextLine();
+				double[] x = new double[nbPoints+1];
+				double[] y = new double[nbPoints+1];
+				int[] demand = new int[nbPoints+1];
+				int depot = 1;
+				x[1] = in.nextInt();
+				y[1] = in.nextInt();
+				demand[1] = 0;
+				for(int i = 2; i <= nbPoints; i++){
+					int id = i;
+					x[id] = in.nextInt();
+					y[id] = in.nextInt();
+					demand[id] = in.nextInt();
+				}
+				
+				in.close();
+				
+				double[][] c = new double[nbPoints+1][nbPoints+1];
+				for(int i = 1; i <= nbPoints; i++){
+					for(int j = 1; j <= nbPoints; j++){
+						double d = (x[i] - x[j])*(x[i] - x[j]) + (y[i] - y[j])*(y[i] - y[j]);
+						double d2 = Math.sqrt(d);
+						c[i][j] = (int)Math.round(d2);
+					}
+				}
+				out.println(nbVehicles + " " + nbPoints);
+				out.println(depot + " " + capacity);
+				for(int i = 1; i <= nbPoints; i++)
+					out.println(i + " " + demand[i]);
+				for(int i = 1; i <= nbPoints; i++)
+					for(int j = 1; j <= nbPoints; j++)
+						out.println(i + " " + j + " " + c[i][j]);
+				out.close();
+			}catch(Exception ex){
+				ex.printStackTrace();
+			}
+		}
+	}
 	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		DataConverter DC = new DataConverter();
 		//DC.standardizeDataChristophides();
-		DC.standardizeDataKelly();
+		//DC.standardizeDataKelly();
+		DC.convertFisher();
+		//DC.convertCMT();
 	}
 
 }

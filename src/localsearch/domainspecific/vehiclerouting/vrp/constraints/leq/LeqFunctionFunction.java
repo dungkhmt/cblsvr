@@ -196,6 +196,15 @@ public class LeqFunctionFunction implements IConstraintVR {
 		initPropagation();
 	}
 
+	public void propagateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
+		// TODO Auto-generated method stub
+		initPropagation();
+	}
+
+	public void propagateRemoveTwoPoints(Point x1, Point x2) {
+		// TODO Auto-generated method stub
+		initPropagation();
+	}
 	
 	public void propagateAddRemovePoints(Point x, Point y, Point z) {
 		// TODO Auto-generated method stub
@@ -471,6 +480,21 @@ public class LeqFunctionFunction implements IConstraintVR {
 		return nv - violations;
 	}
 
+	public int evaluateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
+		// TODO Auto-generated method stub
+		double nf1 = f1.evaluateAddTwoPoints(x1, y1, x2, y2) + f1.getValue();
+		double nf2 = f2.evaluateAddTwoPoints(x1, y1, x2, y2) + f2.getValue();
+		int nv = nf1 <= nf2 ? 0 : (int)Math.ceil(nf1-nf2);
+		return nv - violations;
+	}
+
+	public int evaluateRemoveTwoPoints(Point x1, Point x2) {
+		// TODO Auto-generated method stub
+		double nf1 = f1.evaluateRemoveTwoPoints(x1, x2) + f1.getValue();
+		double nf2 = f2.evaluateRemoveTwoPoints(x1, x2) + f2.getValue();
+		int nv = nf1 <= nf2 ? 0 : (int)Math.ceil(nf1-nf2);
+		return nv - violations;
+	}
 	
 	public int evaluateAddRemovePoints(Point x, Point y, Point z) {
 		// TODO Auto-generated method stub

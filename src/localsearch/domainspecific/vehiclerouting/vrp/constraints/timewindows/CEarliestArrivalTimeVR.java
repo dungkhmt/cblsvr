@@ -83,38 +83,28 @@ public class CEarliestArrivalTimeVR implements IConstraintVR {
 	{
 		for(Point v = XR.getStartingPointOfRoute(k); v!= XR.getTerminatingPointOfRoute(k); v = XR.oldNext(v))
 		{
-			int tm = vio.get(v);
 			violations -= vio.get(v);
-			int xp = computeViolations(v);
 			vio.put(v,computeViolations(v));
 			violations += vio.get(v);
 		}
 	}
 	
-	private void propagateAddOnePoint(int k)
+	private void propagateAddPoint(int k)
 	{
-		for(Point v = XR.getStartingPointOfRoute(k); v!= XR.getTerminatingPointOfRoute(k); v = XR.next(v))
-		{
-			int tm = vio.get(v);
+		for(Point v = XR.getStartingPointOfRoute(k); v!= XR.getTerminatingPointOfRoute(k); v = XR.next(v)){
 			violations -= vio.get(v);
-			int xp = computeViolations(v);
 			vio.put(v,computeViolations(v));
 			violations += vio.get(v);
 		}
 	}
 	
-	private void propagateRemoveOnePoint(int k)
+	private void propagateRemovePoint(int k)
 	{
-		for(Point v = XR.getStartingPointOfRoute(k); v!= XR.getTerminatingPointOfRoute(k); v = XR.oldNext(v))
-		{
-			if(XR.route(v) == Constants.NULL_POINT){
-				int tm = vio.get(v);
+		for(Point v = XR.getStartingPointOfRoute(k); v!= XR.getTerminatingPointOfRoute(k); v = XR.oldNext(v)){
+			if(XR.route(v) == Constants.NULL_POINT)
 				violations -= vio.get(v);
-			}
 			else{
-				int tm = vio.get(v);
 				violations -= vio.get(v);
-				int xp = computeViolations(v);
 				vio.put(v,computeViolations(v));
 				violations += vio.get(v);
 			}
@@ -388,16 +378,27 @@ public class CEarliestArrivalTimeVR implements IConstraintVR {
 		// TODO Auto-generated method stub
 		int k = XR.oldRoute(y);
 		vio.put(x, 0);
-		propagateAddOnePoint(k);
+		propagateAddPoint(k);
 	}
 
 	
 	public void propagateRemoveOnePoint(Point x) {
 		// TODO Auto-generated method stub
 		int k = XR.oldRoute(x);
-		propagateRemoveOnePoint(k);
+		propagateRemovePoint(k);
+	}
+	
+	public void propagateAddTwoPoints(Point x1, Point y1, Point x2, Point y2){
+		int k = XR.oldRoute(y1);
+		vio.put(x1, 0);
+		vio.put(x2, 0);
+		propagateAddPoint(k);
 	}
 
+	public void propagateRemoveTwoPoints(Point x1, Point x2){
+		int k = XR.oldRoute(x1);
+		propagateRemovePoint(k);
+	}
 	
 	public void propagateAddRemovePoints(Point x, Point y, Point z) {
 		// TODO Auto-generated method stub
@@ -1156,7 +1157,9 @@ public class CEarliestArrivalTimeVR implements IConstraintVR {
 		vio.put(x, 0);
 		getSegment(ny, XR.getTerminatingPointOfRoute(k));
 		int delta = 0;
-		
+		//System.out.println("tnexxt");
+		//for(int i  =0; i < t_next.size(); i++)
+			//System.out.println(t_next.get(i));
 		delta += calDeltaSegment(y, XR.getTerminatingPointOfRoute(k));
 		return delta;
 	}
@@ -1173,6 +1176,47 @@ public class CEarliestArrivalTimeVR implements IConstraintVR {
 		return calDeltaSegment(px, XR.getTerminatingPointOfRoute(k));
 	}
 
+	public int evaluateAddTwoPoints(Point x1, Point y1, Point x2, Point y2){
+		int k = XR.route(y1);
+		Point ny1 = XR.next(y1);
+		t_next.put(y1, x1);
+		vio.put(x1, 0);
+		vio.put(x2, 0);
+		if(y1 != y2){
+			t_next.put(x1, ny1);
+			getSegment(ny1, y2);
+			Point ny2 = XR.next(y2);
+			t_next.put(y2, x2);
+			t_next.put(x2, ny2);
+			getSegment(ny2, XR.getTerminatingPointOfRoute(k));
+		}
+		else{
+			t_next.put(x1, x2);
+			t_next.put(x2, ny1);
+			getSegment(ny1, XR.getTerminatingPointOfRoute(k));
+		}
+		return calDeltaSegment(y1, XR.getTerminatingPointOfRoute(k));
+	}
+	
+	public int evaluateRemoveTwoPoints(Point x1, Point x2){
+		int k = XR.route(x1);
+		Point px1 = XR.prev(x1);
+		Point nx1 = XR.next(x1);
+		Point px2 = XR.prev(x2);
+		Point nx2 = XR.next(x2);
+		if(x2 == nx1){
+			t_next.put(px1, nx2);
+			getSegment(nx2, XR.getTerminatingPointOfRoute(k));
+		}
+		else{
+			t_next.put(px1, nx1);
+			getSegment(nx1, px2);
+			t_next.put(px2, nx2);
+			getSegment(nx2, XR.getTerminatingPointOfRoute(k));
+		}
+		
+		return calDeltaSegment(px1, XR.getTerminatingPointOfRoute(k));
+	}
 	
 	public int evaluateAddRemovePoints(Point x, Point y, Point z) {
 		// TODO Auto-generated method stub

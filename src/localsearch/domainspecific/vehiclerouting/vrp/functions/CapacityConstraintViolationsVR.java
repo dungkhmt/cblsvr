@@ -389,6 +389,22 @@ public class CapacityConstraintViolationsVR implements IFunctionVR {
 		violations += getViolations(getSumWeights(XR.getTerminatingPointOfRoute(r)), r);
 	}
 
+	public void propagateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
+		// TODO Auto-generated method stub
+		int r = XR.route(y1);
+		violations -= getViolations(getSumWeights(XR.getTerminatingPointOfRoute(r)), r);
+		update(r);
+		violations += getViolations(getSumWeights(XR.getTerminatingPointOfRoute(r)), r);
+	}
+
+	
+	public void propagateRemoveTwoPoints(Point x1, Point x2) {
+		// TODO Auto-generated method stub
+		int r = XR.oldRoute(x1);
+		violations -= getViolations(getSumWeights(XR.getTerminatingPointOfRoute(r)), r);
+		update(r);
+		violations += getViolations(getSumWeights(XR.getTerminatingPointOfRoute(r)), r);
+	}
 	
 	public void propagateAddRemovePoints(Point x, Point y, Point z) {
 		// TODO Auto-generated method stub
@@ -878,6 +894,27 @@ public class CapacityConstraintViolationsVR implements IFunctionVR {
 		return newY - oldY;
 	}
 
+	public double evaluateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
+		// TODO Auto-generated method stub
+		if (!XR.checkPerformAddTwoPoints(x1, y1, x2, y2)) {
+			System.out.println(name() + ":: Error evaluateAddTwoPoints: " + x1 + " " + y1 + " " + x2 + " " + y2 + "\n" + XR.toString());
+    		System.exit(-1);
+		}
+		double oldY = getViolations(getSumWeights(XR.getTerminatingPointOfRoute(XR.route(y1))), XR.route(y1));
+		double newY = getViolations(getSumWeights(XR.getTerminatingPointOfRoute(XR.route(y1))) + getWeights(x1) + getWeights(x2), XR.route(y1));
+		return newY - oldY;
+	}
+	
+	public double evaluateRemoveTwoPoints(Point x1, Point x2) {
+		// TODO Auto-generated method stub
+		if (!XR.checkPerformRemoveTwoPoints(x1, x2)) {
+			System.out.println(name() + ":: Error evaluateRemoveTwoPoints: " + x1 + " " + x2 + "\n" + XR.toString());
+    		System.exit(-1);
+		}
+		double oldY = getViolations(getSumWeights(XR.getTerminatingPointOfRoute(XR.route(x1))), XR.route(x1));
+		double newY = getViolations(getSumWeights(XR.getTerminatingPointOfRoute(XR.route(x1))) - getWeights(x1) - getWeights(x2), XR.route(x1));
+		return newY - oldY;
+	}
 	
 	public double evaluateAddRemovePoints(Point x, Point y, Point z) {
 		// TODO Auto-generated method stub

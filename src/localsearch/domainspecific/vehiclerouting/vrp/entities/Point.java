@@ -2,6 +2,7 @@
 package localsearch.domainspecific.vehiclerouting.vrp.entities;
 
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 
 /*
  * Authors: Nguyen Thanh Hoang (thnbk56@gmail.com)
@@ -10,10 +11,12 @@ import java.text.DecimalFormat;
 public class Point {
 	public int ID;
     double x, y;
+    ArrayList<Integer> bucketIDs;
 
     public Point(int ID, double x, double y){
     	this.ID = ID;
     	this.x = x; this.y = y;
+    	this.bucketIDs = new ArrayList<Integer>();
     }
     public Point(){
     	this.ID = 0;this.x = 0;this.y = 0;
@@ -32,6 +35,10 @@ public class Point {
     public double getY() {
         return y;
     }
+    
+    public ArrayList<Integer> getBucketIDs(){
+    	return bucketIDs;
+    }
 
     public void setX(double x) {
         this.x = x;
@@ -41,7 +48,9 @@ public class Point {
         this.y = y;
     }
 
-    
+    public void setBucketIDs(ArrayList<Integer> bkIDs){
+    	this.bucketIDs = bkIDs;
+    }
 
     double degrees(Point p) {
         double X = p.x - x;
@@ -54,6 +63,7 @@ public class Point {
     public Point(double x, double y) {
         this.x = x;
         this.y = y;
+        this.bucketIDs = new ArrayList<Integer>();
     }
 
     public double distance(Point p) {

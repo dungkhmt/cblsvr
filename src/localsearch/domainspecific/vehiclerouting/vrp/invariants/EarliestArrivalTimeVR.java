@@ -52,7 +52,7 @@ public class EarliestArrivalTimeVR implements InvariantVR {
 			double tnx = earliestArrivalTime.get(x) + serviceDuration.get(x) + awm.getDistance(x, nx);
 			double tmp = tnx > earliestAllowedArrivalTime.get(nx) ? 
 					tnx : earliestAllowedArrivalTime.get(nx);
-			earliestArrivalTime.put(nx, tmp);
+				earliestArrivalTime.put(nx, tmp);
 			//System.out.println(x+"  "+nx+"  "+awm.getDistance(x, nx)+"   "+tmp);
 		}
 	}
@@ -360,6 +360,19 @@ public class EarliestArrivalTimeVR implements InvariantVR {
 		updateFromPoint(XR.oldNext(x));
 	}
 
+	public void propagateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
+		// TODO Auto-generated method stub
+		updateFromPoint(x1);
+	}
+
+	
+	public void propagateRemoveTwoPoints(Point x1, Point x2) {
+		// TODO Auto-generated method stub
+		if(x2 != XR.oldNext(x1))
+			updateFromPoint(XR.oldNext(x1));
+		else
+			updateFromPoint(XR.oldNext(x2));
+	}
 	
 	public void propagateAddRemovePoints(Point x, Point y, Point z) {
 		// TODO Auto-generated method stub

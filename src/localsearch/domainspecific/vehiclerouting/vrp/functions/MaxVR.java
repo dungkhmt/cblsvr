@@ -503,6 +503,19 @@ public class MaxVR implements IFunctionVR {
 		// TODO Auto-generated method stub
 		initPropagation();
 	}
+	
+	@Override
+	public void propagateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
+		// TODO Auto-generated method stub
+		initPropagation();
+	}
+	
+	@Override
+	public void propagateRemoveTwoPoints(Point x1, Point x2) {
+		// TODO Auto-generated method stub
+		initPropagation();
+	}
+	
 	@Override
 	public double evaluateTwoPointsMove(Point x1, Point x2, Point y1, Point y2) {
 		// TODO Auto-generated method stub
@@ -560,6 +573,30 @@ public class MaxVR implements IFunctionVR {
 		}
 		return nMax - value;
 	}
+	
+	@Override
+	public double evaluateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
+		// TODO Auto-generated method stub
+		double nMax = 1-CBLSVR.MAX_INT;
+		for(IFunctionVR f : functions){
+			double v = f.evaluateAddTwoPoints(x1, y1, x2, y2)
+					+ f.getValue();
+			nMax = nMax > v ? nMax : v;
+		}
+		return nMax - value;
+	}
+	@Override
+	public double evaluateRemoveTwoPoints(Point x1, Point x2) {
+		// TODO Auto-generated method stub
+		double nMax = 1-CBLSVR.MAX_INT;
+		for(IFunctionVR f : functions){
+			double v = f.evaluateRemoveTwoPoints(x1, x2)
+					+ f.getValue();
+			nMax = nMax > v ? nMax : v;
+		}
+		return nMax - value;
+	}
+	
 	@Override
 	public void propagateAddRemovePoints(Point x, Point y, Point z) {
 		// TODO Auto-generated method stub

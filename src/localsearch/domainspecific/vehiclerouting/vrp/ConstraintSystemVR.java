@@ -373,6 +373,18 @@ public class ConstraintSystemVR implements IConstraintVR {
 		// TODO Auto-generated method stub
 		initPropagation();
 	}
+	
+	//@Override
+	public void propagateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
+		// TODO Auto-generated method stub
+		initPropagation();
+	}
+	//@Override
+	public void propagateRemoveTwoPoints(Point x1, Point x2) {
+		// TODO Auto-generated method stub
+		initPropagation();
+	}
+	
 	//@Override
 	public int evaluateTwoPointsMove(Point x1, Point x2, Point y1, Point y2) {
 		// TODO Auto-generated method stub
@@ -410,6 +422,22 @@ public class ConstraintSystemVR implements IConstraintVR {
 		for(IConstraintVR f : _constraints) eval += f.evaluateRemoveOnePoint(x);
 		return eval;
 	}
+	
+	//@Override
+	public int evaluateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
+		// TODO Auto-generated method stub
+		int eval = 0;
+		for(IConstraintVR f : _constraints) eval += f.evaluateAddTwoPoints(x1, y1, x2, y2);
+		return eval;
+	}
+	//@Override
+	public int evaluateRemoveTwoPoints(Point x1, Point x2) {
+		// TODO Auto-generated method stub
+		int eval = 0;
+		for(IConstraintVR f : _constraints) eval += f.evaluateRemoveTwoPoints(x1, x2);
+		return eval;
+	}
+	
 	//@Override
 	public void propagateAddRemovePoints(Point x, Point y, Point z) {
 		// TODO Auto-generated method stub
