@@ -1,0 +1,59 @@
+package ifi2017;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Scanner;
+
+import localsearch.model.ConstraintSystem;
+import localsearch.model.IFunction;
+import localsearch.model.LocalSearchManager;
+import localsearch.model.VarIntLS;
+
+public class BACP {
+	// input
+	int n;// number of courses
+	int m;// number of periods
+	int[] c;// c[i] number of credits of course i
+	int minCourses;
+	int maxCourses;
+	int minCredits;
+	int maxCredits;
+	
+	ArrayList<Integer> I; // I[k]
+	ArrayList<Integer> J; // J[k]   
+	
+	// model
+	LocalSearchManager mgr;
+	VarIntLS[] x;
+	ConstraintSystem S;// IConstraint
+	IFunction[] nbCredits;// invariant: number of credits of periods
+	IFunction[] nbCourses;// invariant: number of course of periods
+	
+	
+	public void readData(String fn){
+		try{
+			Scanner in = new Scanner(new File(fn));
+			n = in.nextInt();
+			m = in.nextInt();
+			
+			
+			in.close();
+		}catch(Exception ex){
+			ex.printStackTrace();
+		}
+	}
+	
+	public void stateModel(){
+		
+	}
+	
+	public void search(){
+		
+	}
+	
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+
+	}
+
+}

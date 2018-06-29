@@ -98,6 +98,7 @@ public class CEarliestArrivalTimeVRWithBuffer implements IConstraintVR {
 	private void propagate(int k)
 	{
 		for(Point v = XR.getStartingPointOfRoute(k); v!= XR.getTerminatingPointOfRoute(k); v = XR.oldNext(v))
+		//for(Point v = XR.getStartingPointOfRoute(k); v!= XR.getTerminatingPointOfRoute(k); v = XR.next(v))
 		{
 			violations -= vio.get(v);
 			vio.put(v,computeViolations(v));

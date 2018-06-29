@@ -1,0 +1,79 @@
+package ifi2017;
+
+import java.util.ArrayList;
+import java.util.Random;
+
+import localsearch.model.IConstraint;
+import localsearch.model.VarIntLS;
+
+public class MyTabuSearch {
+
+	
+	public void search(IConstraint c, 
+			int maxIters, int tbl){
+		
+		Random R = new Random();
+		
+		VarIntLS[] x = c.getVariables();
+		int n = x.length;
+		int max_value = -1;
+		for(int i = 0; i < n;i++)
+			if(max_value < x[i].getMaxValue())
+				max_value = x[i].getMaxValue();
+		
+		
+		int[][] tabu = new int[n][max_value + 1];
+		
+		// init tabu
+		for(int i = 0; i < n; i++)
+			for(int v = 0; v <= max_value; v++)
+				tabu[i][v] = -1;// accept all moves
+		
+		int it = 0;// current iteration 
+		int best_violations = c.violations();
+		ArrayList<AssignMove> N = new ArrayList<AssignMove>();
+		
+		while(it <= maxIters){
+			// move
+			int min_delta = Integer.MAX_VALUE;
+			N.clear();
+			for(int i = 0; i < n; i++){
+				for(int v = x[i].getMinValue(); v <= x[i].getMaxValue(); v++){
+					// check if move is accepted
+					int delta = c.getAssignDelta(x[i], v);
+					if(tabu[i][v] <= it || 
+							c.violations() + delta < best_violations// aspiration criterion
+							){
+						if(delta < min_delta){
+							N.clear();
+							N.add(new AssignMove(i,v));
+							min_delta = delta;
+						}else if(delta == min_delta){
+							N.add(new AssignMove(i,v));
+						}
+					}
+				}
+			}
+			
+			// select randomly a neighbor
+			int idx = R.nextInt(N.size());
+			AssignMove m = N.get(idx);
+			
+			// perform the move
+			int i = m.i;
+			int v = m.v;
+			x[i].setValuePropagate(v);// local move
+			tabu[i][v] = it + tbl;// update tabu list		
+			
+			it++;
+		}
+		
+		
+		
+	}
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+
+	}
+
+}

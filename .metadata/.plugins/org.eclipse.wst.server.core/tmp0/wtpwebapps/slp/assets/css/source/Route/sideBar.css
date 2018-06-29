@@ -1,0 +1,39 @@
+body {
+	overflow-y: hidden;
+}
+
+#googleMap {
+	width: 90%;
+	height: 90%;
+	
+	align-items: center;
+}
+
+#sideBarRoute {
+	width: 25%;
+	height: 100%;
+	position: fixed;
+	
+	display: flex;
+	
+	visibility: visible;
+	box-shadow: 0 5px 10px alpha(#000,	 0.2), 0 15px 30px alpha(#000, 0.08);
+	
+	background: white;
+	font-size: 13px;
+	color: #333333;
+	z-index: 1000;
+}
+
+.sideBarRouteIcon {
+	font-size: 20px;
+	position: fixed;
+	padding: 10px;
+	cursor: pointer;
+	margin: 5px;
+	z-index: 200;
+}
+
+.hide {
+	display: none;
+}

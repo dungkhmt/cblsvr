@@ -66,6 +66,14 @@ public class MaxVR implements IFunctionVR {
 		// TODO Auto-generated method stub
 		return value;
 	}
+	// x is before y on the same route
+	// remove (x, next[x]) and (y,next[y])
+	// add (x,y) and (next[x],next[y])
+	public double evaluateTwoOptMoveOneRoute(Point x, Point y) {
+		System.out.println(name() + "::evaluateTwoOptMoveOneRoute NOT IMPEMENTED YET");
+		System.exit(-1);
+		return 0;
+	}
 
 	@Override
 	public double evaluateOnePointMove(Point x, Point y) {
@@ -328,6 +336,14 @@ public class MaxVR implements IFunctionVR {
 		}
 		//System.out.println(name() + "::initPropagation, value = " + value);
 		//System.exit(-1);
+	}
+
+	// x is before y on the same route
+	// remove (x, next[x]) and (y,next[y])
+	// add (x,y) and (next[x],next[y])
+	public void propagateTwoOptMoveOneRoute(Point x, Point y) {
+		System.out.println(name() + "::propagateTwoOptMoveOneRoute NOT IMPLEMENTED YET");
+		System.exit(-1);
 	}
 
 	@Override

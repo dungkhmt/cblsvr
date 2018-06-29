@@ -1,0 +1,72 @@
+package localsearch.applications.examplebook;
+import java.util.*;
+
+import localsearch.constraints.basic.LessOrEqual;
+import localsearch.functions.conditionalsum.ConditionalSum;
+import localsearch.model.ConstraintSystem;
+import localsearch.model.IFunction;
+import localsearch.model.LocalSearchManager;
+import localsearch.model.VarIntLS;
+public class BACP {
+	int n = 9;
+	int p = 4;
+	int a = 2;
+	int b = 4;
+	int c = 3;
+	int d = 7;
+	int[] crd = new int[]{3, 2, 2, 1, 3, 3, 1, 2, 2};
+	Pair[] T = new Pair[]{	new Pair(0,1),
+							new Pair(0,2),
+							new Pair(1,3),
+							new Pair(2,5),
+							new Pair(3,6),
+							new Pair(4,7),
+							};
+	
+	class Pair{
+		int i;
+		int j;
+		public Pair(int i, int j){
+			this.i = i; this.j = j;
+		}
+	}
+	
+	public void BACP(){
+		int n = 9;
+		int p = 4;
+		int a = 2;
+		int b = 4;
+		int c = 3;
+		int d = 7;
+		int[] crd = new int[]{3, 2, 2, 1, 3, 3, 1, 2, 2};
+		Pair[] T = new Pair[]{	new Pair(0,1),
+								new Pair(0,2),
+								new Pair(1,3),
+								new Pair(2,5),
+								new Pair(3,6),
+								new Pair(4,7),
+								};
+
+		LocalSearchManager mgr = new LocalSearchManager();
+		VarIntLS[] x = new VarIntLS[n];
+		for(int i = 0; i < n; i++)
+			x[i] = new VarIntLS(mgr,0,p-1);
+		ConstraintSystem S = new ConstraintSystem(mgr);
+		IFunction[] load = new IFunction[p];
+		IFunction[] nbCourses = new IFunction[p];
+		for(int i = 0; i < p; i++){
+			load[i] = new ConditionalSum(x, crd, i);
+			nbCourses[i] = new ConditionalSum(x, i);
+			S.post(new LessOrEqual(c, load[i]));
+			S.post(new LessOrEqual(load[i], d));
+		}
+		
+		
+		mgr.close();
+	}
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+
+	}
+
+}

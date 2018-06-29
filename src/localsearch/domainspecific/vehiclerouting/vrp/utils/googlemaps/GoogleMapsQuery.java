@@ -3,6 +3,7 @@ package localsearch.domainspecific.vehiclerouting.vrp.utils.googlemaps;
 import java.io.DataInputStream;
 import java.io.BufferedWriter;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
@@ -34,6 +35,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+
 
 
 
@@ -553,10 +555,27 @@ public class GoogleMapsQuery {
 
 
 
-
+	public void extractCoordinate(String fn){
+		try{
+			Scanner in = new Scanner(new File(fn));
+			while(true){
+				String addr = in.nextLine();
+				if(addr.equals("END")) break;
+				LatLng ll = getCoordinate(addr);
+				String p = "NULL";
+				if(ll != null)
+					p = ll.toString();
+				System.out.println(addr + " : " + p);
+			}
+			in.close();
+		}catch(Exception ex){
+			ex.printStackTrace();
+		}
+	}
 	
 	public static void main(String[] args){
 		GoogleMapsQuery G = new GoogleMapsQuery();
-		G.getDirection(21, 105, 21.01, 105, "driving");
+		//G.getDirection(21, 105, 21.01, 105, "driving");
+		G.extractCoordinate("addr.txt");
 	}
 }

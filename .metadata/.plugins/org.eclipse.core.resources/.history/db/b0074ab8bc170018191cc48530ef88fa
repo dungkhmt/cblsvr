@@ -1,0 +1,32 @@
+package localsearch.applications.examplebook;
+import java.util.*;
+public class BACP {
+	int n = 9;
+	int p = 4;
+	int a = 2;
+	int b = 4;
+	int c = 3;
+	int d = 7;
+	int[] crd = new int[]{3, 2, 2, 1, 3, 3, 1, 2, 2};
+	Pair[] T = new Pair[]{	new Pair(0,1),
+							new Pair(0,2),
+							new Pair(1,3),
+							new Pair(2,5),
+							new Pair(3,6),
+							new Pair(4,7),
+							};
+	
+	class Pair{
+		int i;
+		int j;
+		public Pair(int i, int j){
+			this.i = i; this.j = j;
+		}
+	}
+	
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+
+	}
+
+}

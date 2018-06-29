@@ -168,7 +168,15 @@ public class ConstraintViolationsVR implements IFunctionVR {
 		return cstr.violations();
 	}
 
-	
+	// x is before y on the same route
+	// remove (x, next[x]) and (y,next[y])
+	// add (x,y) and (next[x],next[y])
+	public double evaluateTwoOptMoveOneRoute(Point x, Point y) {
+		System.out.println(name() + "::evaluateTwoOptMoveOneRoute NOT IMPEMENTED YET");
+		System.exit(-1);
+		return 0;
+	}
+
 	public double evaluateOnePointMove(Point x, Point y) {
 		// TODO Auto-generated method stub
 		return cstr.evaluateOnePointMove(x, y);
@@ -294,7 +302,14 @@ public class ConstraintViolationsVR implements IFunctionVR {
 		return cstr.evaluateCrossExchangeMove(x1, y1, x2, y2);
 	}
 
-	
+	// x is before y on the same route
+	// remove (x, next[x]) and (y,next[y])
+	// add (x,y) and (next[x],next[y])
+	public void propagateTwoOptMoveOneRoute(Point x, Point y) {
+		System.out.println(name() + "::propagateTwoOptMoveOneRoute NOT IMPLEMENTED YET");
+		System.exit(-1);
+	}
+
 	public void propagateTwoPointsMove(Point x1, Point x2, Point y1, Point y2) {
 		// TODO Auto-generated method stub
 		

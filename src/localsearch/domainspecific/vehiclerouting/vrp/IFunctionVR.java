@@ -20,6 +20,12 @@ public interface IFunctionVR extends InvariantVR{
      * query the evaluation of different moves
 	 */
 
+    // x is before y on the same route
+ 	// remove (x, next[x]) and (y,next[y])
+ 	// add (x,y) and (next[x],next[y])
+ 	double evaluateTwoOptMoveOneRoute(Point x, Point y);
+ 	
+ 	
     // move of type a [Groer et al., 2010]
     // move customer x to from route of x to route of y; insert x into the position between y and next[y]
     // x and y are not depot

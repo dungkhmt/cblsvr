@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE tiles-definitions PUBLIC
+       "-//Apache Software Foundation//DTD Tiles Configuration 2.0//EN"
+       "http://tiles.apache.org/dtds/tiles-config_2_0.dtd">
+<tiles-definitions>
+ 
+	<!-- layout -->
+    <definition name="layout" template="/WEB-INF/views/layout/base.jsp">           
+    	<put-attribute name="header" value="/WEB-INF/views/layout/header.jsp" />
+    	<put-attribute name="footer" value="/WEB-INF/views/layout/footer.jsp" />            
+    </definition> 
+    <!-- Error -->
+    <definition name="layout.errorBase" template="/WEB-INF/views/error/errorBase.jsp"></definition>
+    <definition name="error.notFound404" extends="layout.errorBase">
+    	<put-attribute name="content" value="/WEB-INF/views/error/404.jsp"/>
+    </definition>
+    <definition name="error.500" extends="layout.errorBase">
+    	<put-attribute name="content" value="/WEB-INF/views/error/500.jsp"/>
+    </definition>
+    <!-- online Store -->
+    <definition name="onlinestore.home" extends="layout">
+    	<put-attribute name="title" value="Chức năng quản lý bán hàng" />
+    	<put-attribute name="content" value="/WEB-INF/views/home/onlinestorehome.jsp" />                
+    </definition> 
+  	<!-- outgoing articles -->
+  	<definition name="outgoingarticles.allotParcelToShipper" extends="layout">
+    	<put-attribute name="title" value="Phân lô cho shipper" />
+    	<put-attribute name="content" value="/WEB-INF/views/outgoingarticles/allotParcelToShipper.jsp" />                
+    </definition>
+  	<definition name="outgoingarticles.clustering" extends="layout">
+    	<put-attribute name="title" value="Phân lô giao hàng" />
+    	<put-attribute name="content" value="/WEB-INF/views/outgoingarticles/clustering.jsp" />                
+    </definition>
+  	<definition name="outgoingarticles.parcel" extends="layout">
+    	<put-attribute name="title" value="Quản lý lô giao hàng" />
+    	<put-attribute name="content" value="/WEB-INF/views/outgoingarticles/parcel.jsp" />                
+    </definition>
+    <definition name="outgoingarticles.commoditystatistics" extends="layout">
+    	<put-attribute name="title" value="Thống kê doanh thu" />
+    	<put-attribute name="content" value="/WEB-INF/views/outgoingarticles/commodityStatistics.jsp" />                
+    </definition>
+    <definition name="outgoingarticles.addAOrder" extends="layout">
+    	<put-attribute name="title" value="Add an Order" />
+    	<put-attribute name="content" value="/WEB-INF/views/outgoingarticles/add.jsp" />                
+    </definition>
+    <definition name="outgoingarticles.list" extends="layout">
+    	<put-attribute name="title" value="list Order" />
+    	<put-attribute name="content" value="/WEB-INF/views/outgoingarticles/list.jsp" />                
+    </definition>
+    <definition name="outgoingarticles.uploadFile" extends="layout">
+    	<put-attribute name="title" value="Thêm đơn hàng" />
+    	<put-attribute name="content" value="/WEB-INF/views/outgoingarticles/uploadFileExcel.jsp" />                
+    </definition>
+    <definition name="outgoingarticles.createAutoRoute" extends="layout">
+    	<put-attribute name="title" value="Lập tuyến giao hàng" />
+    	<put-attribute name="content" value="/WEB-INF/views/outgoingarticles/createAutoRoute.jsp" />                
+    </definition>
+    <definition name="outgoingarticles.viewAutoRoute" extends="layout">
+    	<put-attribute name="title" value="Lập tuyến giao hàng" />
+    	<put-attribute name="content" value="/WEB-INF/views/outgoingarticles/viewAutoRoute.jsp" />                
+    </definition>
+    
+    <!-- home -->
+    <definition name="home" template="/WEB-INF/views/home/home.jsp">
+    	<put-attribute name="title" value="Homepage" />                
+    </definition>    
+    
+    
+    <!-- module incomingarticles -->  
+    <definition name="in.addArticles" extends="layout">
+    	<put-attribute name="title" value="Nhập hàng"/>
+    	<put-attribute name="content" value="/WEB-INF/views/incomingarticles/addArticles.jsp"/>
+    </definition>
+    
+    <definition name="in.listIncommingArticles" extends="layout">
+    	<put-attribute name="title" value="Danh sách hàng nhập"/>
+    	<put-attribute name="content" value="/WEB-INF/views/incomingarticles/list.jsp"/>
+    </definition>
+    
+    <definition name="outgoingarticles.orderStatus" extends="layout">
+    	<put-attribute name="title" value="Cập nhật tình trạng giao hàng"/>
+    	<put-attribute name="content" value="/WEB-INF/views/outgoingarticles/viewOrderStatus.jsp"/>
+    </definition>
+	
+	<!-- trash -->
+	<definition name="trash.outgoingarticles.add" extends="layout">
+    	<put-attribute name="title" value="Nhập hàng"/>
+    	<put-attribute name="content" value="/WEB-INF/views/trash/add.jsp"/>
+    </definition>
+
+    <!-- Auth -->
+    <definition name="login" template="/WEB-INF/views/auth/login.jsp">
+    	    
+    </definition>
+    <definition name="register" template="/WEB-INF/views/auth/register.jsp">
+     
+    </definition>
+    <definition name="denied" extends="layout">
+    	<put-attribute name="title" value="Access Denied" />
+    	<put-attribute name="content" value="/WEB-INF/views/auth/denied.jsp" />                
+    </definition>
+    
+    <!-- Shipping Modules -->
+    <definition name="ship.createRoute" extends="layout">
+    	<put-attribute name="title" value="Create route manual"/>
+    	<put-attribute name="content" value="/WEB-INF/views/shipping/createRoute.jsp"/>
+    </definition>
+    <definition name="ship.createpickupdeliveryroute" extends="layout">
+    	<put-attribute name="title" value="Create pickup delivery route manual"/>
+    	<put-attribute name="content" value="/WEB-INF/views/shipping/createRoutePickupDelivery.jsp"/>
+    </definition>
+    
+     <definition name="ship.getRoutes" extends="layout">
+    	<put-attribute name="title" value="View routes this shipper"/>
+    	<put-attribute name="content" value="/WEB-INF/views/shipping/viewRouteShipper.jsp"/>
+    </definition>
+    
+    <!-- Container Delivery Modules -->
+    <definition name="containerdelivery.home" extends="layout">
+    	<put-attribute name="title" value="Chức năng quản lý chuyển hàng" />
+    	<put-attribute name="content" value="/WEB-INF/views/home/containertransportation.jsp" />                
+    </definition> 
+    <definition name="containerdelivery.listpickupdeliveryorder" extends="layout">
+    	<put-attribute name="title" value="View list Pickup Delivery Order"/>
+    	<put-attribute name="content" value="/WEB-INF/views/containerdelivery/list.jsp"/>
+    </definition>
+    
+    <definition name="containerdelivery.addpickupdeliveryordersbyxls" extends="layout">
+    	<put-attribute name="title" value="add pickup delivery orders by xls"/>
+    	<put-attribute name="content" value="/WEB-INF/views/containerdelivery/addpickupdeliveryordersbyxls.jsp"/>
+    </definition>
+    
+    <definition name="containerdelivery.addapickupdeliveryorder" extends="layout">
+    	<put-attribute name="title" value="Add a Pickup Delivery Order"/>
+    	<put-attribute name="content" value="/WEB-INF/views/containerdelivery/add.jsp"/>
+    </definition>
+    
+    <definition name="containerdelivery.viewallroutecontainer" extends="layout">
+    	<put-attribute name="title" value="View all route container"/>
+    	<put-attribute name="content" value="/WEB-INF/views/containerdelivery/viewallroutecontainer.jsp"/>
+    </definition>
+    
+    <definition name="containerdelivery.createAutoRoute" extends="layout">
+    	<put-attribute name="title" value="Create Auto Route Container"/>
+    	<put-attribute name="content" value="/WEB-INF/views/containerdelivery/createautoroutecontainer.jsp"/>
+    </definition>
+    <!-- di chung modules -->
+    <definition name="dichung.createroute" extends="layout">
+    	<put-attribute name="title" value="Create route dichung"/>
+    	<put-attribute name="content" value="/WEB-INF/views/dichung/createroute.jsp" /> 
+    </definition>
+    <definition name="dichung.home" extends="layout">
+    	<put-attribute name="title" value="Home dichung"/>
+    	<put-attribute name="content" value="/WEB-INF/views/home/dichunghome.jsp" /> 
+    </definition>
+    <definition name="dichung.adddichungrequestsbyxls" extends="layout">
+    	<put-attribute name="title" value="Upload xls dichung"/>
+    	<put-attribute name="content" value="/WEB-INF/views/dichung/adddichungrequestsbyxls.jsp" /> 
+    </definition>
+    <definition name="dichung.viewroute" extends="layout">
+    	<put-attribute name="title" value="View Route Di Chung"/>
+    	<put-attribute name="content" value="/WEB-INF/views/dichung/viewRouteDiChung.jsp" /> 
+    </definition>
+    
+    <definition name="dichung.uploadLongTripRequest" extends="layout">
+    	<put-attribute name="title" value="View Route Di Chung"/>
+    	<put-attribute name="content" value="/WEB-INF/views/dichung/uploadlongtriprequest.jsp" /> 
+    </definition>
+    
+    <definition name="dichung.viewLongTripSolution" extends="layout">
+    	<put-attribute name="title" value="View Route Di Chung"/>
+    	<put-attribute name="content" value="/WEB-INF/views/dichung/viewRouteLongTripDiChung.jsp" /> 
+    </definition>
+    <!-- Manager -->
+    <definition name="manage.home" extends="layout">
+    	<put-attribute name="title" value="Chức năng quản lý danh mục" />
+    	<put-attribute name="content" value="/WEB-INF/views/home/managehome.jsp" />                
+    </definition> 
+    
+    <definition name="usermanagement.home" extends="layout">
+    	<put-attribute name="title" value="Chức năng quản lý người sử dụng" />
+    	<put-attribute name="content" value="/WEB-INF/views/usermanager/list.jsp" />                
+    </definition> 
+    
+    <definition name="usermanagement.addUser" extends="layout">
+    	<put-attribute name="title" value="Chức năng quản lý người sử dụng" />
+    	<put-attribute name="content" value="/WEB-INF/views/usermanager/add.jsp" />                
+    </definition> 
+    
+    <definition name="usermanagement.editUserFunction" extends="layout">
+    	<put-attribute name="title" value="Chức năng cấp quyền chức năng cho người sử dụng" />
+    	<put-attribute name="content" value="/WEB-INF/views/usermanager/edit.jsp" />                
+    </definition> 
+    
+    <!-- Map Street Manipulation -->
+    <definition name="mapstreetmanipulation.home" extends="layout">
+    	<put-attribute name="title" value="Chức năng quản lý bản đồ" />
+    	<put-attribute name="content" value="/WEB-INF/views/home/mapstreetmanipulationhome.jsp" />                
+    </definition>
+    <definition name="mapstreetmanipulation.createroad" extends="layout">
+    	<put-attribute name="title" value="Chức năng tạo tuyến đường" />
+    	<put-attribute name="content" value="/WEB-INF/views/mapstreetmanipulation/CreateRoad.jsp" />                
+    </definition> 
+    <definition name="mapstreetmanipulation.editPoint" extends="layout">
+    	<put-attribute name="title" value="Chức năng sửa bản đồ" />
+    	<put-attribute name="content" value="/WEB-INF/views/mapstreetmanipulation/editPoint.jsp" />                
+    </definition>
+    <definition name="mapstreetmanipulation.viewStreets" extends="layout">
+    	<put-attribute name="title" value="Chức năng xem các tuyến đường" />
+    	<put-attribute name="content" value="/WEB-INF/views/mapstreetmanipulation/viewStreets.jsp" />              
+    </definition>
+    <definition name="mapstreetmanipulation.findIntersectionPoints" extends="layout">
+    	<put-attribute name="title" value="Chức năng tìm điểm giao cắt"/>
+    	<put-attribute name="content" value="/WEB-INF/views/mapstreetmanipulation/findIntersectionPoints.jsp"></put-attribute>
+    </definition>
+    <definition name="mapstreetmanipulation.editroadpoints" extends="layout">
+    	<put-attribute name="title" value="Chức năng chỉnh sửa điểm nút bản đồ"/>
+    	<put-attribute name="content" value="/WEB-INF/views/mapstreetmanipulation/EditRoadPoints.jsp"></put-attribute>
+    </definition>
+    <definition name="mapstreetmanipulation.directionhome" extends="layout">
+    	<put-attribute name="title" value="Tìm đường ngắn nhất"/>
+    	<put-attribute name="content" value="/WEB-INF/views/mapstreetmanipulation/upload-time-series.jsp"></put-attribute>
+    </definition>
+    <definition name="mapstreetmanipulation.demoChart" extends="layout">
+    	<put-attribute name="title" value="ve do thi"/>
+    	<put-attribute name="content" value="/WEB-INF/views/mapstreetmanipulation/demoChart.jsp"></put-attribute>
+    </definition>
+    <!-- Request Shipper Matching -->
+    <definition name="requestshippermatching.home" extends="layout">
+    	<put-attribute name="title" value="View request shipper matching" />
+    	<put-attribute name="content" value="/WEB-INF/views/home/requestshippermatchinghome.jsp" />                
+    </definition>
+    <definition name="requestshippermatching.uploadshippermatchingrequest" extends="layout">
+    	<put-attribute name="title" value="Upload shipper matching request" />
+    	<put-attribute name="content" value="/WEB-INF/views/requestshippermatching/uploadrequestshippermatching.jsp" />                
+    </definition>
+    <definition name="requestshippermatching.viewsolutionshippermatching" extends="layout">
+    	<put-attribute name="title" value="View solution shipper matching" />
+    	<put-attribute name="content" value="/WEB-INF/views/requestshippermatching/viewrequestshippermatching.jsp" />                
+    </definition>
+    
+    <!-- Item managerment module -->
+    <definition name="customermanager.list" extends="layout">
+    	<put-attribute name="title" value="Quản lý khách hàng" />
+    	<put-attribute name="content" value="/WEB-INF/views/itemmanagerment/list.jsp" />                
+    </definition>
+    <definition name="customermanager.add" extends="layout">
+    	<put-attribute name="title" value="Thêm khách hàng" />
+    	<put-attribute name="content" value="/WEB-INF/views/itemmanagerment/add.jsp" />                
+    </definition>
+    <definition name="customermanager.edit" extends="layout">
+    	<put-attribute name="title" value="Sửa thông tin khách hàng" />
+    	<put-attribute name="content" value="/WEB-INF/views/itemmanagerment/edit.jsp" />                
+    </definition>
+    
+    <!-- Shippermanagerment module -->
+    <definition name="shippermanagerment.list" extends="layout">
+    	<put-attribute name="title" value="Quản lý người giao hàng" />
+    	<put-attribute name="content" value="/WEB-INF/views/shippermanagerment/list.jsp" />                
+    </definition>
+    <definition name="shippermanagerment.add" extends="layout">
+    	<put-attribute name="title" value="Thêm người giao hàng" />
+    	<put-attribute name="content" value="/WEB-INF/views/shippermanagerment/add.jsp" />                
+    </definition>
+    <definition name="shippermanagerment.edit" extends="layout">
+    	<put-attribute name="title" value="Sửa thông tin người giao hàng hàng" />
+    	<put-attribute name="content" value="/WEB-INF/views/shippermanagerment/edit.jsp" />                
+    </definition>
+    
+    <!-- TSPD -->
+    <definition name="tspd.home" extends="layout">
+    	<put-attribute name="title" value="Traveling Salesman Problem with Drone"/>
+    	<put-attribute name="content" value="/WEB-INF/views/home/tspdhome.jsp"/>
+    </definition>
+    <definition name="tspd.uploadFile" extends="layout">
+    	<put-attribute name="title" value="Upload TSP File"/>
+    	<put-attribute name="content" value="/WEB-INF/views/tspd/uploadFile.jsp"></put-attribute>
+    </definition>
+    <definition name="tspd.viewSolution" extends="layout">
+    	<put-attribute name="title" value="Solution TSPD"/>
+    	<put-attribute name="content" value="/WEB-INF/views/tspd/viewSolution.jsp"></put-attribute>
+    </definition>
+    <definition name="tspds.viewSolution" extends="layout">
+    	<put-attribute name="title" value="Solution TSPDs"/>
+    	<put-attribute name="content" value="/WEB-INF/views/tspd/viewSolutionkDrone.jsp"></put-attribute>
+    </definition>
+    <definition name="tspd.solveHome" extends="layout">
+    	<put-attribute name="title" value="Create data"/>
+    	<put-attribute name="content" value="/WEB-INF/views/tspd/solveHome.jsp"/>
+    </definition>
+    <definition name="tspds.solveHome" extends="layout">
+    	<put-attribute name="title" value="Home tsps"/>
+    	<put-attribute name="content" value="/WEB-INF/views/tspd/tspdssolveHome.jsp"/>
+	</definition>
+    <!-- VRP-Load3D -->
+    <definition name = "vrpload3d.home" extends = "layout">
+    	<put-attribute name="title" value="VRP-Load3d Home" />
+    	<put-attribute name="content" value="/WEB-INF/views/home/vrpload3dhome.jsp" />
+    </definition>
+    <definition name = "vrpload3d.uploadFile" extends = "layout">
+    	<put-attribute name="title" value="VRP-Load3D Upload File" />
+    	<put-attribute name="content" value="/WEB-INF/views/vrpload3d/uploadFile.jsp" />
+    </definition>
+    <definition name="vrpload3d.viewSolution" extends="layout">
+    	<put-attribute name="title"  value="VRP-Load3D Solution" />
+    	<put-attribute name="content" value="/WEB-INF/views/vrpload3d/viewSolution.jsp" />
+    </definition>
+    
+</tiles-definitions>

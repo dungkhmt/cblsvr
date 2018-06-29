@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE log4j:configuration PUBLIC "-//APACHE//DTD LOG4J 1.2//EN" "log4j.dtd">
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
+
+	<!-- Appenders -->
+	<appender name="file" class="org.apache.log4j.RollingFileAppender">
+		<param name="append" value="true" />
+		
+		<param name="maxFileSize" value="50MB" />
+	   	<param name="maxBackupIndex" value="10" />
+	   	<param name="file" value="~/logs/slp.log" />
+	   	<layout class="org.apache.log4j.PatternLayout">
+		<param name="ConversionPattern" 
+			value="%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}: %m- %M %n" />
+	    </layout>
+	</appender>
+	
+	
+	<!-- Root Logger -->
+	<root>
+		<level value="INFO" />
+		<appender-ref ref="file" />
+	</root>
+	
+</log4j:configuration>

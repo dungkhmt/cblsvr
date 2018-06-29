@@ -1,0 +1,23 @@
+package ifi2017;
+
+import java.util.ArrayList;
+
+public class BACP {
+	// input
+	int n;// number of courses
+	int m;// number of periods
+	int[] c;// c[i] number of credits of course i
+	int minCourses;
+	int maxCourses;
+	int minCredits;
+	int maxCredits;
+	
+	ArrayList<Integer> I;
+	ArrayList<Integer> J;
+	
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+
+	}
+
+}

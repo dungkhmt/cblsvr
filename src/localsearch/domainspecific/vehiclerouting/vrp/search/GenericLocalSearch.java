@@ -164,6 +164,7 @@ public class GenericLocalSearch implements ISearch {
 		bestSolution = new ValueRoutesVR(XR);
 		currentIter = 0;
 		generateInitialSolution();
+		if(verbose) System.out.println(name() + "::search, initial solution = " + XR.toString());
 		nic = 0;
 		Neighborhood N = new Neighborhood(mgr);
 		bestValue = new LexMultiValues(F.getValues());

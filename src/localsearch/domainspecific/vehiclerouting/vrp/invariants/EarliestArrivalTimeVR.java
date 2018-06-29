@@ -122,6 +122,15 @@ public class EarliestArrivalTimeVR implements InvariantVR {
 		}
 		*/
 	}
+	// x is before y on the same route
+	// remove (x, next[x]) and (y,next[y])
+	// add (x,y) and (next[x],next[y])
+	public void propagateTwoOptMoveOneRoute(Point x, Point y) {
+		System.out.println(name() + "::propagateTwoOptMoveOneRoute NOT IMPLEMENTED YET");
+		System.exit(-1);
+	}
+
+	
 	// move of type a [Groer et al., 2010]
     // move customer x to from route of x to route of y; insert x into the position between y and next[y]
     // x and y are not the depot

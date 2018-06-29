@@ -239,7 +239,15 @@ public class NumberCoveredPoints implements IFunctionVR {
 		return value;
 	}
 
-	
+	// x is before y on the same route
+	// remove (x, next[x]) and (y,next[y])
+	// add (x,y) and (next[x],next[y])
+	public double evaluateTwoOptMoveOneRoute(Point x, Point y) {
+		System.out.println(name() + "::evaluateTwoOptMoveOneRoute NOT IMPEMENTED YET");
+		System.exit(-1);
+		return 0;
+	}
+
 	public double evaluateOnePointMove(Point x, Point y) {
 		// TODO Auto-generated method stub
 		return 0;
@@ -408,7 +416,14 @@ public class NumberCoveredPoints implements IFunctionVR {
 		}
 		return eval;
 	}
-	
+	// x is before y on the same route
+	// remove (x, next[x]) and (y,next[y])
+	// add (x,y) and (next[x],next[y])
+	public void propagateTwoOptMoveOneRoute(Point x, Point y) {
+		System.out.println(name() + "::propagateTwoOptMoveOneRoute NOT IMPLEMENTED YET");
+		System.exit(-1);
+	}
+
 	public void propagateAddRemovePoints(Point x, Point y, Point z) {
 		// TODO Auto-generated method stub
 		for(int u : cover.get(y)){

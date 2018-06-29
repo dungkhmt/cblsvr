@@ -1,4 +1,3 @@
-
 /*
  * authors: Pham Quang Dung (dungkhmt@gmail.com), Nguyen Thanh Hoang (thnbk56@gmail.com)
  * date: 21/10/2015
@@ -202,6 +201,16 @@ public class AccumulatedEdgeWeightsOnPathVR implements IFunctionVR {
 	public double getValue() {
 		// TODO Auto-generated method stub
 		return accWE.getCostRight(v);
+	}
+
+	// x is before y on the same route
+	// remove (x, next[x]) and (y,next[y])
+	// add (x,y) and (next[x],next[y])
+	public double evaluateTwoOptMoveOneRoute(Point x, Point y) {
+		System.out.println(name()
+				+ "::evaluateTwoOptMoveOneRoute NOT IMPEMENTED YET");
+		System.exit(-1);
+		return 0;
 	}
 
 	//
@@ -933,22 +942,26 @@ public class AccumulatedEdgeWeightsOnPathVR implements IFunctionVR {
 		double d1 = 0;
 		double d2 = 0;
 		if (XR.next(z) != XR.getTerminatingPointOfRoute(XR.route(x))) {
-			d1 = accWE.getCost(XR.getStartingPointOfRoute(XR.route(x)), XR.prev(XR.getTerminatingPointOfRoute(XR.route(x))))
-					- accWE.getCost(XR.getTerminatingPointOfRoute(XR.route(x)), XR.prev(XR.getTerminatingPointOfRoute(XR.route(x))))
-					;
-			d2 = accWE.getCostLeft(XR.next(z)) + d1 + accWE.getCost(XR.next(z), y);
+			d1 = accWE.getCost(XR.getStartingPointOfRoute(XR.route(x)),
+					XR.prev(XR.getTerminatingPointOfRoute(XR.route(x))))
+					- accWE.getCost(XR.getTerminatingPointOfRoute(XR.route(x)),
+							XR.prev(XR.getTerminatingPointOfRoute(XR.route(x))));
+			d2 = accWE.getCostLeft(XR.next(z)) + d1
+					+ accWE.getCost(XR.next(z), y);
 		} else {
 			d2 = accWE.getCost(XR.getStartingPointOfRoute(XR.route(x)), y);
 		}
-		
+
 		if (v == XR.getTerminatingPointOfRoute(XR.route(x))) {
-			
+
 			double newV = d2;
 			newV += calc(y, XR.next(x));
 			newV += accWE.getCost(XR.next(x), XR.next(y)) + calc(XR.next(y), z);
 			newV += accWE.getCost(z, x)
 					+ calc(x, XR.next(XR.getStartingPointOfRoute(XR.route(x))))
-					+ accWE.getCost(XR.next(XR.getStartingPointOfRoute(XR.route(x))), XR.getTerminatingPointOfRoute(XR.route(x)));
+					+ accWE.getCost(
+							XR.next(XR.getStartingPointOfRoute(XR.route(x))),
+							XR.getTerminatingPointOfRoute(XR.route(x)));
 			return newV - accWE.getCostRight(v);
 		}
 		if (XR.route(x) == XR.route(v)) {
@@ -963,8 +976,7 @@ public class AccumulatedEdgeWeightsOnPathVR implements IFunctionVR {
 				return newV - accWE.getCostRight(v);
 			}
 			if (XR.isBefore(x, v)) {
-				return d2 + calc(y, v)
-						- accWE.getCostRight(v);
+				return d2 + calc(y, v) - accWE.getCostRight(v);
 			}
 			double newV = d2 + calc(y, XR.next(x));
 			newV += accWE.getCost(XR.next(x), XR.next(y)) + calc(XR.next(y), z);
@@ -1031,19 +1043,24 @@ public class AccumulatedEdgeWeightsOnPathVR implements IFunctionVR {
 		double d1 = 0;
 		double d2 = 0;
 		if (XR.next(z) != XR.getTerminatingPointOfRoute(XR.route(x))) {
-			d1 = accWE.getCost(XR.getStartingPointOfRoute(XR.route(x)), XR.prev(XR.getTerminatingPointOfRoute(XR.route(x))))
-					- accWE.getCost(XR.getTerminatingPointOfRoute(XR.route(x)), XR.prev(XR.getTerminatingPointOfRoute(XR.route(x))))
-					;
-			d2 = accWE.getCostLeft(XR.next(z)) + d1 + accWE.getCost(XR.next(z), XR.next(y));
+			d1 = accWE.getCost(XR.getStartingPointOfRoute(XR.route(x)),
+					XR.prev(XR.getTerminatingPointOfRoute(XR.route(x))))
+					- accWE.getCost(XR.getTerminatingPointOfRoute(XR.route(x)),
+							XR.prev(XR.getTerminatingPointOfRoute(XR.route(x))));
+			d2 = accWE.getCostLeft(XR.next(z)) + d1
+					+ accWE.getCost(XR.next(z), XR.next(y));
 		} else {
-			d2 = accWE.getCost(XR.getStartingPointOfRoute(XR.route(x)), XR.next(y));
+			d2 = accWE.getCost(XR.getStartingPointOfRoute(XR.route(x)),
+					XR.next(y));
 		}
 		if (v == XR.getTerminatingPointOfRoute(XR.route(x))) {
 			double newV = d2 + calc(XR.next(y), z);
 			newV += accWE.getCost(z, XR.next(x)) + calc(XR.next(x), y);
 			newV += accWE.getCost(y, x)
 					+ calc(x, XR.next(XR.getStartingPointOfRoute(XR.route(x))))
-					+ accWE.getCost(XR.next(XR.getStartingPointOfRoute(XR.route(x))), XR.getTerminatingPointOfRoute(XR.route(x)));
+					+ accWE.getCost(
+							XR.next(XR.getStartingPointOfRoute(XR.route(x))),
+							XR.getTerminatingPointOfRoute(XR.route(x)));
 			return newV - accWE.getCostRight(v);
 		}
 
@@ -1052,19 +1069,17 @@ public class AccumulatedEdgeWeightsOnPathVR implements IFunctionVR {
 				return accWE.getCostLeft(v) + d1 - accWE.getCostRight(v);
 			}
 			if (XR.isBefore(y, v)) {
-				return d2
-						+ calc(XR.next(y), v) - accWE.getCostRight(v);
+				return d2 + calc(XR.next(y), v) - accWE.getCostRight(v);
 			}
 			if (XR.isBefore(x, v)) {
-				double newV = d2
-						+ calc(XR.next(y), z);
+				double newV = d2 + calc(XR.next(y), z);
 				newV += accWE.getCost(z, XR.next(x)) + calc(XR.next(x), v);
 				return newV - accWE.getCostRight(v);
 			}
 			double newV = d2 + calc(XR.next(y), z);
 			newV += accWE.getCost(z, XR.next(x)) + calc(XR.next(x), y);
 			newV += accWE.getCost(y, x) + calc(x, v);
-			
+
 			return newV - accWE.getCostRight(v);
 		}
 		return 0;
@@ -1129,10 +1144,12 @@ public class AccumulatedEdgeWeightsOnPathVR implements IFunctionVR {
 		double d1 = 0;
 		double d2 = 0;
 		if (XR.next(z) != XR.getTerminatingPointOfRoute(XR.route(x))) {
-			d1 = accWE.getCost(XR.getStartingPointOfRoute(XR.route(x)), XR.prev(XR.getTerminatingPointOfRoute(XR.route(x))))
-					- accWE.getCost(XR.getTerminatingPointOfRoute(XR.route(x)), XR.prev(XR.getTerminatingPointOfRoute(XR.route(x))))
-					;
-			d2 = accWE.getCostLeft(XR.next(z)) + d1 + accWE.getCost(XR.next(z), y);
+			d1 = accWE.getCost(XR.getStartingPointOfRoute(XR.route(x)),
+					XR.prev(XR.getTerminatingPointOfRoute(XR.route(x))))
+					- accWE.getCost(XR.getTerminatingPointOfRoute(XR.route(x)),
+							XR.prev(XR.getTerminatingPointOfRoute(XR.route(x))));
+			d2 = accWE.getCostLeft(XR.next(z)) + d1
+					+ accWE.getCost(XR.next(z), y);
 		} else {
 			d2 = accWE.getCost(XR.getStartingPointOfRoute(XR.route(x)), y);
 		}
@@ -1141,7 +1158,9 @@ public class AccumulatedEdgeWeightsOnPathVR implements IFunctionVR {
 			newV += accWE.getCost(XR.next(x), z) + calc(z, XR.next(y));
 			newV += accWE.getCost(XR.next(y), x)
 					+ calc(x, XR.next(XR.getStartingPointOfRoute(XR.route(x))))
-					+ accWE.getCost(XR.next(XR.getStartingPointOfRoute(XR.route(x))), XR.getTerminatingPointOfRoute(XR.route(x)));
+					+ accWE.getCost(
+							XR.next(XR.getStartingPointOfRoute(XR.route(x))),
+							XR.getTerminatingPointOfRoute(XR.route(x)));
 			return newV - accWE.getCostRight(v);
 		}
 
@@ -1155,8 +1174,7 @@ public class AccumulatedEdgeWeightsOnPathVR implements IFunctionVR {
 				return newV - accWE.getCostRight(v);
 			}
 			if (XR.isBefore(x, v)) {
-				return d2 + calc(y, v)
-						- accWE.getCostRight(v);
+				return d2 + calc(y, v) - accWE.getCostRight(v);
 			}
 			double newV = d2 + calc(y, XR.next(x));
 			newV += accWE.getCost(XR.next(x), z) + calc(z, XR.next(y));
@@ -1226,19 +1244,24 @@ public class AccumulatedEdgeWeightsOnPathVR implements IFunctionVR {
 		double d1 = 0;
 		double d2 = 0;
 		if (XR.next(z) != XR.getTerminatingPointOfRoute(XR.route(x))) {
-			d1 = accWE.getCost(XR.getStartingPointOfRoute(XR.route(x)), XR.prev(XR.getTerminatingPointOfRoute(XR.route(x))))
-					- accWE.getCost(XR.getTerminatingPointOfRoute(XR.route(x)), XR.prev(XR.getTerminatingPointOfRoute(XR.route(x))))
-					;
-			d2 = accWE.getCostLeft(XR.next(z)) + d1 + accWE.getCost(XR.next(z), XR.next(x));
+			d1 = accWE.getCost(XR.getStartingPointOfRoute(XR.route(x)),
+					XR.prev(XR.getTerminatingPointOfRoute(XR.route(x))))
+					- accWE.getCost(XR.getTerminatingPointOfRoute(XR.route(x)),
+							XR.prev(XR.getTerminatingPointOfRoute(XR.route(x))));
+			d2 = accWE.getCostLeft(XR.next(z)) + d1
+					+ accWE.getCost(XR.next(z), XR.next(x));
 		} else {
-			d2 = accWE.getCost(XR.getStartingPointOfRoute(XR.route(x)), XR.next(x));
+			d2 = accWE.getCost(XR.getStartingPointOfRoute(XR.route(x)),
+					XR.next(x));
 		}
 		if (v == XR.getTerminatingPointOfRoute(XR.route(x))) {
 			double newV = d2 + calc(XR.next(x), y);
 			newV += accWE.getCost(y, z) + calc(z, XR.next(y));
 			newV += accWE.getCost(XR.next(y), x)
 					+ calc(x, XR.next(XR.getStartingPointOfRoute(XR.route(x))))
-					+ accWE.getCost(XR.next(XR.getStartingPointOfRoute(XR.route(x))), XR.getTerminatingPointOfRoute(XR.route(x)));
+					+ accWE.getCost(
+							XR.next(XR.getStartingPointOfRoute(XR.route(x))),
+							XR.getTerminatingPointOfRoute(XR.route(x)));
 			return newV - accWE.getCostRight(v);
 		}
 		if (XR.route(x) == XR.route(v)) {
@@ -1298,6 +1321,14 @@ public class AccumulatedEdgeWeightsOnPathVR implements IFunctionVR {
 			}
 		}
 		return 0;
+	}
+
+	// x is before y on the same route
+	// remove (x, next[x]) and (y,next[y])
+	// add (x,y) and (next[x],next[y])
+	public void propagateTwoOptMoveOneRoute(Point x, Point y) {
+		System.out.println(name() + "::propagateTwoOptMoveOneRoute NOT IMPLEMENTED YET");
+		System.exit(-1);
 	}
 
 	//
@@ -1673,14 +1704,15 @@ public class AccumulatedEdgeWeightsOnPathVR implements IFunctionVR {
 	//
 	public void propagateKPointsMove(ArrayList<Point> x, ArrayList<Point> y) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	//
 	public double evaluateKPointsMove(ArrayList<Point> x, ArrayList<Point> y) {
 		// TODO Auto-generated method stub
 		if (!XR.checkPerformKPointsMove(x, y)) {
-			System.out.println(name() + ":: Error evaluateKPointsMove:\n" + XR.toString());
+			System.out.println(name() + ":: Error evaluateKPointsMove:\n"
+					+ XR.toString());
 			System.exit(-1);
 		}
 		int n = x.size();
@@ -1704,7 +1736,7 @@ public class AccumulatedEdgeWeightsOnPathVR implements IFunctionVR {
 					xx.add(x.get(i));
 					yy.add(y.get(i));
 					ok |= x.get(i) == v;
-				} else if (y.get(i) == CBLSVR.NULL_POINT){
+				} else if (y.get(i) == CBLSVR.NULL_POINT) {
 					if (x.get(i) == v) {
 						return -accWE.getCostRight(v);
 					}
@@ -1729,7 +1761,7 @@ public class AccumulatedEdgeWeightsOnPathVR implements IFunctionVR {
 		}
 		return eval;
 	}
-	
+
 	public static void main(String[] avgr) {
 		int N = 60;
 		int n = 50;
@@ -1761,7 +1793,7 @@ public class AccumulatedEdgeWeightsOnPathVR implements IFunctionVR {
 		}
 		mgr.close();
 		mgr.performRemoveOnePoint(p[0]);
-		
+
 		int iter = 0;
 		double[] oldV = new double[N];
 		double[] newV = new double[N];
@@ -1771,26 +1803,27 @@ public class AccumulatedEdgeWeightsOnPathVR implements IFunctionVR {
 			for (int i = 0; i < N; i++) {
 				oldV[i] = f[i].getValue();
 			}
-//			int x1 = rand.nextInt(N);
-//			int x2 = rand.nextInt(N);
-//			int y1 = rand.nextInt(N);
-//			int y2 = rand.nextInt(N);
-//			int x3 = rand.nextInt(N);
-//			int y3 = rand.nextInt(N);
-//			int x4 = rand.nextInt(N);
-//			int y4 = rand.nextInt(N);
-//			while (!XR.checkPerformAddRemovePoints(p[x1], p[x2], p[x3])) {
-//				x1 = rand.nextInt(N);
-//				y1 = rand.nextInt(N);
-//				x2 = rand.nextInt(N);
-//				y2 = rand.nextInt(N);
-//				x3 = rand.nextInt(N);
-//				y3 = rand.nextInt(N);
-//				x4 = rand.nextInt(N);
-//				y4 = rand.nextInt(N);
-//			}
+			// int x1 = rand.nextInt(N);
+			// int x2 = rand.nextInt(N);
+			// int y1 = rand.nextInt(N);
+			// int y2 = rand.nextInt(N);
+			// int x3 = rand.nextInt(N);
+			// int y3 = rand.nextInt(N);
+			// int x4 = rand.nextInt(N);
+			// int y4 = rand.nextInt(N);
+			// while (!XR.checkPerformAddRemovePoints(p[x1], p[x2], p[x3])) {
+			// x1 = rand.nextInt(N);
+			// y1 = rand.nextInt(N);
+			// x2 = rand.nextInt(N);
+			// y2 = rand.nextInt(N);
+			// x3 = rand.nextInt(N);
+			// y3 = rand.nextInt(N);
+			// x4 = rand.nextInt(N);
+			// y4 = rand.nextInt(N);
+			// }
 
-//			System.out.println(x1 + " " + p[x1] + " " + x2 + " " + p[x2] + " " + x3 + " "+ p[x3] + " " );
+			// System.out.println(x1 + " " + p[x1] + " " + x2 + " " + p[x2] +
+			// " " + x3 + " "+ p[x3] + " " );
 			ArrayList<Point> x = new ArrayList<Point>();
 			ArrayList<Point> y = new ArrayList<Point>();
 			int count = rand.nextInt(5) + 5;
@@ -1821,7 +1854,7 @@ public class AccumulatedEdgeWeightsOnPathVR implements IFunctionVR {
 			}
 			for (int i = 0; i < N; i++) {
 				delta[i] = f[i].evaluateKPointsMove(x, y);
-			} 
+			}
 			mgr.performKPointsMove(x, y);
 			for (int i = 0; i < N; i++) {
 				newV[i] = f[i].getValue();
@@ -1837,7 +1870,5 @@ public class AccumulatedEdgeWeightsOnPathVR implements IFunctionVR {
 		}
 		System.out.println("Okkkkkkkkkkkkkk");
 	}
-
-	
 
 }

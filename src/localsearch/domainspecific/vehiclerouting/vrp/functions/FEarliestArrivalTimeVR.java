@@ -264,6 +264,16 @@ public class FEarliestArrivalTimeVR implements IFunctionVR {
 		}
 		return 0;
 	}
+	// x is before y on the same route
+	// remove (x, next[x]) and (y,next[y])
+	// add (x,y) and (next[x],next[y])
+	public double evaluateTwoOptMoveOneRoute(Point x, Point y) {
+		System.out.println(name() + "::evaluateTwoOptMoveOneRoute NOT IMPEMENTED YET");
+		System.exit(-1);
+		return 0;
+	}
+
+	
 	// move of type a [Groer et al., 2010]
     // move customer x to from route of x to route of y; insert x into the position between y and next[y]
     // x and y are not the depot
@@ -1026,7 +1036,14 @@ public class FEarliestArrivalTimeVR implements IFunctionVR {
 		
 		return calDeltaSegment(px, XR.getTerminatingPointOfRoute(k));
 	}
-	
+	// x is before y on the same route
+	// remove (x, next[x]) and (y,next[y])
+	// add (x,y) and (next[x],next[y])
+	public void propagateTwoOptMoveOneRoute(Point x, Point y) {
+		System.out.println(name() + "::propagateTwoOptMoveOneRoute NOT IMPLEMENTED YET");
+		System.exit(-1);
+	}
+
 	@Override
 	public void propagateKPointsMove(ArrayList<Point> x, ArrayList<Point> y) {
 		// TODO Auto-generated method stub

@@ -112,7 +112,14 @@ public class AccumulatedWeightEdgesVR implements InvariantVR {
         }
 	}
 
-	
+	// x is before y on the same route
+	// remove (x, next[x]) and (y,next[y])
+	// add (x,y) and (next[x],next[y])
+	public void propagateTwoOptMoveOneRoute(Point x, Point y) {
+		System.out.println(name() + "::propagateTwoOptMoveOneRoute NOT IMPLEMENTED YET");
+		System.exit(-1);
+	}
+
 	public void propagateOnePointMove(Point x, Point y) {
 		// TODO Auto-generated method stub
 		HashSet<Integer> oldR = new HashSet<Integer>();

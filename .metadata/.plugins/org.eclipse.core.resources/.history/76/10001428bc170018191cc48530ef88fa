@@ -1,0 +1,20 @@
+package localsearch.applications.examplebook;
+import java.util.*;
+public class BACP {
+	int n;
+	int p;
+	int a, b, c, d;
+	int[] crd;
+	HashSet<Pair> T;
+	
+	class Pair{
+		int i;
+		int j;
+	}
+	
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+
+	}
+
+}

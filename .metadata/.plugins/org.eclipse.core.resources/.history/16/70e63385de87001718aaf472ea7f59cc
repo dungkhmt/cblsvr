@@ -1,0 +1,15 @@
+package ifi2017;
+
+public class BACP {
+	// input
+	int n;// number of courses
+	int m;// number of periods
+	int[] c;// c[i] number of credits of course i
+	
+	
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+
+	}
+
+}

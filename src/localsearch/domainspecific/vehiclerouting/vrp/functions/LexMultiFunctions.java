@@ -23,6 +23,13 @@ public class LexMultiFunctions {
 	public void add(IConstraintVR c){
 		functions.add(new ConstraintViolationsVR(c));
 	}
+	public LexMultiValues evaluateTwoOptMoveOneRoute(Point x, Point y){
+		LexMultiValues eval = new LexMultiValues();
+		for(int i = 0; i < functions.size(); i++)
+			eval.add(functions.get(i).evaluateTwoOptMoveOneRoute(x, y));
+		return eval;
+	}
+
 	public LexMultiValues evaluateKPointsMove(ArrayList<Point> x, ArrayList<Point> y){
 		LexMultiValues eval = new LexMultiValues();
 		for(int i = 0; i < functions.size(); i++)

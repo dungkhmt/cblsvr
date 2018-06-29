@@ -1,0 +1,44 @@
+package localsearch.applications.examplebook;
+
+import localsearch.constraints.basic.LessOrEqual;
+import localsearch.functions.sum.Sum;
+import localsearch.model.IConstraint;
+import localsearch.model.IFunction;
+import localsearch.model.LocalSearchManager;
+import localsearch.model.VarIntLS;
+
+public class Examples {
+	public static void example1(){
+		LocalSearchManager mgr = new LocalSearchManager();
+		VarIntLS[] x = new VarIntLS[5];
+		for(int i = 0; i < x.length; i++){
+			x[i] = new VarIntLS(mgr,1,10);
+			x[i].setValue(i);
+		}
+		IFunction s = new Sum(x);
+		IConstraint c = new LessOrEqual(s, 8);
+		mgr.close();
+		
+		System.out.println("s = " + s.getValue() + ", c.violations = " + c.violations());
+		int ds = s.getAssignDelta(x[4], 1);
+		int dc = c.getAssignDelta(x[4], 1);
+		x[4].setValuePropagate(1);
+		System.out.println("ds = " + ds + ", dc = " + dc + ", new s = " + s.getValue()
+				+ ", new violations = " + c.violations());
+		
+	}
+	public static void example2(){
+		LocalSearchManager mgr = new LocalSearchManager();
+		VarIntLS[] x = new VarIntLS[5];
+		for(int i = 0; i < x.length; i++)
+			x[i] = new VarIntLS(mgr,1,3);
+		int[] w = new int[]{2, 3, 1, 5, 4};
+		
+		mgr.close();
+	}
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+		Examples.example1();
+	}
+
+}

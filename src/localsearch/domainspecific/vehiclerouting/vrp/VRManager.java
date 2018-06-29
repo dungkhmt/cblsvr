@@ -70,6 +70,17 @@ public class VRManager {
 		initPropagation();
 
 	}
+    public void performTwoOptMoveOneRoute(Point x, Point y){
+    	// x and y are in the same route, x is before y
+    	// remove (x,next[x]) and (y,next[y])
+    	// add (x,y) and (next[x],next[y]), reverse path from y to next[x]
+		X.performTwoOptMoveOneRoute(x, y);
+		for (InvariantVR f : invariants) {
+			f.propagateTwoOptMoveOneRoute(x, y);
+		}
+    
+    		
+    }
 
 	public void performRemoveAllClientPoints() {
 		for (int k = 1; k <= X.getNbRoutes(); k++) {

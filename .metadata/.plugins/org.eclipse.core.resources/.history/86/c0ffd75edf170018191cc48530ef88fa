@@ -1,0 +1,18 @@
+package localsearch.applications.examplebook;
+
+public class BinPacking2D {
+
+	public void tabuSearchBinPacking2D(){
+		int W = 10;
+		int H = 7;
+		int[] w = new int[]{6, 5, 2, 3, 3, 2};
+		int[] h = new int[]{3, 2, 4, 4, 3, 1};
+		
+		
+	}
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+
+	}
+
+}
