@@ -11,12 +11,12 @@ import java.util.ArrayList;
 public class Point {
 	public int ID;
     double x, y;
-    ArrayList<Integer> bucketIDs;
+    //ArrayList<Integer> bucketIDs;
 
     public Point(int ID, double x, double y){
     	this.ID = ID;
     	this.x = x; this.y = y;
-    	this.bucketIDs = new ArrayList<Integer>();
+    	//this.bucketIDs = new ArrayList<Integer>();
     }
     public Point(){
     	this.ID = 0;this.x = 0;this.y = 0;
@@ -36,9 +36,13 @@ public class Point {
         return y;
     }
     
-    public ArrayList<Integer> getBucketIDs(){
-    	return bucketIDs;
-    }
+//    public ArrayList<Integer> getBucketIDs(){
+//    	return bucketIDs;
+//    }
+//    
+//    public void setBucketIDs(ArrayList<Integer> bkIDs){
+//    	this.bucketIDs = bkIDs;
+//    }
 
     public void setX(double x) {
         this.x = x;
@@ -46,10 +50,6 @@ public class Point {
 
     public void setY(double y) {
         this.y = y;
-    }
-
-    public void setBucketIDs(ArrayList<Integer> bkIDs){
-    	this.bucketIDs = bkIDs;
     }
 
     double degrees(Point p) {
@@ -63,7 +63,7 @@ public class Point {
     public Point(double x, double y) {
         this.x = x;
         this.y = y;
-        this.bucketIDs = new ArrayList<Integer>();
+        //this.bucketIDs = new ArrayList<Integer>();
     }
 
     public double distance(Point p) {

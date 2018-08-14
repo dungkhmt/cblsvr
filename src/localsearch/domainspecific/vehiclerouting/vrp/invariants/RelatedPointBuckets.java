@@ -3,6 +3,7 @@ package localsearch.domainspecific.vehiclerouting.vrp.invariants;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import localsearch.domainspecific.vehiclerouting.vrp.Constants;
 import localsearch.domainspecific.vehiclerouting.vrp.IDistanceManager;
 import localsearch.domainspecific.vehiclerouting.vrp.InvariantVR;
 import localsearch.domainspecific.vehiclerouting.vrp.VRManager;
@@ -16,18 +17,20 @@ public class RelatedPointBuckets implements InvariantVR {
 	HashMap<Point, Double> eat;
 	HashMap<Point, Integer> latestAllowedArrivalTime;
 	HashMap<Point, Integer> serviceDuration;
-	private HashMap<Integer, ArrayList<Point>> bks;
+	private HashMap<Integer, HashMap<Integer, ArrayList<Point>>> bks;
+	private HashMap<Point,Point> pickup2DeliveryOfPeople;
 	private int delta;
 	public int nbBuckets;
 	
-	public RelatedPointBuckets(VarRoutesVR XR, HashMap<Point, Double> eat, HashMap<Point, Integer> latestAllowedArrivalTime, HashMap<Point, Integer> serviceDuration, int delta){
+	public RelatedPointBuckets(VarRoutesVR XR, HashMap<Point,Point> pickup2DeliveryOfPeople, HashMap<Point, Double> eat, HashMap<Point, Integer> latestAllowedArrivalTime, HashMap<Point, Integer> serviceDuration, int delta){
+		this.pickup2DeliveryOfPeople = pickup2DeliveryOfPeople;
 		this.eat = eat;
 		this.latestAllowedArrivalTime = latestAllowedArrivalTime;
 		this.serviceDuration = serviceDuration;
 		this.XR = XR;
 		this.mgr = XR.getVRManager();
 		this.delta = delta;
-		bks = new HashMap<Integer, ArrayList<Point>>();
+		bks = new HashMap<Integer, HashMap<Integer, ArrayList<Point>>>();
 		this.nbBuckets = 86400/delta;
 		this.mgr.post(this);
 	}
@@ -38,14 +41,14 @@ public class RelatedPointBuckets implements InvariantVR {
 		return mgr;
 	}
 	
-	public HashMap<Integer, ArrayList<Point>> getBuckets(){
+	public HashMap<Integer, HashMap<Integer, ArrayList<Point>>> getBuckets(){
 		return this.bks;
 	}
 	
-	public void setBuckets(HashMap<Integer, ArrayList<Point>> bks) {
+	public void setBuckets(HashMap<Integer, HashMap<Integer, ArrayList<Point>>> bks) {
 		this.bks = bks;
 	}
-	public ArrayList<Point> getBucketWithIndex(int idx){
+	public HashMap<Integer, ArrayList<Point>> getBucketOfRoute(int idx){
 		return this.bks.get(idx);
 	}
 	
@@ -57,20 +60,16 @@ public class RelatedPointBuckets implements InvariantVR {
 	public void initPropagation() {
 		// TODO Auto-generated method stub
 		
-		ArrayList<Integer> bucketID = new ArrayList<Integer>();
-		for(int i = 0; i < nbBuckets; i++){
-			ArrayList<Point> b0 = new ArrayList<Point>();
-			ArrayList<Point> temp = XR.getStartingPoints();
-			for(int j = 0; j < temp.size(); j++)
-				b0.add(temp.get(j));
-			bks.put(i, b0);
-			bucketID.add(i);
-		}
-		
-		ArrayList<Point> startingpoint = XR.getStartingPoints();
-		for(int i = 0; i < startingpoint.size(); i++){
-			ArrayList<Integer> bkIds = new ArrayList<Integer>(bucketID);
-			startingpoint.get(i).setBucketIDs(bkIds);
+		for(int i = 1; i <= XR.getNbRoutes(); i++){
+			HashMap<Integer, ArrayList<Point>> routeBK = new HashMap<Integer, ArrayList<Point>>();
+			Point stP = XR.getStartingPointOfRoute(i);
+			for(int j = 0; j < nbBuckets; j++){
+				ArrayList<Point> b0 = new ArrayList<Point>();
+				b0.add(stP);
+				b0.add(stP);
+				routeBK.put(j, b0);
+			}
+			bks.put(i, routeBK);
 		}
 	}
 	/***
@@ -79,17 +78,11 @@ public class RelatedPointBuckets implements InvariantVR {
 	 */
 	private void propagate(Point x){
 		int k = XR.route(x);
+		HashMap<Integer, ArrayList<Point>> routeBK = bks.get(k);
 		for(Point p = x; p != XR.getTerminatingPointOfRoute(k); p = XR.next(p)){
 			//get bucket list include point p
-			ArrayList<Integer> BucketIDsOfPointP = p.getBucketIDs();
-			//delete point p in the old bucket
-			for(int i = 0; i < BucketIDsOfPointP.size(); i++){
-				int bkId = BucketIDsOfPointP.get(i);
-				ArrayList<Point> bucket = bks.get(bkId);
-				bucket.remove(p);
-				bks.put(bkId, bucket);
-			}
-			BucketIDsOfPointP.clear();
+			if(pickup2DeliveryOfPeople.containsKey(p))
+				continue;
 			
 			//update new bucket
 			double eatX = eat.get(p);
@@ -101,13 +94,21 @@ public class RelatedPointBuckets implements InvariantVR {
 			if(endIdx > 86400/delta - 1)
 				endIdx = 86400/delta - 1;
 			for(int i = stIdx; i <= endIdx; i++){	
-				ArrayList<Point> bk = bks.get(i);
-				bk.add(p);
-				bks.put(i, bk);
-				BucketIDsOfPointP.add(i);
+				ArrayList<Point> bk = routeBK.get(i);
+				Point st = bk.get(0);
+
+				if(XR.index(st) == Constants.NULL_POINT || XR.index(st) > XR.index(p))
+					bk.set(0, p);
+				else{
+					Point en = bk.get(1);
+					if(XR.index(en) < XR.index(p))
+						bk.set(1, p);
+				}
+				routeBK.put(i, bk);
 			}
 			//p.setBucketIDs(BucketIDsOfPointP);
 		}
+		bks.put(k, routeBK);
 	}
 
 	@Override
@@ -275,16 +276,6 @@ public class RelatedPointBuckets implements InvariantVR {
 	@Override
 	public void propagateRemoveOnePoint(Point x) {
 		// TODO Auto-generated method stub
-		ArrayList<Integer> bkOfX = x.getBucketIDs();
-		//delete point p in the old bucket
-		for(int i = 0; i < bkOfX.size(); i++){
-			int bkId = bkOfX.get(i);
-			ArrayList<Point> bucket = bks.get(bkId);
-			bucket.remove(x);
-			bks.put(bkId, bucket);
-		}
-		bkOfX.clear();
-		x.setBucketIDs(bkOfX);
 		propagate(XR.oldPrev(x));
 	}
 
@@ -297,26 +288,6 @@ public class RelatedPointBuckets implements InvariantVR {
 	@Override
 	public void propagateRemoveTwoPoints(Point x1, Point x2) {
 		// TODO Auto-generated method stub
-		ArrayList<Integer> bkOfX1 = x1.getBucketIDs();
-		//delete point p in the old bucket
-		for(int i = 0; i < bkOfX1.size(); i++){
-			int bkId = bkOfX1.get(i);
-			ArrayList<Point> bucket = bks.get(bkId);
-			bucket.remove(x1);
-			bks.put(bkId, bucket);
-		}
-		bkOfX1.clear();
-		x1.setBucketIDs(bkOfX1);
-		ArrayList<Integer> bkOfX2 = x2.getBucketIDs();
-		//delete point p in the old bucket
-		for(int i = 0; i < bkOfX2.size(); i++){
-			int bkId = bkOfX2.get(i);
-			ArrayList<Point> bucket = bks.get(bkId);
-			bucket.remove(x2);
-			bks.put(bkId, bucket);
-		}
-		bkOfX2.clear();
-		x2.setBucketIDs(bkOfX2);
 		propagate(XR.oldPrev(x1));
 	}
 
@@ -330,6 +301,12 @@ public class RelatedPointBuckets implements InvariantVR {
 	public String name() {
 		// TODO Auto-generated method stub
 		return "RelatedPointBuckets";
+	}
+
+	@Override
+	public void propagateTwoOptMoveOneRoute(Point x, Point y) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

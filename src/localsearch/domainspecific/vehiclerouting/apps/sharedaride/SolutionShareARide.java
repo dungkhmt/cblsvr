@@ -15,10 +15,10 @@ public class SolutionShareARide {
 	private ArrayList<Point> _rejectPickupGoods;
 	private ArrayList<Point> _rejectPickupPeoples;
 	private double _cost;
-	private HashMap<Integer, ArrayList<Point>> _bks;
+	private HashMap<Integer, HashMap<Integer, ArrayList<Point>>> _bks;
 	
 	public SolutionShareARide(RelatedPointBuckets buckets, VarRoutesVR XR, ArrayList<Point> rejectPoints, ArrayList<Point> rejectPickupGoods, ArrayList<Point> rejectPickupPeoples, double cost){
-		_bks = new HashMap<Integer, ArrayList<Point>>(buckets.getBuckets());
+		_bks = new HashMap<Integer, HashMap<Integer, ArrayList<Point>>>(buckets.getBuckets());
 		_rejectPoints = new ArrayList<Point>();
 		_rejectPickupGoods = new ArrayList<Point>();
 		_rejectPickupPeoples = new ArrayList<Point>();
@@ -52,11 +52,11 @@ public class SolutionShareARide {
 		this._cost = cost;
 	}
 	
-	public void set_buckets(HashMap<Integer, ArrayList<Point>> bks) {
+	public void set_buckets(HashMap<Integer, HashMap<Integer, ArrayList<Point>>> bks) {
 		this._bks = bks;
 	}
 	
-	public HashMap<Integer, ArrayList<Point>> get_buckets(){
+	public HashMap<Integer, HashMap<Integer, ArrayList<Point>>> get_buckets(){
 		return _bks;
 	}
 	
