@@ -532,5 +532,25 @@ public class NumberCoveredPoints implements IFunctionVR {
 		}
 		return eval;
 	}
+	@Override
+	public void propagateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public void propagateRemoveTwoPoints(Point x1, Point x2) {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public double evaluateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+	@Override
+	public double evaluateRemoveTwoPoints(Point x1, Point x2) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
 
 }

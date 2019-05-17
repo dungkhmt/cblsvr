@@ -1347,4 +1347,10 @@ public class CEarliestArrivalTimeVR implements IConstraintVR {
 		return delta;
 	}
 
+	@Override
+	public void propagateTwoOptMoveOneRoute(Point x, Point y) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

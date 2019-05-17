@@ -497,4 +497,10 @@ public class Implicate implements IConstraintVR {
 		return v - violations;
 	}
 
+	@Override
+	public void propagateTwoOptMoveOneRoute(Point x, Point y) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

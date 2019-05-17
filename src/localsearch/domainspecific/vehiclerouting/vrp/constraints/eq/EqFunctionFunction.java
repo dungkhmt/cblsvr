@@ -504,4 +504,11 @@ public class EqFunctionFunction implements IConstraintVR {
 		return nv - violations;
 	}
 
+
+	@Override
+	public void propagateTwoOptMoveOneRoute(Point x, Point y) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

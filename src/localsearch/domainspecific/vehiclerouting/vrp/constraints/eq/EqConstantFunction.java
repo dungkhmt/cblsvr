@@ -470,4 +470,11 @@ public class EqConstantFunction implements IConstraintVR {
 		int nv = c == v ? 0 : (int)Math.abs(c-v);
 		return nv - violations;
 	}
+
+
+	@Override
+	public void propagateTwoOptMoveOneRoute(Point x, Point y) {
+		// TODO Auto-generated method stub
+		
+	}
 }

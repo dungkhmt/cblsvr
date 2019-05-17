@@ -615,4 +615,16 @@ public class TotalRequestsNotServed implements IFunctionVR {
 		
 	}
 
+	@Override
+	public void propagateTwoOptMoveOneRoute(Point x, Point y) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public double evaluateTwoOptMoveOneRoute(Point x, Point y) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
 }

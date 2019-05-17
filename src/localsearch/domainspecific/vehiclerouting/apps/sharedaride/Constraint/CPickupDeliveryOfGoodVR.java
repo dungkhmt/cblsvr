@@ -1403,4 +1403,10 @@ public class CPickupDeliveryOfGoodVR implements IConstraintVR{
 		return delta;
 	}
 
+	@Override
+	public void propagateTwoOptMoveOneRoute(Point x, Point y) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

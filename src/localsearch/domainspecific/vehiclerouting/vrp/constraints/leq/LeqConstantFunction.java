@@ -470,4 +470,11 @@ public class LeqConstantFunction implements IConstraintVR {
 		int nv = c <= v ? 0 : (int)Math.ceil(c-v);
 		return nv - violations;
 	}
+
+
+	@Override
+	public void propagateTwoOptMoveOneRoute(Point x, Point y) {
+		// TODO Auto-generated method stub
+		
+	}
 }

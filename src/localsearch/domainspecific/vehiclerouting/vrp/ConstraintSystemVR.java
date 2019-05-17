@@ -467,4 +467,9 @@ public class ConstraintSystemVR implements IConstraintVR {
 		}
 		return eval;
 	}
+	@Override
+	public void propagateTwoOptMoveOneRoute(Point x, Point y) {
+		// TODO Auto-generated method stub
+		
+	}
 }

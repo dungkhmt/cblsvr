@@ -1201,13 +1201,8 @@ public class IndexOnRoute implements IFunctionVR {
 			}
 		}
 		return eval;
-<<<<<<< HEAD
 	}
 
-=======
-	}	
-	
->>>>>>> b97c149ce61245b5939125dd91b667aebcb11466
 	public double evaluateAddOnePoint(Point x, Point y) {
 		// TODO Auto-generated method stub
 		if (!XR.checkPerformAddOnePoint(x, y)) {
@@ -1223,11 +1218,7 @@ public class IndexOnRoute implements IFunctionVR {
 		}
 		return 0;
 	}
-<<<<<<< HEAD
 
-=======
-	
->>>>>>> b97c149ce61245b5939125dd91b667aebcb11466
 	public double evaluateRemoveOnePoint(Point x) {
 		// TODO Auto-generated method stub
 		if (!XR.checkPerformRemoveOnePoint(x)) {
@@ -1244,8 +1235,6 @@ public class IndexOnRoute implements IFunctionVR {
 		return 0;
 	}
 
-<<<<<<< HEAD
-=======
 	public double evaluateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
 		// TODO Auto-generated method stub
 		if (!XR.checkPerformAddTwoPoints(x1, y1, x2, y2)) {
@@ -1290,7 +1279,6 @@ public class IndexOnRoute implements IFunctionVR {
 		return 0;
 	}
 	
->>>>>>> b97c149ce61245b5939125dd91b667aebcb11466
 	public void propagateAddRemovePoints(Point x, Point y, Point z) {
 		// TODO Auto-generated method stub
 

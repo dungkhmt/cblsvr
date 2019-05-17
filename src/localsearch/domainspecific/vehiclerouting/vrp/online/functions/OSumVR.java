@@ -585,5 +585,25 @@ public class OSumVR implements OFunctionVR {
 		//for(int i = 1; i <= _functions.size(); i++)	System.out.println("f["+ i + "] = " +_functions.get(i-1).getValue());
 		//if(_functions.size() > 0)System.out.println(_functions.get(0).getVRPManager().getVarRoutesVRP().toString());
 	}
+	@Override
+	public double evaluateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+	@Override
+	public double evaluateRemoveTwoPoints(Point x1, Point x2) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+	@Override
+	public void propagateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public void propagateRemoveTwoPoints(Point x1, Point x2) {
+		// TODO Auto-generated method stub
+		
+	}
 
 }

@@ -396,4 +396,9 @@ public class Leq implements IConstraintVR {
 		// TODO Auto-generated method stub
 		return cstr.evaluateKPointsMove(x, y);
 	}
+	@Override
+	public void propagateTwoOptMoveOneRoute(Point x, Point y) {
+		// TODO Auto-generated method stub
+		
+	}
 }

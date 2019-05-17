@@ -393,4 +393,10 @@ public class ScaleConstraint implements IConstraintVR{
 		return scale*cstr.evaluateKPointsMove(x, y);
 	}
 
+	@Override
+	public void propagateTwoOptMoveOneRoute(Point x, Point y) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }
