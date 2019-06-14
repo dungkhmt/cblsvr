@@ -37,16 +37,6 @@ public class CapacityConstraintViolationsVR implements IFunctionVR {
 		post();
 	}
 	
-	public CapacityConstraintViolationsVR(VarRoutesVR XR, NodeWeightsManager nwm, double[] capacity) {
-		this.XR = XR;
-		this.nwm = nwm;
-		this.capacity = new double[XR.getNbRoutes() + 1];
-		for (int i = 1; i <= XR.getNbRoutes(); i++) {
-			this.capacity[i] = capacity[i];
-		}
-		post();
-	}
-
 	private void post() {
 		mgr = XR.getVRManager();
 		sumWeights = new double[XR.getTotalNbPoints()];

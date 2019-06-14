@@ -11,9 +11,9 @@ import java.util.ArrayList;
 public class Point {
 	public int ID;
     double x, y;
+    String locationCode;
     //ArrayList<Integer> bucketIDs;
-
-    public Point(int ID, double x, double y){
+	public Point(int ID, double x, double y){
     	this.ID = ID;
     	this.x = x; this.y = y;
     	//this.bucketIDs = new ArrayList<Integer>();
@@ -24,6 +24,24 @@ public class Point {
     public Point(int ID){
     	this.ID = ID; this.x = 0; this.y = 0;
     }
+    
+    public Point(int ID, String locationCode){
+    	this.ID = ID;
+    	this.locationCode = locationCode;
+    	this.x = 0;
+    	this.y = 0;
+    }
+    
+    public String getLocationCode() {
+		return locationCode;
+	}
+	public void setLocationCode(String locationCode) {
+		this.locationCode = locationCode;
+	}
+	public void setID(int iD) {
+		ID = iD;
+	}
+
     public int getID() {
     	return ID;
     }

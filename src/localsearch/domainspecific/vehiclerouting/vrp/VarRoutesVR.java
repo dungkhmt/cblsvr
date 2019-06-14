@@ -1663,7 +1663,7 @@ public class VarRoutesVR{
     }
     
     public boolean checkPerformAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
-    	return (route[getIndex(x1)] == Constants.NULL_POINT && isClientPoint(x1) && (isClientPoint(y1) || 
+    	return (route[getIndex(x1)] == Constants.NULL_POINT && isClientPoint(x1) && (isClientPoint(y1) ||
     			isStartingPoint(y1)) && route[getIndex(y1)] != Constants.NULL_POINT
     			&& route[getIndex(x2)] == Constants.NULL_POINT && isClientPoint(x2) && (isClientPoint(y2) || 
     	    	isStartingPoint(y2)) && route[getIndex(y2)] != Constants.NULL_POINT
