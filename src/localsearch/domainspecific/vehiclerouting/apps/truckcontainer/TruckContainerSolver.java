@@ -2,8 +2,10 @@ package localsearch.domainspecific.vehiclerouting.apps.truckcontainer;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -146,77 +148,96 @@ public class TruckContainerSolver {
 		
 	}
 	
-	public void adaptiveSearchOperators(){
-		int it = 0;
-		int timeLimit = 36000000;
-    	int nIter = 10000;
-    	int maxStable = 1000;
-    	int iS = 0;
-    	SearchOptimumSolution opt = new SearchOptimumSolution(this);
-    	
-		double best_cost = objective.getValue();
-		TruckContainerSolution best_solution = new TruckContainerSolution(XR, rejectPickupPoints,
-				rejectDeliveryPoints, best_cost);
-
-		double start_search_time = System.currentTimeMillis();
-
-		while( (System.currentTimeMillis()-start_search_time) < timeLimit && it++ < nIter){
-			System.out.println("nb of iterator: " + it);
-			double current_cost = objective.getValue();
-			TruckContainerSolution current_solution = new TruckContainerSolution(XR, rejectPickupPoints, 
-				rejectDeliveryPoints, current_cost);
+	public void adaptiveSearchOperators(String outputfile){	
+		try{
 			
-			Random r = new Random();
-			if(iS >= maxStable){
-				opt.allRemoval();
-				iS = 0;
-			}
-			else{
-				int i_selected_removal = r.nextInt(3);
-				switch(i_selected_removal){
-					case 0: opt.routeRemoval(); break;
-					case 1: opt.randomRequestRemoval(); break;
-					case 2: opt.shaw_removal(); break;
+			PrintWriter fo = new PrintWriter(new File(outputfile));
+			int it = 0;
+			int timeLimit = 36000000;
+	    	int nIter = 1000;
+	    	int maxStable = 1000;
+	    	int iS = 0;
+	    	fo.println("time limit = " + timeLimit + ", nbIters = " + nIter + ", maxStable = " + maxStable);
+	    	
+	    	SearchOptimumSolution opt = new SearchOptimumSolution(this);
+	    	
+			double best_cost = objective.getValue();
+			TruckContainerSolution best_solution = new TruckContainerSolution(XR, rejectPickupPoints,
+					rejectDeliveryPoints, best_cost);
+	
+			double start_search_time = System.currentTimeMillis();
+			
+			fo.println("iter=====insertion=====removal=====time=====cost=====nbReject");
+			fo.println("0 -1 -1 " + " " + System.currentTimeMillis()/1000 + " " + best_cost + " " + getNbRejectedRequests());
+	
+			while( (System.currentTimeMillis()-start_search_time) < timeLimit && it++ < nIter){
+				System.out.println("nb of iterator: " + it);
+				double current_cost = objective.getValue();
+				TruckContainerSolution current_solution = new TruckContainerSolution(XR, rejectPickupPoints, 
+					rejectDeliveryPoints, current_cost);
+				
+				Random r = new Random();
+				int i_selected_removal = -1;
+				if(iS >= maxStable){
+					opt.allRemoval();
+					iS = 0;
 				}
-			}
-			
-			removeAllMoocFromRoutes();
-			
-			int i_selected_insertion = r.nextInt(3);
-			switch(i_selected_insertion){
-				case 0: opt.greedyInsertion(); break;
-				case 1: opt.greedyInsertionWithNoise(); break;
-				case 2: opt.regret_n_insertion(2); break;
-			}
-			
-			insertMoocToRoutes();
-			
-			int new_nb_reject_points = rejectPickupPoints.size();
-			int current_nb_reject_points = current_solution.get_rejectPickupPoints().size();
-			double new_cost = objective.getValue();
-			if( new_nb_reject_points < current_nb_reject_points
-					|| (new_nb_reject_points == current_nb_reject_points && new_cost < current_cost)){
+				else{
+					i_selected_removal = r.nextInt(4);
+					switch(i_selected_removal){
+						case 0: opt.routeRemoval(); break;
+						case 1: opt.randomRequestRemoval(); break;
+						case 2: opt.shaw_removal(); break;
+						case 3: opt.worst_removal(); break;
+					}
+				}
 				
-				int best_nb_reject_points = best_solution.get_rejectPickupPoints().size();
+				removeAllMoocFromRoutes();
 				
-				if(new_nb_reject_points < best_nb_reject_points
-						|| (new_nb_reject_points == best_nb_reject_points && new_cost < best_cost)){
+				int i_selected_insertion = r.nextInt(4);
+				switch(i_selected_insertion){
+					case 0: opt.greedyInsertion(); break;
+					case 1: opt.greedyInsertionWithNoise(); break;
+					case 2: opt.regret_n_insertion(2); break;
+					case 3: opt.first_possible_insertion(); break;
+				}
+				
+				insertMoocToRoutes();
+				
+				int new_nb_reject_points = rejectPickupPoints.size();
+				int current_nb_reject_points = current_solution.get_rejectPickupPoints().size();
+				double new_cost = objective.getValue();
+				if( new_nb_reject_points < current_nb_reject_points
+						|| (new_nb_reject_points == current_nb_reject_points && new_cost < current_cost)){
 					
-					best_cost = new_cost;
-					best_solution = new TruckContainerSolution(XR, rejectPickupPoints, rejectDeliveryPoints, best_cost);	
+					int best_nb_reject_points = best_solution.get_rejectPickupPoints().size();
+					
+					if(new_nb_reject_points < best_nb_reject_points
+							|| (new_nb_reject_points == best_nb_reject_points && new_cost < best_cost)){
+						
+						best_cost = new_cost;
+						best_solution = new TruckContainerSolution(XR, rejectPickupPoints, rejectDeliveryPoints, best_cost);
+						fo.println(it + " " + i_selected_insertion 
+							+ " " + i_selected_removal + " "
+							+ System.currentTimeMillis()/1000 + " "
+							+ best_cost + " " + getNbRejectedRequests());
+					}
+				}
+				/*
+				 * if new solution has cost worst than current solution
+				 * 		because XR is new solution
+				 * 			copy current current solution to new solution if don't change solution
+				 */
+				else{
+					current_solution.copy2XR(XR);
+					rejectPickupPoints = current_solution.get_rejectPickupPoints();
+					rejectDeliveryPoints = current_solution.get_rejectDeliveryPoints();
+					iS++;
 				}
 			}
-			/*
-			 * if new solution has cost worst than current solution
-			 * 		because XR is new solution
-			 * 			copy current current solution to new solution if don't change solution
-			 */
-			else{
-				current_solution.copy2XR(XR);
-				rejectPickupPoints = current_solution.get_rejectPickupPoints();
-				rejectDeliveryPoints = current_solution.get_rejectDeliveryPoints();
-				iS++;
-			}
+			fo.close();
+		}catch(Exception e){
+			System.out.println(e);
 		}
 	}
 	
@@ -1452,7 +1473,20 @@ public class TruckContainerSolver {
 		mgr.close();
 	}
 	
-	public void printSolution(){
+	public int getNbRejectedRequests(){
+		Set<Integer> grs = new HashSet<Integer>();
+		for(int i = 0; i < rejectPickupPoints.size(); i++){
+			Point pickup = rejectPickupPoints.get(i);
+			int groupId = point2Group.get(pickup);
+			
+			if(group2marked.get(groupId) == 1)
+				continue;
+			grs.add(groupId);
+		}
+		return grs.size();
+	}
+	
+	public void printSolution(String outputfile){
 		String s = "";
 		ArrayList<ArrayList<Point>> _route = new ArrayList<ArrayList<Point>>();
 		
@@ -1469,28 +1503,31 @@ public class TruckContainerSolver {
 		}		
 		System.out.println(s);
 		
-		int nbRP = 0;
-		Set<Integer> grs = new HashSet<Integer>();
-		for(int i = 0; i < rejectPickupPoints.size(); i++){
-			Point pickup = rejectPickupPoints.get(i);
-			int groupId = point2Group.get(pickup);
-			
-			if(group2marked.get(groupId) == 1)
-				continue;
-			grs.add(groupId);
-		}
-		System.out.println("Search done. At end search number of reject points = " + grs.size() + ",  cost = " + objective.getValue());
+		int nbR = getNbRejectedRequests();
 		
+		System.out.println("Search done. At end search number of reject points = " + nbR + ",  cost = " + objective.getValue());
+		try{
+			FileOutputStream write = new FileOutputStream(outputfile, true);
+			PrintWriter fo = new PrintWriter(write);
+			fo.println(s);
+			fo.println("end time = " + System.currentTimeMillis()/1000 + ", nbR = " + nbR + ", cost = " + objective.getValue());
+			fo.close();
+		}catch(Exception e){
+			
+		}
 	}
 	public static void main(String[] args){
-		String dataFileName = "E:/Project/smartlog/doc/documents/experiments/data/random_big_data.json";
+		String dir = "data/truck-container/";
+		String fileName = "input_1802.json";
+		String outputfile = dir + "output/result-" + fileName + ".txt"; 
+		String dataFileName = dir + fileName;
 		TruckContainerSolver solver = new TruckContainerSolver();
 		solver.readData(dataFileName);
 		solver.init();
 		solver.stateModel();
 		solver.greedyInitSolution();
 
-		solver.adaptiveSearchOperators();
-		solver.printSolution();
+		solver.adaptiveSearchOperators(outputfile);
+		solver.printSolution(outputfile);
 	}
 }

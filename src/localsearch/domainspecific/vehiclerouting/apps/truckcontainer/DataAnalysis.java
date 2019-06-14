@@ -848,13 +848,13 @@ public class DataAnalysis {
 		try{
 			ArrayList<String> days = getDayList();
 			Gson gson = new Gson();
-			String dataFileName = "E:/Project/smartlog/doc/documents/experiments/data/sml/input_1802.json";
+			String dataFileName = "data/truck-container/input_1802.json";
 			solver.readData(dataFileName);
 		    String bString = gson.toJson(solver.input);
 			JSONObject b = new JSONObject(bString);
 			for(int i = 1; i <days.size(); i++){
 				System.out.println("day " + days.get(i));
-				dataFileName = "E:/Project/smartlog/doc/documents/experiments/data/sml/input_" + days.get(i) + ".json";
+				dataFileName = "data/truck-container/input_" + days.get(i) + ".json";
 				TruckContainerSolver s = new TruckContainerSolver();
 				s.readData(dataFileName);
 				String aString = gson.toJson(s.input);
@@ -863,7 +863,7 @@ public class DataAnalysis {
 			}
 		
 		
-			dataFileName = "E:/Project/smartlog/doc/documents/experiments/data/sml/generated_input.json";
+			dataFileName = "data/truck-container/generated_input.json";
 			File fo = new File(dataFileName);
 			FileWriter fw = new FileWriter(fo);
 			fw.write(b.toString());
@@ -876,7 +876,7 @@ public class DataAnalysis {
 	}
 	
 	public void updateData(){
-		String dataFileName = "E:/Project/smartlog/doc/documents/experiments/data/sml/input_1802.json";
+		String dataFileName = "data/truck-container/input_1802.json";
 		solver = new TruckContainerSolver();
 		solver.readData(dataFileName);
 		
@@ -893,7 +893,7 @@ public class DataAnalysis {
 		//da.mergeFile();
 		
 		//tao file du lieu lon de test
-		String fileName = "E:/Project/smartlog/doc/documents/experiments/data/random_big_data.json";
+		String fileName = "data/truck-container/random_big_data.json";
 		da.createJsonFile(fileName);
 	}
 }
