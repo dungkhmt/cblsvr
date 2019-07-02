@@ -11,13 +11,16 @@ public class TruckContainerSolution {
 	private ArrayList<ArrayList<Point>> _route;
 	private ArrayList<Point> _rejectPickupPoints;
 	private ArrayList<Point> _rejectDeliveryPoints;
+	private HashMap<Integer, Integer> _group2marked;
 
 	private double _cost;
+	private int _nbTrucks;
 	
 	public TruckContainerSolution(VarRoutesVR XR, ArrayList<Point> rejectPickupPoints, 
-			ArrayList<Point> rejectDeliveryPoints, double cost){
+			ArrayList<Point> rejectDeliveryPoints, double cost, int nbTrucks, HashMap<Integer, Integer> group2marked){
 		this._rejectPickupPoints = new ArrayList<Point>();
 		this._rejectDeliveryPoints = new ArrayList<Point>();
+		this._group2marked = new HashMap<Integer, Integer>();
 		
 		for(int i=0; i<rejectPickupPoints.size(); i++){
 			_rejectPickupPoints.add(rejectPickupPoints.get(i));
@@ -25,6 +28,10 @@ public class TruckContainerSolution {
 		
 		for(int i=0; i<rejectDeliveryPoints.size(); i++){
 			_rejectDeliveryPoints.add(rejectDeliveryPoints.get(i));
+		}
+		
+		for(int key : group2marked.keySet()){
+			_group2marked.put(key, group2marked.get(key));
 		}
 		
 		_route = new ArrayList<ArrayList<Point>>();
@@ -42,6 +49,7 @@ public class TruckContainerSolution {
 		}
 		
 		this._cost = cost;
+		this._nbTrucks = nbTrucks;
 	}
 	
 	public void copy2XR(VarRoutesVR XR){
@@ -87,5 +95,21 @@ public class TruckContainerSolution {
 
 	public void set_cost(double _cost) {
 		this._cost = _cost;
+	}
+
+	public int get_nbTrucks() {
+		return _nbTrucks;
+	}
+
+	public void set_nbTrucks(int _nbTrucks) {
+		this._nbTrucks = _nbTrucks;
+	}
+
+	public HashMap<Integer, Integer> get_group2marked() {
+		return _group2marked;
+	}
+
+	public void set_group2marked(HashMap<Integer, Integer> _group2marked) {
+		this._group2marked = _group2marked;
 	}
 }

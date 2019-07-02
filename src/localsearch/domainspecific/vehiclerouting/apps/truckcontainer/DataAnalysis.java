@@ -105,15 +105,16 @@ public class DataAnalysis {
 		nbTrucks = nbRequests;
 		nbMoocs = nbTrucks;
 		nbContainers = nbRequests;
-		nbDepotTrucks = (int)(nbTrucks / 10);
-		nbDepotMoocs = (int)(nbMoocs / 10);
-		nbDepotContainers = (int)(nbContainers / 10);
-		nbWarehouses = nbRequests/10;
-		nbPorts = (nbEL + nbIL)/10;
+		nbDepotTrucks = (int)(nbTrucks / 50);
+		nbDepotMoocs = (int)(nbMoocs / 50);
+		nbDepotContainers = (int)(nbContainers / 50);
+		nbWarehouses = nbRequests/50;
+		nbPorts = (nbEL + nbIL)/50;
 		
 		beginTime = 1560250800;
 		minEarliestTime = 1560272400;
 		maxLatestTime = 1560531599;
+		rangeTime = 25200;
 		duration = (int)(maxLatestTime - minEarliestTime);
 		input = new ContainerTruckMoocInput();
 	}
@@ -482,12 +483,12 @@ public class DataAnalysis {
 	public Truck getNearestTruck(String locationCode){
 		int minTime = Integer.MAX_VALUE;
 		Truck truck = null;
-		for(int i = 0; i < input.getTrucks().length; i++){
-			int d = solver.getTravelTime(input.getTrucks()[i].getDepotTruckLocationCode(),
+		for(int i = 0; i < solver.input.getTrucks().length; i++){
+			int d = solver.getTravelTime(solver.input.getTrucks()[i].getDepotTruckLocationCode(),
 					locationCode);
 			if(d < minTime){
 				minTime = d;
-				truck = input.getTrucks()[i];
+				truck = solver.input.getTrucks()[i];
 			}
 		}
 		return truck;
@@ -496,12 +497,12 @@ public class DataAnalysis {
 	public Mooc getNearestMooc(String locationCode){
 		int minTime = Integer.MAX_VALUE;
 		Mooc mooc = null;
-		for(int i = 0; i < input.getMoocs().length; i++){
-			int d = solver.getTravelTime(input.getMoocs()[i].getDepotMoocLocationCode(),
+		for(int i = 0; i < solver.input.getMoocs().length; i++){
+			int d = solver.getTravelTime(solver.input.getMoocs()[i].getDepotMoocLocationCode(),
 					locationCode);
 			if(d < minTime){
 				minTime = d;
-				mooc = input.getMoocs()[i];
+				mooc = solver.input.getMoocs()[i];
 			}
 		}
 		return mooc;
@@ -523,9 +524,9 @@ public class DataAnalysis {
 	 * e < l
 	 */
 	public void fixTimeWindow(){
-		if(input.getExRequests() != null){
-			for(int i = 0; i < input.getExRequests().length; i++){
-				ExportContainerTruckMoocRequest R = input.getExRequests()[i];
+		if(solver.input.getExRequests() != null){
+			for(int i = 0; i < solver.input.getExRequests().length; i++){
+				ExportContainerTruckMoocRequest R = solver.input.getExRequests()[i];
 				if(R.getContainerRequest() != null){
 					for(int j = 0; j< R.getContainerRequest().length; j++){
 						ExportContainerRequest r = R.getContainerRequest()[j];
@@ -575,9 +576,9 @@ public class DataAnalysis {
 			}
 		}
 		
-		if(input.getImRequests() != null){
-			for(int i = 0; i < input.getImRequests().length; i++){
-				ImportContainerTruckMoocRequest R = input.getImRequests()[i];
+		if(solver.input.getImRequests() != null){
+			for(int i = 0; i < solver.input.getImRequests().length; i++){
+				ImportContainerTruckMoocRequest R = solver.input.getImRequests()[i];
 				if(R.getContainerRequest() != null){
 					for(int j = 0; j < R.getContainerRequest().length; j++){
 						ImportContainerRequest r = R.getContainerRequest()[j];
@@ -628,9 +629,9 @@ public class DataAnalysis {
 			}
 		}
 		
-		if(input.getImEmptyRequests() != null){
-			for(int i = 0; i < input.getImEmptyRequests().length; i++){
-				ImportEmptyRequests r = input.getImEmptyRequests()[i];
+		if(solver.input.getImEmptyRequests() != null){
+			for(int i = 0; i < solver.input.getImEmptyRequests().length; i++){
+				ImportEmptyRequests r = solver.input.getImEmptyRequests()[i];
 				int et = 0;
 				int lt = 0;
 				
@@ -657,9 +658,9 @@ public class DataAnalysis {
 				r.setLateDateTimeReturnEmptyAtDepot(DateTimeUtils.unixTimeStamp2DateTime(lt));
 			}
 		}
-		if(input.getImLadenRequests() != null){
-			for(int i= 0; i < input.getImLadenRequests().length; i++){
-				ImportLadenRequests r = input.getImLadenRequests()[i];
+		if(solver.input.getImLadenRequests() != null){
+			for(int i= 0; i < solver.input.getImLadenRequests().length; i++){
+				ImportLadenRequests r = solver.input.getImLadenRequests()[i];
 				int et = 0;
 				int lt = 0;
 				Port port = solver.mCode2Port.get(r.getPortCode());
@@ -703,9 +704,9 @@ public class DataAnalysis {
 			}
 		}
 		
-		if(input.getExEmptyRequests() != null){
-			for(int i = 0; i < input.getExEmptyRequests().length; i++){
-				ExportEmptyRequests r = input.getExEmptyRequests()[i];
+		if(solver.input.getExEmptyRequests() != null){
+			for(int i = 0; i < solver.input.getExEmptyRequests().length; i++){
+				ExportEmptyRequests r = solver.input.getExEmptyRequests()[i];
 				int et = 0;
 				int lt = 0;
 				DepotContainer depotcont = solver.mCode2DepotContainer.get(r.getDepotContainerCode());
@@ -747,9 +748,9 @@ public class DataAnalysis {
 				r.setLateDateTimeLoadAtWarehouse(DateTimeUtils.unixTimeStamp2DateTime(lt));
 			}
 		}
-		if(input.getExLadenRequests() != null){
-			for(int i = 0; i < input.getExLadenRequests().length; i++){
-				ExportLadenRequests r = input.getExLadenRequests()[i];
+		if(solver.input.getExLadenRequests() != null){
+			for(int i = 0; i < solver.input.getExLadenRequests().length; i++){
+				ExportLadenRequests r = solver.input.getExLadenRequests()[i];
 				int et = 0;
 				int lt = 0;
 				Warehouse wh = solver.mCode2Warehouse.get(r.getWareHouseCode());
@@ -772,6 +773,192 @@ public class DataAnalysis {
 					lt = tv + 25200;
 				}
 				r.setLateDateTimeUnloadAtPort(DateTimeUtils.unixTimeStamp2DateTime(lt));
+			}
+		}
+	}
+	
+	/***
+	 * edit time window back to 1802
+	 */
+	public void editTimeWindowToFirstDay(int minusTime){
+		if(solver.input.getExRequests() != null){
+			for(int i = 0; i < solver.input.getExRequests().length; i++){
+				ExportContainerTruckMoocRequest R = solver.input.getExRequests()[i];
+				if(R.getContainerRequest() != null){
+					for(int j = 0; j< R.getContainerRequest().length; j++){
+						ExportContainerRequest r = R.getContainerRequest()[j];
+						int et = 0;
+						DepotContainer depotcont = solver.mCode2DepotContainer.get(r.getDepotContainerCode());
+						int tv = getMinTravelTimeTruckMooc(depotcont.getLocationCode());
+						if(r.getEarlyDateTimePickupAtDepot() != null){
+							et = (int)DateTimeUtils.dateTime2Int(
+									r.getEarlyDateTimePickupAtDepot());
+							et -= minusTime;
+							r.setEarlyDateTimePickupAtDepot(DateTimeUtils.unixTimeStamp2DateTime(et));
+						}
+						if(r.getLateDateTimePickupAtDepot() != null){
+							et = (int)DateTimeUtils.dateTime2Int(
+									r.getLateDateTimePickupAtDepot());
+							et -= minusTime;
+							r.setLateDateTimePickupAtDepot(DateTimeUtils.unixTimeStamp2DateTime(et));
+						}
+
+						if(r.getEarlyDateTimeUnloadAtPort() != null){
+							et = (int)DateTimeUtils.dateTime2Int(
+									r.getEarlyDateTimeUnloadAtPort());
+							et -= minusTime;
+							r.setEarlyDateTimeUnloadAtPort(DateTimeUtils.unixTimeStamp2DateTime(et));
+						}
+						if(r.getLateDateTimeUnloadAtPort() != null){
+							et = (int)DateTimeUtils.dateTime2Int(
+									r.getLateDateTimeUnloadAtPort());
+							et -= minusTime;
+							r.setLateDateTimeUnloadAtPort(DateTimeUtils.unixTimeStamp2DateTime(et));
+						}
+					}
+				}
+			}
+		}
+		
+		if(solver.input.getImRequests() != null){
+			for(int i = 0; i < solver.input.getImRequests().length; i++){
+				ImportContainerTruckMoocRequest R = solver.input.getImRequests()[i];
+				if(R.getContainerRequest() != null){
+					for(int j = 0; j < R.getContainerRequest().length; j++){
+						ImportContainerRequest r = R.getContainerRequest()[j];
+						int et = 0;
+
+						if(r.getEarlyDateTimePickupAtPort() != null){
+							et = (int)DateTimeUtils.dateTime2Int(
+									r.getEarlyDateTimePickupAtPort());
+							et -= minusTime;
+							r.setEarlyDateTimePickupAtPort(DateTimeUtils.unixTimeStamp2DateTime(et));
+						}
+						if(r.getLateDateTimePickupAtPort() != null){
+							et = (int)DateTimeUtils.dateTime2Int(
+									r.getLateDateTimePickupAtPort());
+							et -= minusTime;
+							r.setLateDateTimePickupAtPort(DateTimeUtils.unixTimeStamp2DateTime(et));
+						}
+
+						if(r.getEarlyDateTimeDeliveryAtDepot() != null){
+							et = (int)DateTimeUtils.dateTime2Int(
+									r.getEarlyDateTimeDeliveryAtDepot());
+							et -= minusTime;
+							r.setEarlyDateTimeDeliveryAtDepot(DateTimeUtils.unixTimeStamp2DateTime(et));
+						}
+						if(r.getLateDateTimeDeliveryAtDepot() != null){
+							et = (int)DateTimeUtils.dateTime2Int(
+									r.getLateDateTimeDeliveryAtDepot());
+							et -= minusTime;
+							r.setLateDateTimeDeliveryAtDepot(DateTimeUtils.unixTimeStamp2DateTime(et));
+						}
+					}
+				}
+			}
+		}
+		
+		if(solver.input.getImEmptyRequests() != null){
+			for(int i = 0; i < solver.input.getImEmptyRequests().length; i++){
+				ImportEmptyRequests r = solver.input.getImEmptyRequests()[i];
+				int et = 0;
+				
+				if(r.getEarlyDateTimeAttachAtWarehouse() != null){
+					et = (int)DateTimeUtils.dateTime2Int(
+							r.getEarlyDateTimeAttachAtWarehouse());
+					et -= minusTime;
+					r.setEarlyDateTimeAttachAtWarehouse(DateTimeUtils.unixTimeStamp2DateTime(et));
+				}
+				if(r.getLateDateTimeReturnEmptyAtDepot() != null){
+					et = (int)DateTimeUtils.dateTime2Int(
+							r.getLateDateTimeReturnEmptyAtDepot());
+					et -= minusTime;
+					r.setLateDateTimeReturnEmptyAtDepot(DateTimeUtils.unixTimeStamp2DateTime(et));
+				}
+			}
+		}
+		if(solver.input.getImLadenRequests() != null){
+			for(int i= 0; i < solver.input.getImLadenRequests().length; i++){
+				ImportLadenRequests r = solver.input.getImLadenRequests()[i];
+				int et = 0;
+
+				if(r.getEarlyDateTimePickupAtPort() != null){
+					et = (int)DateTimeUtils.dateTime2Int(
+							r.getEarlyDateTimePickupAtPort());
+					et -= minusTime;
+					r.setEarlyDateTimePickupAtPort(DateTimeUtils.unixTimeStamp2DateTime(et));
+				}
+				if(r.getLateDateTimePickupAtPort() != null){
+					et = (int)DateTimeUtils.dateTime2Int(
+							r.getLateDateTimePickupAtPort());
+					et -= minusTime;
+					r.setLateDateTimePickupAtPort(DateTimeUtils.unixTimeStamp2DateTime(et));
+				}
+
+				if(r.getEarlyDateTimeUnloadAtWarehouse() != null){
+					et = (int)DateTimeUtils.dateTime2Int(
+							r.getEarlyDateTimeUnloadAtWarehouse());
+					et -= minusTime;
+					r.setEarlyDateTimeUnloadAtWarehouse(DateTimeUtils.unixTimeStamp2DateTime(et));
+				}
+				if(r.getLateDateTimeUnloadAtWarehouse() != null){
+					et = (int)DateTimeUtils.dateTime2Int(
+							r.getLateDateTimeUnloadAtWarehouse());
+					et -= minusTime;
+					r.setLateDateTimeUnloadAtWarehouse(DateTimeUtils.unixTimeStamp2DateTime(et));
+				}
+			}
+		}
+		
+		if(solver.input.getExEmptyRequests() != null){
+			for(int i = 0; i < solver.input.getExEmptyRequests().length; i++){
+				ExportEmptyRequests r = solver.input.getExEmptyRequests()[i];
+				int et = 0;
+
+				if(r.getEarlyDateTimePickupAtDepot() != null){
+					et = (int)DateTimeUtils.dateTime2Int(
+							r.getEarlyDateTimePickupAtDepot());
+					et -= minusTime;
+					r.setEarlyDateTimePickupAtDepot(DateTimeUtils.unixTimeStamp2DateTime(et));
+				}
+				if(r.getLateDateTimePickupAtDepot() != null){
+					et = (int)DateTimeUtils.dateTime2Int(
+							r.getLateDateTimePickupAtDepot());
+					et -= minusTime;
+					r.setLateDateTimePickupAtDepot(DateTimeUtils.unixTimeStamp2DateTime(et));
+				}
+
+				if(r.getEarlyDateTimeLoadAtWarehouse() != null){
+					et = (int)DateTimeUtils.dateTime2Int(
+							r.getEarlyDateTimeLoadAtWarehouse());
+					et -= minusTime;
+					r.setEarlyDateTimeLoadAtWarehouse(DateTimeUtils.unixTimeStamp2DateTime(et));
+				}
+				if(r.getLateDateTimeLoadAtWarehouse() != null){
+					et = (int)DateTimeUtils.dateTime2Int(
+							r.getLateDateTimeLoadAtWarehouse());
+					et -= minusTime;
+					r.setLateDateTimeLoadAtWarehouse(DateTimeUtils.unixTimeStamp2DateTime(et));
+				}
+			}
+		}
+		if(solver.input.getExLadenRequests() != null){
+			for(int i = 0; i < solver.input.getExLadenRequests().length; i++){
+				ExportLadenRequests r = solver.input.getExLadenRequests()[i];
+				int et = 0;
+
+				if(r.getEarlyDateTimeAttachAtWarehouse() != null){
+					et = (int)DateTimeUtils.dateTime2Int(
+							r.getEarlyDateTimeAttachAtWarehouse());
+					et -= minusTime;
+					r.setEarlyDateTimeAttachAtWarehouse(DateTimeUtils.unixTimeStamp2DateTime(et));
+				}
+				if(r.getLateDateTimeUnloadAtPort() != null){
+					et = (int)DateTimeUtils.dateTime2Int(
+							r.getLateDateTimeUnloadAtPort());
+					et -= minusTime;
+					r.setLateDateTimeUnloadAtPort(DateTimeUtils.unixTimeStamp2DateTime(et));
+				}
 			}
 		}
 	}
@@ -835,26 +1022,61 @@ public class DataAnalysis {
 	
 	public ArrayList<String> getDayList(){
 		ArrayList<String> days = new ArrayList<String>();
-		days.add("1802");
-		days.add("1902");
-		days.add("2102");
-		days.add("2202");
-		days.add("2502");
-		days.add("2602");
-		days.add("2702");
+//		days.add("1802");
+//		days.add("1902");
+//		days.add("2102");
+//		days.add("2202");
+//		days.add("2502");
+//		days.add("2602");
+//		days.add("2702");
+		days.add("0103");
+		days.add("0403");
+		days.add("0503");
+		days.add("0703");
+		days.add("1203");
+		days.add("1303");
+		days.add("1803");
+		days.add("1903");
+		days.add("2103");
+		days.add("2803");
+		days.add("2903");
 		return days;
 	}
+	
+	public int getMinusTime(String time){
+		String day = time.substring(0, 2);
+		String month = time.substring(2, time.length());
+		String currentTime = "2019-" + month + "-" + day + " 00:00:00";
+		String startTime = "2019-03-01 00:00:00";
+		int a = (int)DateTimeUtils.dateTime2Int(currentTime);
+		int b = (int)DateTimeUtils.dateTime2Int(startTime);
+		return a - b;
+	}
+	
+	//chinh sua timewindow cua cac file ve ngay dau tien cua thang (editTimeWindowToFirstDay)
+	//merge cac file vao file dau tien cua thang
+	//truoc khi chay can sua trong editTimeWindowToFirstDay va ten file in/output
 	public void mergeFile(){
 		try{
 			ArrayList<String> days = getDayList();
+			for(int i = 1; i <days.size(); i++){
+				int minusTime = getMinusTime(days.get(i));
+				String dir = "data/truck-container/";
+				String inFile = dir + "input_" + days.get(i) + ".json";
+				String outFile = dir + "edited_input_" + days.get(i) + ".json";
+				solver.readData(inFile);
+				editTimeWindowToFirstDay(minusTime);
+				updateJsonFile(outFile);
+			}
+			solver = new TruckContainerSolver();
 			Gson gson = new Gson();
-			String dataFileName = "data/truck-container/input_1802.json";
+			String dataFileName = "data/truck-container/input_0103.json";
 			solver.readData(dataFileName);
 		    String bString = gson.toJson(solver.input);
 			JSONObject b = new JSONObject(bString);
 			for(int i = 1; i <days.size(); i++){
 				System.out.println("day " + days.get(i));
-				dataFileName = "data/truck-container/input_" + days.get(i) + ".json";
+				dataFileName = "data/truck-container/edited_input_" + days.get(i) + ".json";
 				TruckContainerSolver s = new TruckContainerSolver();
 				s.readData(dataFileName);
 				String aString = gson.toJson(s.input);
@@ -863,7 +1085,7 @@ public class DataAnalysis {
 			}
 		
 		
-			dataFileName = "data/truck-container/generated_input.json";
+			dataFileName = "data/truck-container/merged_input_03.json";
 			File fo = new File(dataFileName);
 			FileWriter fw = new FileWriter(fo);
 			fw.write(b.toString());
@@ -875,13 +1097,39 @@ public class DataAnalysis {
 		}
 	}
 	
+	public ArrayList<String> createDayList(){
+		ArrayList<String> days = new ArrayList<String>();
+		days.add("1802");
+		days.add("1902");
+		days.add("2102");
+		days.add("2202");
+		days.add("2502");
+		days.add("2602");
+		days.add("2702");
+		days.add("0103");
+		days.add("0403");
+		days.add("0503");
+		days.add("0703");
+		days.add("1203");
+		days.add("1303");
+		days.add("1803");
+		days.add("1903");
+		days.add("2103");
+		days.add("2803");
+		days.add("2903");
+		return days;
+	}
+	
 	public void updateData(){
-		String dataFileName = "data/truck-container/input_1802.json";
-		solver = new TruckContainerSolver();
-		solver.readData(dataFileName);
-		
-		fixError();
-		updateJsonFile(dataFileName);
+		ArrayList<String> days = createDayList();
+		for(int i = 0; i < days.size(); i++){
+			String dataFileName = "data/truck-container/input_" + days.get(i) + ".json";
+			solver = new TruckContainerSolver();
+			solver.readData(dataFileName);
+			
+			fixError();
+			updateJsonFile(dataFileName);
+		}
 	}
 
 	public static void main(String[] args){
@@ -890,10 +1138,11 @@ public class DataAnalysis {
 		//da.updateData();
 		
 		//merge cac filde du lieu thanh 1 file de test
-		//da.mergeFile();
+		da.mergeFile();
 		
 		//tao file du lieu lon de test
-		String fileName = "data/truck-container/random_big_data.json";
-		da.createJsonFile(fileName);
+		//sua cac params trong initParams function
+		//String fileName = "data/truck-container/random_big_data.json";
+		//da.createJsonFile(fileName);
 	}
 }

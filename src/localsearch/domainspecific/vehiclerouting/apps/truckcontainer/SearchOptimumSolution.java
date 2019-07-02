@@ -71,6 +71,8 @@ public class SearchOptimumSolution {
 					tcs.rejectDeliveryPoints.add(x);
 			}
 		}
+		int groupTruck = tcs.point2Group.get(tcs.XR.getStartingPointOfRoute(k));
+		tcs.group2marked.put(groupTruck, 1);
 	}
 
 	public void randomRequestRemoval(){
@@ -94,10 +96,11 @@ public class SearchOptimumSolution {
 			while(i < n){
 				if(tcs.rejectPickupPoints.size() == tcs.pickupPoints.size())
 					break;
+
 				int rand = r.nextInt(tcs.pickupPoints.size());
 				Point pickup = tcs.pickupPoints.get(rand);
-				
-				if(tcs.XR.route(pickup) == Constants.NULL_POINT)
+				int ridx = tcs.XR.route(pickup);
+				if(ridx == Constants.NULL_POINT)
 					continue;
 				Point delivery = tcs.pickup2Delivery.get(tcs.pickupPoints.get(rand));
 				tcs.mgr.performRemoveTwoPoints(pickup, delivery);
@@ -105,6 +108,10 @@ public class SearchOptimumSolution {
 				tcs.rejectDeliveryPoints.add(delivery);
 				tcs.group2marked.put(tcs.point2Group.get(pickup), 0);
 				tcs.group2marked.put(tcs.point2Group.get(delivery), 0);
+				if(tcs.XR.index(tcs.XR.getTerminatingPointOfRoute(ridx)) <= 1){
+					int groupTruck = tcs.point2Group.get(tcs.XR.getStartingPointOfRoute(ridx));
+					tcs.group2marked.put(groupTruck, 1);
+				}
 				i++;
 			}
 		}
@@ -164,9 +171,14 @@ public class SearchOptimumSolution {
 			tcs.rejectPickupPoints.add(r1);
 			tcs.rejectDeliveryPoints.add(dr1);
 			
-			tcs.mgr.performRemoveTwoPoints(r1, dr1);
+			int ridx = tcs.XR.route(r1);
 			tcs.group2marked.put(tcs.point2Group.get(r1), 0);
 			tcs.group2marked.put(tcs.point2Group.get(dr1), 0);
+			if(tcs.XR.index(tcs.XR.getTerminatingPointOfRoute(ridx)) <= 1){
+				int groupTruck = tcs.point2Group.get(tcs.XR.getStartingPointOfRoute(ridx));
+				tcs.group2marked.put(groupTruck, 1);
+			}
+			tcs.mgr.performRemoveTwoPoints(r1, dr1);
 			/*
 			 * find the request is the most related with r1
 			 */
@@ -262,11 +274,15 @@ public class SearchOptimumSolution {
 			
 			if(removedDelivery == null || removedPickup == null)
 				break;
-			
+			int ridx = tcs.XR.route(removedPickup);
 			tcs.rejectPickupPoints.add(removedPickup);
 			tcs.rejectDeliveryPoints.add(removedDelivery);
 			tcs.group2marked.put(tcs.point2Group.get(removedPickup), 0);
 			tcs.group2marked.put(tcs.point2Group.get(removedDelivery), 0);
+			if(tcs.XR.index(tcs.XR.getTerminatingPointOfRoute(ridx)) <= 1){
+				int groupTruck = tcs.point2Group.get(tcs.XR.getStartingPointOfRoute(ridx));
+				tcs.group2marked.put(groupTruck, 1);
+			}
 //			nChosed.put(removedDelivery, nChosed.get(removedDelivery)+1);
 //			nChosed.put(removedPickup, nChosed.get(removedPickup)+1);
 			
@@ -277,17 +293,17 @@ public class SearchOptimumSolution {
 	
 	public void greedyInsertion(){
 		System.out.println("greedyInsertion");
-		HashMap<Truck, Integer> truck2marked = new HashMap<Truck, Integer>();
-		Truck[] trucks = tcs.input.getTrucks();
-		for(int i = 0; i < trucks.length; i++)
-			truck2marked.put(trucks[i], 0);
-		for(int r = 1; r <= tcs.XR.getNbRoutes(); r++){
-			if(tcs.XR.index(tcs.XR.getTerminatingPointOfRoute(r)) > 1){
-				Point st = tcs.XR.getStartingPointOfRoute(r);
-				Truck truck = tcs.startPoint2Truck.get(st);
-				truck2marked.put(truck, 1);
-			}
-		}
+//		HashMap<Truck, Integer> truck2marked = new HashMap<Truck, Integer>();
+//		Truck[] trucks = tcs.input.getTrucks();
+//		for(int i = 0; i < trucks.length; i++)
+//			truck2marked.put(trucks[i], 0);
+//		for(int r = 1; r <= tcs.XR.getNbRoutes(); r++){
+//			if(tcs.XR.index(tcs.XR.getTerminatingPointOfRoute(r)) > 1){
+//				Point st = tcs.XR.getStartingPointOfRoute(r);
+//				Truck truck = tcs.startPoint2Truck.get(st);
+//				truck2marked.put(truck, 1);
+//			}
+//		}
 		
 		for(int i = 0; i < tcs.rejectPickupPoints.size(); i++){
 			Point pickup = tcs.rejectPickupPoints.get(i);
@@ -303,9 +319,9 @@ public class SearchOptimumSolution {
 			double best_objective = Double.MAX_VALUE;
 			for(int r = 1; r <= tcs.XR.getNbRoutes(); r++){
 				Point st = tcs.XR.getStartingPointOfRoute(r);
-				Truck truck = tcs.startPoint2Truck.get(st);
-
-				if(truck2marked.get(truck) == 1 && tcs.XR.index(tcs.XR.getTerminatingPointOfRoute(r)) <= 1)
+				
+				int groupTruck = tcs.point2Group.get(st);
+				if(tcs.group2marked.get(groupTruck) == 1 && tcs.XR.index(tcs.XR.getTerminatingPointOfRoute(r)) <= 1)
 					continue;
 				
 				for(Point p = st; p != tcs.XR.getTerminatingPointOfRoute(r); p = tcs.XR.next(p)){
@@ -339,10 +355,10 @@ public class SearchOptimumSolution {
 			if(pre_pick != null && pre_delivery != null){
 				tcs.mgr.performAddTwoPoints(pickup, pre_pick, delivery, pre_delivery);
 				Point st = tcs.XR.getStartingPointOfRoute(tcs.XR.route(pre_pick));
-				Truck truck = tcs.startPoint2Truck.get(st);
-				truck2marked.put(truck, 1);
 				tcs.rejectPickupPoints.remove(pickup);
 				tcs.rejectDeliveryPoints.remove(delivery);
+				int groupTruck = tcs.point2Group.get(st);
+				tcs.group2marked.put(groupTruck, 1);
 				tcs.group2marked.put(groupId, 1);
 				i--;
 			}
@@ -351,17 +367,17 @@ public class SearchOptimumSolution {
 	
 	public void greedyInsertionWithNoise(){
 		System.out.println("greedyInsertionWithNoise");
-		HashMap<Truck, Integer> truck2marked = new HashMap<Truck, Integer>();
-		Truck[] trucks = tcs.input.getTrucks();
-		for(int i = 0; i < trucks.length; i++)
-			truck2marked.put(trucks[i], 0);
-		for(int r = 1; r <= tcs.XR.getNbRoutes(); r++){
-			if(tcs.XR.index(tcs.XR.getTerminatingPointOfRoute(r)) > 1){
-				Point st = tcs.XR.getStartingPointOfRoute(r);
-				Truck truck = tcs.startPoint2Truck.get(st);
-				truck2marked.put(truck, 1);
-			}
-		}
+//		HashMap<Truck, Integer> truck2marked = new HashMap<Truck, Integer>();
+//		Truck[] trucks = tcs.input.getTrucks();
+//		for(int i = 0; i < trucks.length; i++)
+//			truck2marked.put(trucks[i], 0);
+//		for(int r = 1; r <= tcs.XR.getNbRoutes(); r++){
+//			if(tcs.XR.index(tcs.XR.getTerminatingPointOfRoute(r)) > 1){
+//				Point st = tcs.XR.getStartingPointOfRoute(r);
+//				Truck truck = tcs.startPoint2Truck.get(st);
+//				truck2marked.put(truck, 1);
+//			}
+//		}
 		
 		for(int i = 0; i < tcs.rejectPickupPoints.size(); i++){
 			Point pickup = tcs.rejectPickupPoints.get(i);
@@ -377,9 +393,10 @@ public class SearchOptimumSolution {
 			double best_objective = Double.MAX_VALUE;
 			for(int r = 1; r <= tcs.XR.getNbRoutes(); r++){
 				Point st = tcs.XR.getStartingPointOfRoute(r);
-				Truck truck = tcs.startPoint2Truck.get(st);
 
-				if(truck2marked.get(truck) == 1 && tcs.XR.index(tcs.XR.getTerminatingPointOfRoute(r)) <= 1)
+				int groupTruck = tcs.point2Group.get(st);
+
+				if(tcs.group2marked.get(groupTruck) == 1 && tcs.XR.index(tcs.XR.getTerminatingPointOfRoute(r)) <= 1)
 					continue;
 				
 				for(Point p = st; p != tcs.XR.getTerminatingPointOfRoute(r); p = tcs.XR.next(p)){
@@ -405,8 +422,8 @@ public class SearchOptimumSolution {
 			if(pre_pick != null && pre_delivery != null){
 				tcs.mgr.performAddTwoPoints(pickup, pre_pick, delivery, pre_delivery);
 				Point st = tcs.XR.getStartingPointOfRoute(tcs.XR.route(pre_pick));
-				Truck truck = tcs.startPoint2Truck.get(st);
-				truck2marked.put(truck, 1);
+				int groupTruck = tcs.point2Group.get(st);
+				tcs.group2marked.put(groupTruck, 1);
 				tcs.rejectPickupPoints.remove(pickup);
 				tcs.rejectDeliveryPoints.remove(delivery);
 				tcs.group2marked.put(groupId, 1);
@@ -417,17 +434,17 @@ public class SearchOptimumSolution {
 	
 	public void regret_n_insertion(int n){
 		System.out.println("regret insertion n = " + n);
-		HashMap<Truck, Integer> truck2marked = new HashMap<Truck, Integer>();
-		Truck[] trucks = tcs.input.getTrucks();
-		for(int i = 0; i < trucks.length; i++)
-			truck2marked.put(trucks[i], 0);
-		for(int r = 1; r <= tcs.XR.getNbRoutes(); r++){
-			if(tcs.XR.index(tcs.XR.getTerminatingPointOfRoute(r)) > 1){
-				Point st = tcs.XR.getStartingPointOfRoute(r);
-				Truck truck = tcs.startPoint2Truck.get(st);
-				truck2marked.put(truck, 1);
-			}
-		}
+//		HashMap<Truck, Integer> truck2marked = new HashMap<Truck, Integer>();
+//		Truck[] trucks = tcs.input.getTrucks();
+//		for(int i = 0; i < trucks.length; i++)
+//			truck2marked.put(trucks[i], 0);
+//		for(int r = 1; r <= tcs.XR.getNbRoutes(); r++){
+//			if(tcs.XR.index(tcs.XR.getTerminatingPointOfRoute(r)) > 1){
+//				Point st = tcs.XR.getStartingPointOfRoute(r);
+//				Truck truck = tcs.startPoint2Truck.get(st);
+//				truck2marked.put(truck, 1);
+//			}
+//		}
 		
 		for(int i = 0; i < tcs.rejectPickupPoints.size(); i++){
 			Point pickup = tcs.rejectPickupPoints.get(i);
@@ -449,9 +466,9 @@ public class SearchOptimumSolution {
 
 			for(int r = 1; r <= tcs.XR.getNbRoutes(); r++){
 				Point st = tcs.XR.getStartingPointOfRoute(r);
-				Truck truck = tcs.startPoint2Truck.get(st);
+				int groupTruck = tcs.point2Group.get(st);
 
-				if(truck2marked.get(truck) == 1 && tcs.XR.index(tcs.XR.getTerminatingPointOfRoute(r)) <= 1)
+				if(tcs.group2marked.get(groupTruck) == 1 && tcs.XR.index(tcs.XR.getTerminatingPointOfRoute(r)) <= 1)
 					continue;
 				
 				for(Point p = st; p != tcs.XR.getTerminatingPointOfRoute(r); p = tcs.XR.next(p)){
@@ -488,8 +505,8 @@ public class SearchOptimumSolution {
 			if(pre_pick != null && pre_delivery != null){
 				tcs.mgr.performAddTwoPoints(pickup, pre_pick, delivery, pre_delivery);
 				Point st = tcs.XR.getStartingPointOfRoute(tcs.XR.route(pre_pick));
-				Truck truck = tcs.startPoint2Truck.get(st);
-				truck2marked.put(truck, 1);
+				int groupTruck = tcs.point2Group.get(st);
+				tcs.group2marked.put(groupTruck, 1);
 				tcs.rejectPickupPoints.remove(pickup);
 				tcs.rejectDeliveryPoints.remove(delivery);
 				tcs.group2marked.put(groupId, 1);
@@ -500,17 +517,17 @@ public class SearchOptimumSolution {
 	
 	public void first_possible_insertion(){
 		System.out.println("first_possible_insertion");
-		HashMap<Truck, Integer> truck2marked = new HashMap<Truck, Integer>();
-		Truck[] trucks = tcs.input.getTrucks();
-		for(int i = 0; i < trucks.length; i++)
-			truck2marked.put(trucks[i], 0);
-		for(int r = 1; r <= tcs.XR.getNbRoutes(); r++){
-			if(tcs.XR.index(tcs.XR.getTerminatingPointOfRoute(r)) > 1){
-				Point st = tcs.XR.getStartingPointOfRoute(r);
-				Truck truck = tcs.startPoint2Truck.get(st);
-				truck2marked.put(truck, 1);
-			}
-		}
+//		HashMap<Truck, Integer> truck2marked = new HashMap<Truck, Integer>();
+//		Truck[] trucks = tcs.input.getTrucks();
+//		for(int i = 0; i < trucks.length; i++)
+//			truck2marked.put(trucks[i], 0);
+//		for(int r = 1; r <= tcs.XR.getNbRoutes(); r++){
+//			if(tcs.XR.index(tcs.XR.getTerminatingPointOfRoute(r)) > 1){
+//				Point st = tcs.XR.getStartingPointOfRoute(r);
+//				Truck truck = tcs.startPoint2Truck.get(st);
+//				truck2marked.put(truck, 1);
+//			}
+//		}
 		
 		for(int i = 0; i < tcs.rejectPickupPoints.size(); i++){
 			Point pickup = tcs.rejectPickupPoints.get(i);
@@ -529,9 +546,8 @@ public class SearchOptimumSolution {
 				if(finded)
 					break;
 				Point st = tcs.XR.getStartingPointOfRoute(r);
-				Truck truck = tcs.startPoint2Truck.get(st);
-
-				if(truck2marked.get(truck) == 1 && tcs.XR.index(tcs.XR.getTerminatingPointOfRoute(r)) <= 1)
+				int groupTruck = tcs.point2Group.get(st);
+				if(tcs.group2marked.get(groupTruck) == 1 && tcs.XR.index(tcs.XR.getTerminatingPointOfRoute(r)) <= 1)
 					continue;
 				
 				for(Point p = st; p != tcs.XR.getTerminatingPointOfRoute(r); p = tcs.XR.next(p)){
@@ -546,7 +562,7 @@ public class SearchOptimumSolution {
 							double cost = tcs.objective.evaluateAddTwoPoints(pickup, p, delivery, q);
 							if( cost < best_objective){
 								tcs.mgr.performAddTwoPoints(pickup, p, delivery, q);
-								truck2marked.put(truck, 1);
+								tcs.group2marked.put(groupTruck, 1);
 								tcs.rejectPickupPoints.remove(pickup);
 								tcs.rejectDeliveryPoints.remove(delivery);
 								tcs.group2marked.put(groupId, 1);

@@ -6,22 +6,15 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 
-import algorithms.matching.WeightedMaxMatching;
 import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.DistanceElement;
-import routingdelivery.model.RoutingElement;
-import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.ActionEnum;
+
 import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.Checkin;
-import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.ComboContainerMoocTruck;
 import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.Container;
-import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.ContainerCategoryEnum;
 import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.ContainerTruckMoocInput;
-import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.ContainerTruckMoocSolution;
 import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.DeliveryWarehouseInfo;
 import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.DepotContainer;
 import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.DepotMooc;
 import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.DepotTruck;
-import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.EmptyContainerFromDepotRequest;
-import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.EmptyContainerToDepotRequest;
 import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.ExportContainerRequest;
 import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.ExportContainerTruckMoocRequest;
 import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.ExportEmptyRequests;
@@ -31,27 +24,16 @@ import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.Impor
 import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.ImportEmptyRequests;
 import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.ImportLadenRequests;
 import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.Intervals;
-import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.Measure;
 import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.Mooc;
 import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.MoocGroup;
-import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.MoveOperator;
 import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.PickupWarehouseInfo;
 import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.Port;
-import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.RouteElement;
-import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.SequenceSolution;
 import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.ShipCompany;
-import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.StatisticInformation;
-import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.SwapEmptyContainerMooc;
-import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.TransportContainerLocationInfo;
-import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.TransportContainerRequest;
 import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.Truck;
-import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.TruckItinerary;
-import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.TruckRoute;
-import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.TruckRouteInfo4Request;
 import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.Warehouse;
 import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.WarehouseContainerTransportRequest;
 import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.WarehouseTransportRequest;
-import utils.DateTimeUtils;
+import localsearch.domainspecific.vehiclerouting.vrp.utils.DateTimeUtils;
 
 public class ContainerTruckMoocSolver {
 	public static final String ROOT_DIR = "C:/tmp/";
