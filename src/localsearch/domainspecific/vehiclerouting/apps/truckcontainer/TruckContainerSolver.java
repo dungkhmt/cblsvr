@@ -18,6 +18,7 @@ import com.google.gson.Gson;
 import localsearch.domainspecific.vehiclerouting.apps.sharedaride.ShareARide;
 import localsearch.domainspecific.vehiclerouting.apps.sharedaride.SolutionShareARide;
 import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.constraints.ContainerCapacityConstraint;
+import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.constraints.ContainerCarriedByTrailerConstraint;
 import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.constraints.MoocCapacityConstraint;
 import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.Container;
 import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.ContainerTruckMoocInput;
@@ -89,6 +90,8 @@ public class TruckContainerSolver {
 	public HashMap<Point, Integer> point2moocWeight;
 	public HashMap<Point, Integer> point2containerWeight;
 	
+	public HashMap<Integer, Point> route2DeliveryMooc;
+	
 	public int nVehicle;
 	public static int nRequest;
 	
@@ -126,6 +129,7 @@ public class TruckContainerSolver {
 	CEarliestArrivalTimeVR cEarliest;
 	ContainerCapacityConstraint capContCtr;
 	MoocCapacityConstraint capMoocCtr;
+	ContainerCarriedByTrailerConstraint contmoocCtr;
 	
 	NodeWeightsManager nwMooc;
 	NodeWeightsManager nwContainer;
@@ -307,6 +311,8 @@ public class TruckContainerSolver {
 		point2moocWeight = new HashMap<Point, Integer>();
 		point2containerWeight = new HashMap<Point, Integer>();
 		
+		route2DeliveryMooc = new HashMap<Integer, Point>();
+		
 		int id = 0;
 		int groupId = 0;
 		for(int i = 0; i < nVehicle; i++){
@@ -420,7 +426,10 @@ public class TruckContainerSolver {
 				delivery2Pickup.put(delivery, pickup);
 				
 				point2moocWeight.put(pickup, 0);
-				point2moocWeight.put(delivery, 0);
+				if(exEmptyRequests[i].getIsBreakRomooc())
+					point2moocWeight.put(delivery, -1);
+				else
+					point2moocWeight.put(delivery, 0);
 				
 				point2containerWeight.put(pickup, 1);
 				point2containerWeight.put(delivery, -1);
@@ -486,7 +495,10 @@ public class TruckContainerSolver {
 			point2Group.put(delivery, groupId);
 			
 			point2moocWeight.put(pickup, 0);
-			point2moocWeight.put(delivery, 0);
+			if(exLadenRequests[i].getIsBreakRomooc())
+				point2moocWeight.put(delivery, -1);
+			else
+				point2moocWeight.put(delivery, 0);
 			
 			point2containerWeight.put(pickup, 1);
 			point2containerWeight.put(delivery, -1);
@@ -593,7 +605,10 @@ public class TruckContainerSolver {
 			delivery2Pickup.put(delivery, pickup);
 			
 			point2moocWeight.put(pickup, 0);
-			point2moocWeight.put(delivery, 0);
+			if(imLadenRequests[i].getIsBreakRomooc())
+				point2moocWeight.put(delivery, -1);
+			else
+				point2moocWeight.put(delivery, 0);
 			
 			point2containerWeight.put(pickup, 1);
 			point2containerWeight.put(delivery, -1);
@@ -1311,6 +1326,27 @@ public class TruckContainerSolver {
 		}
 	}
 	
+	public Point getBestMoocForRequest(int r, Point p, Point pickup){
+		Mooc[] moocs = input.getMoocs();
+		Point st = XR.getStartingPointOfRoute(r);
+		Point bestMooc = null;
+		double min_d = Double.MAX_VALUE;
+		for(int i = 0; i < startMoocPoints.size(); i++){
+			Point stMooc = startMoocPoints.get(i);
+			int groupMooc = point2Group.get(stMooc);
+			if(group2marked.get(groupMooc) == 1
+				|| XR.route(stMooc) != Constants.NULL_POINT)
+				continue;
+			double d = getTravelTime(p.getLocationCode(), stMooc.getLocationCode())
+				+ getTravelTime(stMooc.getLocationCode(), pickup.getLocationCode());
+			if(d < min_d){
+				min_d = d;
+				bestMooc = stMooc;
+			}
+		}
+		return bestMooc;
+	}
+	
 	public Point getBestDepotMoocForRoute(int r){
 //		HashMap<Mooc, Integer> mooc2marked = new HashMap<Mooc, Integer>();
 		Mooc[] moocs = input.getMoocs();
@@ -1377,7 +1413,10 @@ public class TruckContainerSolver {
 			//add the request to route
 			Point pre_pick = null;
 			Point pre_delivery = null;
+			Point beststMooc = null;
+			Point bestenMooc = null;
 			double best_objective = Double.MAX_VALUE;
+			
 			for(int r = 1; r <= XR.getNbRoutes(); r++){
 				Point st = XR.getStartingPointOfRoute(r);
 				Truck truck = startPoint2Truck.get(st);
@@ -1416,20 +1455,81 @@ public class TruckContainerSolver {
 //							System.out.println("acc = " +  accContainerInvr.getSumWeights(p));
 //							System.out.println("weight at pickup = " + accContainerInvr.getWeights(pickup));
 //						}
+						Point stMooc = null;
+						Point enMooc = null;
+						Point pre = null;
+						System.out.println("S.evaluateAddOnePoint(" + delivery.getLocationCode()
+								+ ", " + q.getLocationCode()
+								+ ") = " + S.evaluateAddOnePoint(delivery, q));
 						if(S.evaluateAddOnePoint(delivery, q) > 0)
 							continue;
-						if(S.evaluateAddTwoPoints(pickup, p, delivery, q) == 0){
+						System.out.println("accMoocInvr.getSumWeights("
+							+ p.getLocationCode() + ") = " + accMoocInvr.getSumWeights(p));
+						
+						if(accMoocInvr.getSumWeights(p) == 0){
+							stMooc = getBestMoocForRequest(r, p, pickup);
+							mgr.performAddOnePoint(stMooc, p);
+							enMooc = start2stopMoocPoint.get(stMooc);
+						}
+						System.out.println("accMoocInvr.getWeights("
+								+ delivery.getLocationCode() + ") = "
+								+ accMoocInvr.getWeights(delivery));
+						if(accMoocInvr.getWeights(delivery) < 0){
+							enMooc = null;
+							System.out.println("accContainerInvr.getWeights("
+									+ XR.next(q).getLocationCode() + ") = "
+									+ accContainerInvr.getWeights(XR.next(q)));
+							if(accContainerInvr.getWeights(XR.next(q)) > 0){
+								stMooc = getBestMoocForRequest(r, q, delivery);
+								mgr.performAddOnePoint(stMooc, q);
+								enMooc = start2stopMoocPoint.get(stMooc);
+							}
+						}
+						System.out.println("accMoocInvr.getWeights("
+								+ XR.prev(XR.getTerminatingPointOfRoute(r)).getLocationCode() + ") = "
+								+ accMoocInvr.getWeights(XR.prev(XR.getTerminatingPointOfRoute(r))));
+						if(accMoocInvr.getWeights(XR.prev(XR.getTerminatingPointOfRoute(r))) < 0
+							&& enMooc != null){
+							pre = XR.prev(XR.getTerminatingPointOfRoute(r));
+							mgr.performAddOnePoint(enMooc, XR.prev(pre));
+							mgr.performRemoveOnePoint(pre);
+						}
+						
+						mgr.performAddTwoPoints(pickup, p, delivery, q);
+						if(S.violations() == 0){
 							double cost = objective.evaluateAddTwoPoints(pickup, p, delivery, q);
 							if( cost < best_objective){
 								best_objective = cost;
 								pre_pick = p;
 								pre_delivery = q;
+								beststMooc = stMooc;
+								bestenMooc = enMooc;
 							}
 						}
+						mgr.performRemoveTwoPoints(pickup, delivery);
+						if(stMooc != null)
+							mgr.performRemoveOnePoint(stMooc);
+						if(enMooc != null)
+							mgr.performRemoveOnePoint(delivery);
+						if(pre != null)
+							mgr.performAddOnePoint(pre, XR.prev(XR.getTerminatingPointOfRoute(r)));
 					}
 				}
 			}
 			if(pre_pick != null && pre_delivery != null){
+				if(accMoocInvr.getSumWeights(pre_pick) == 0)
+					mgr.performAddOnePoint(beststMooc, pre_pick);
+				if(accMoocInvr.getWeights(delivery) < 0)
+					if(accContainerInvr.getWeights(XR.next(pre_delivery)) > 0)
+						mgr.performAddOnePoint(beststMooc, pre_delivery);
+
+				if(accMoocInvr.getWeights(XR.prev(XR.getTerminatingPointOfRoute
+						(XR.route(pre_pick)))) < 0
+					&& bestenMooc != null){
+					Point pre = XR.prev(XR.getTerminatingPointOfRoute(XR.route(pre_pick)));
+					mgr.performAddOnePoint(bestenMooc, XR.prev(pre));
+					mgr.performRemoveOnePoint(pre);
+				}
 				mgr.performAddTwoPoints(pickup, pre_pick, delivery, pre_delivery);
 				Point st = XR.getStartingPointOfRoute(XR.route(pre_pick));
 				Truck truck = startPoint2Truck.get(st);
@@ -1504,11 +1604,15 @@ public class TruckContainerSolver {
 		capContCtr = new ContainerCapacityConstraint(XR, accContainerInvr);
 		
 		//mooc capacity constraint
-		//capMoocCtr = new MoocCapacityConstraint(XR, accMoocInvr);
+		capMoocCtr = new MoocCapacityConstraint(XR, accMoocInvr);
+		
+		//container carried by trailer constraint
+		contmoocCtr = new ContainerCarriedByTrailerConstraint(XR, accContainerInvr, accMoocInvr);
 		
 		S.post(cEarliest);
 		S.post(capContCtr);
-		//S.post(capMoocCtr);
+		S.post(capMoocCtr);
+		S.post(contmoocCtr);
 		objective = new TotalCostVR(XR,awm);
 		valueSolution = new LexMultiValues();
 		valueSolution.add(S.violations());
@@ -1641,7 +1745,7 @@ public class TruckContainerSolver {
 		days.add("2903");
 //		for(int i = 0; i < days.size(); i++){
 //			String fileName = "input_" + days.get(i) + ".json";
-			String fileName = "merged_input_03.json";
+			String fileName = "random_big_data-8reqs.json";
 			String outputfile = dir + "output/result-" + fileName + ".txt"; 
 			String dataFileName = dir + fileName;
 			TruckContainerSolver solver = new TruckContainerSolver();
@@ -1650,7 +1754,7 @@ public class TruckContainerSolver {
 			solver.stateModel();
 			solver.greedyInitSolution();
 	
-			solver.adaptiveSearchOperators(outputfile);
+			//solver.adaptiveSearchOperators(outputfile);
 			solver.printSolution(outputfile);
 //		}
 	}

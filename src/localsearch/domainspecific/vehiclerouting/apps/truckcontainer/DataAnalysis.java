@@ -95,21 +95,21 @@ public class DataAnalysis {
 	private ConfigParam params;
 	
 	public void initParams(){
-		nbEE = 100;
-		nbEL = 100;
-		nbIE = 100;
-		nbIL = 100;
+		nbEE = 2;
+		nbEL = 2;
+		nbIE = 2;
+		nbIL = 2;
 		
-		nbLogicalPoints = 1400;
+		nbLogicalPoints = 500;
 		nbRequests = nbEE + nbEL + nbIE + nbIL;
 		nbTrucks = nbRequests;
 		nbMoocs = nbTrucks;
 		nbContainers = nbRequests;
-		nbDepotTrucks = (int)(nbTrucks / 50);
-		nbDepotMoocs = (int)(nbMoocs / 50);
-		nbDepotContainers = (int)(nbContainers / 50);
-		nbWarehouses = nbRequests/50;
-		nbPorts = (nbEL + nbIL)/50;
+		nbDepotTrucks = (int)(nbTrucks / 50) >= 5 ? (int)(nbTrucks / 50) : 5;
+		nbDepotMoocs = (int)(nbMoocs / 50) >= 5 ? (int)(nbMoocs / 50) : 5;
+		nbDepotContainers = (int)(nbContainers / 50) >= 5 ? (int)(nbContainers / 50) : 5;
+		nbWarehouses = (int)(nbRequests / 50) >= 5 ? (int)(nbRequests / 50) : 5;
+		nbPorts = (nbEL + nbIL)/50 >= 5 ? (nbEL + nbIL)/50 : 5;
 		
 		beginTime = 1560250800;
 		minEarliestTime = 1560272400;
@@ -1138,11 +1138,11 @@ public class DataAnalysis {
 		//da.updateData();
 		
 		//merge cac filde du lieu thanh 1 file de test
-		da.mergeFile();
+		//da.mergeFile();
 		
 		//tao file du lieu lon de test
 		//sua cac params trong initParams function
-		//String fileName = "data/truck-container/random_big_data.json";
-		//da.createJsonFile(fileName);
+		String fileName = "data/truck-container/random_big_data-8reqs.json";
+		da.createJsonFile(fileName);
 	}
 }
