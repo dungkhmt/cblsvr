@@ -193,25 +193,37 @@ public class MoocCapacityConstraint implements IConstraintVR {
 	@Override
 	public void propagateAddOnePoint(Point x, Point y) {
 		// TODO Auto-generated method stub
-		
+		violations = 0;
+		int r = XR.route(y);
+		for(Point p = XR.getStartingPointOfRoute(r); p != XR.getTerminatingPointOfRoute(r); p = XR.next(p)){
+			int wY = (int)(accMoocInvr.getSumWeights(p));
+			if(wY > 2)
+				violations += wY - 2;
+		}
 	}
 
 	@Override
 	public void propagateRemoveOnePoint(Point x) {
 		// TODO Auto-generated method stub
-		
+		violations = 0;
 	}
 
 	@Override
 	public void propagateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
 		// TODO Auto-generated method stub
-		
+		violations = 0;
+		int r = XR.route(y1);
+		for(Point p = XR.getStartingPointOfRoute(r); p != XR.getTerminatingPointOfRoute(r); p = XR.next(p)){
+			int wY = (int)(accMoocInvr.getSumWeights(p));
+			if(wY > 2)
+				violations += wY - 2;
+		}
 	}
 
 	@Override
 	public void propagateRemoveTwoPoints(Point x1, Point x2) {
 		// TODO Auto-generated method stub
-		
+		violations = 0;
 	}
 
 	@Override
@@ -229,7 +241,7 @@ public class MoocCapacityConstraint implements IConstraintVR {
 	@Override
 	public int violations() {
 		// TODO Auto-generated method stub
-		return 0;
+		return violations;
 	}
 
 	@Override
@@ -387,16 +399,16 @@ public class MoocCapacityConstraint implements IConstraintVR {
 	@Override
 	public int evaluateAddOnePoint(Point x, Point y) {
 		// TODO Auto-generated method stub
-		violations = 0;
+		int vio = 0;
 
 		for(Point p = y; p != XR.getTerminatingPointOfRoute(XR.route(y)); p = XR.next(p)){
 			int wY = (int)(accMoocInvr.getSumWeights(p) 
 					+ accMoocInvr.getWeights(x));
-			if(wY > 1)
-				violations += wY - 1;
+			if(wY > 2)
+				vio += wY - 2;
 		}
 		
-		return violations;
+		return vio;
 	}
 
 	@Override
@@ -408,21 +420,21 @@ public class MoocCapacityConstraint implements IConstraintVR {
 	@Override
 	public int evaluateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
 		// TODO Auto-generated method stub
-		violations = 0;
+		int vio = 0;
 		for(Point p = y1; p != XR.next(y2); p = XR.next(p)){
 			int wY1 = (int)(accMoocInvr.getSumWeights(p) + accMoocInvr.getWeights(x1));
 			if(wY1 > 1)
-				violations += wY1 - 1;
+				vio += wY1 - 1;
 		}
 		for(Point p = y2; p != XR.getTerminatingPointOfRoute(XR.route(y1)); p = XR.next(p)){
 			int wY2 = (int)(accMoocInvr.getSumWeights(p) 
 					+ accMoocInvr.getWeights(x1)
 					+ accMoocInvr.getWeights(x2));
-			if(wY2 > 1)
-				violations += wY2 - 1;
+			if(wY2 > 2)
+				vio += wY2 - 2;
 		}
 		
-		return violations;
+		return vio;
 	}
 
 	@Override

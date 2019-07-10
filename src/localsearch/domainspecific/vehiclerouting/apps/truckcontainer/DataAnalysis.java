@@ -95,12 +95,11 @@ public class DataAnalysis {
 	private ConfigParam params;
 	
 	public void initParams(){
-		nbEE = 2;
-		nbEL = 2;
-		nbIE = 2;
-		nbIL = 2;
+		nbEE = 50;
+		nbEL = 50;
+		nbIE = 50;
+		nbIL = 50;
 		
-		nbLogicalPoints = 500;
 		nbRequests = nbEE + nbEL + nbIE + nbIL;
 		nbTrucks = nbRequests;
 		nbMoocs = nbTrucks;
@@ -114,9 +113,13 @@ public class DataAnalysis {
 		beginTime = 1560250800;
 		minEarliestTime = 1560272400;
 		maxLatestTime = 1560531599;
-		rangeTime = 25200;
+		rangeTime = 259200;
 		duration = (int)(maxLatestTime - minEarliestTime);
 		input = new ContainerTruckMoocInput();
+		
+		nbLogicalPoints = nbTrucks + nbMoocs + nbContainers
+				+ nbDepotTrucks + nbDepotMoocs + nbDepotContainers
+				+ nbWarehouses + nbPorts;
 	}
 	
 	//tao code cho cac entities (location code trung voi code) 
@@ -1142,7 +1145,8 @@ public class DataAnalysis {
 		
 		//tao file du lieu lon de test
 		//sua cac params trong initParams function
-		String fileName = "data/truck-container/random_big_data-8reqs.json";
+		
+		String fileName = "data/truck-container/random_big_data-200reqs.json";
 		da.createJsonFile(fileName);
 	}
 }

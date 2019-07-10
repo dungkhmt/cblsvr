@@ -1691,16 +1691,44 @@ public class VarRoutesVR{
     	update(route[x]);
     }
     
+    private void performAddTwoPoint(int x1, int y1, int x2, int y2){
+    	copySolution();
+    	if(y1 != y2){
+    		prev[next[y1]] = x1;
+        	next[x1] = next[y1];
+        	prev[x1] = y1;
+        	next[y1] = x1;
+        	route[x1] = route[y1];
+        	
+    		prev[next[y2]] = x2;
+        	next[x2] = next[y2];
+        	prev[x2] = y2;
+        	next[y2] = x2;
+        	route[x2] = route[y2];
+    	}
+    	else{
+    		prev[next[y1]] = x2;
+    		next[x2] = next[y1];
+    		prev[x2] = x1;
+    		next[x1] = x2;
+    		prev[x1] = y1;
+    		next[y1] = x1;
+    		route[x1] = route[y1];
+    		route[x2] = route[y1];
+    	}
+    	update(route[x1]);
+    }
+    
     public void performAddTwoPoints(Point x1, Point y1, Point x2, Point y2){
     	if (!checkPerformAddTwoPoints(x1, y1, x2, y2)) {
     		System.out.println(name() + ":: Error performAddTwoPoints: " + x1 + " " + y1 + " " + x2 + " " + y2 + "\n" + toString());
     		System.exit(-1);
     	}
-    	performAddOnePoint(x1, y1);
-    	if(y1 != y2)
-    		performAddOnePoint(x2, y2);
-    	else
-    		performAddOnePoint(x2, x1);
+    	int idx1 = getIndex(x1);
+    	int idy1 = getIndex(y1);
+    	int idx2 = getIndex(x2);
+    	int idy2 = getIndex(y2);
+    	performAddTwoPoint(idx1, idy1, idx2, idy2);
     }
     
     public boolean checkPerformRemoveOnePoint(Point x) {
@@ -1740,8 +1768,20 @@ public class VarRoutesVR{
     		System.out.println(name() + ":: Error performRemoveTwoPoints: " + x1 + " " + x2 + "\n" + toString());
     		System.exit(-1);
     	}
-    	performRemoveOnePoint(x2);
-    	performRemoveOnePoint(x1);
+    	int idx1 = getIndex(x1);
+    	int idx2 = getIndex(x2);
+    	copySolution();
+    	next[prev[idx1]] = next[idx1];
+    	prev[next[idx1]] = prev[idx1];
+    	next[idx1] = prev[idx1] = route[idx1] = Constants.NULL_POINT;
+    	update(old_route[idx1]);
+    	index[idx1] = Constants.NULL_POINT;
+    	
+    	next[prev[idx2]] = next[idx2];
+    	prev[next[idx2]] = prev[idx2];
+    	next[idx2] = prev[idx2] = route[idx2] = Constants.NULL_POINT;
+    	update(old_route[idx2]);
+    	index[idx2] = Constants.NULL_POINT;
     }
     
     public boolean checkPerformAddRemovePoints(Point x, Point y, Point z){

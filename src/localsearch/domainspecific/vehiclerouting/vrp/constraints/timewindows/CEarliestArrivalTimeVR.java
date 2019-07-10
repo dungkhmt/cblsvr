@@ -76,7 +76,6 @@ public class CEarliestArrivalTimeVR implements IConstraintVR {
 			}while(true);
 			//System.out.println();
 		}
-		System.out.println("vio = "+violations);
 	}
 
 	private void propagate(int k)

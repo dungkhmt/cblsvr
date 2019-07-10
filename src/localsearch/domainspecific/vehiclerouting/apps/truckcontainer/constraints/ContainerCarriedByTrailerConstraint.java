@@ -197,25 +197,39 @@ public class ContainerCarriedByTrailerConstraint implements IConstraintVR {
 	@Override
 	public void propagateAddOnePoint(Point x, Point y) {
 		// TODO Auto-generated method stub
-		
+		violations = 0;
+		int r = XR.route(y);
+		for(Point p = XR.getStartingPointOfRoute(r); p != XR.getTerminatingPointOfRoute(r); p = XR.next(p)){
+			int cY1 = (int)(accContainerInvr.getSumWeights(p));
+			int mY1 = (int)(accMoocInvr.getSumWeights(p));
+			if(mY1 < cY1)
+				violations += cY1 - mY1;
+		}
 	}
 
 	@Override
 	public void propagateRemoveOnePoint(Point x) {
 		// TODO Auto-generated method stub
-		
+		violations = 0;
 	}
 
 	@Override
 	public void propagateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
 		// TODO Auto-generated method stub
-		
+		violations = 0;
+		int r = XR.route(y1);
+		for(Point p = XR.getStartingPointOfRoute(r); p != XR.getTerminatingPointOfRoute(r); p = XR.next(p)){
+			int cY1 = (int)(accContainerInvr.getSumWeights(p));
+			int mY1 = (int)(accMoocInvr.getSumWeights(p));
+			if(mY1 < cY1)
+				violations += cY1 - mY1;
+		}
 	}
 
 	@Override
 	public void propagateRemoveTwoPoints(Point x1, Point x2) {
 		// TODO Auto-generated method stub
-		
+		violations = 0;
 	}
 
 	@Override
@@ -233,7 +247,7 @@ public class ContainerCarriedByTrailerConstraint implements IConstraintVR {
 	@Override
 	public int violations() {
 		// TODO Auto-generated method stub
-		return 0;
+		return violations;
 	}
 
 	@Override
@@ -391,15 +405,15 @@ public class ContainerCarriedByTrailerConstraint implements IConstraintVR {
 	@Override
 	public int evaluateAddOnePoint(Point x, Point y) {
 		// TODO Auto-generated method stub
-		violations = 0;
+		int vio = 0;
 
 		for(Point p = y; p != XR.getTerminatingPointOfRoute(XR.route(y)); p = XR.next(p)){
 			int cY1 = (int)(accContainerInvr.getSumWeights(p) + accContainerInvr.getWeights(x));
 			int mY1 = (int)(accMoocInvr.getSumWeights(p) + accMoocInvr.getWeights(x));
 			if(mY1 < cY1)
-				violations += cY1 - mY1;
+				vio += cY1 - mY1;
 		}
-		return violations;
+		return vio;
 	}
 
 	@Override
@@ -411,13 +425,13 @@ public class ContainerCarriedByTrailerConstraint implements IConstraintVR {
 	@Override
 	public int evaluateAddTwoPoints(Point x1, Point y1, Point x2, Point y2) {
 		// TODO Auto-generated method stub
-		violations = 0;
+		int vio = 0;
 
 		for(Point p = y1; p != XR.next(y2); p = XR.next(p)){
 			int cY1 = (int)(accContainerInvr.getSumWeights(p) + accContainerInvr.getWeights(x1));
 			int mY1 = (int)(accMoocInvr.getSumWeights(p) + accMoocInvr.getWeights(x1));
 			if(mY1 < cY1)
-				violations += cY1 - mY1;
+				vio += cY1 - mY1;
 		}
 		for(Point p = y2; p != XR.getTerminatingPointOfRoute(XR.route(y1)); p = XR.next(p)){
 			int cY2 = (int)(accContainerInvr.getSumWeights(p) 
@@ -427,10 +441,10 @@ public class ContainerCarriedByTrailerConstraint implements IConstraintVR {
 					+ accMoocInvr.getWeights(x1)
 					+ accMoocInvr.getWeights(x2));
 			if(mY2 < cY2)
-				violations += cY2 - mY2;
+				vio += cY2 - mY2;
 		}
 		
-		return violations;
+		return vio;
 	}
 
 	@Override
