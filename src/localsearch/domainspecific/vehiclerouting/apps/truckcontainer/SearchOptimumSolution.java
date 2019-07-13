@@ -70,6 +70,7 @@ public class SearchOptimumSolution {
 				else 
 					tcs.rejectDeliveryPoints.add(x);
 			}
+			tcs.nChosed.put(x, tcs.nChosed.get(x)+1);
 		}
 		int groupTruck = tcs.point2Group.get(tcs.XR.getStartingPointOfRoute(k));
 		tcs.group2marked.put(groupTruck, 1);
@@ -102,6 +103,8 @@ public class SearchOptimumSolution {
 				int ridx = tcs.XR.route(pickup);
 				if(ridx == Constants.NULL_POINT)
 					continue;
+				if(!tcs.removeAllowed.get(pickup))
+					continue;
 				Point delivery = tcs.pickup2Delivery.get(tcs.pickupPoints.get(rand));
 				tcs.mgr.performRemoveTwoPoints(pickup, delivery);
 				tcs.rejectPickupPoints.add(pickup);
@@ -113,6 +116,8 @@ public class SearchOptimumSolution {
 					tcs.group2marked.put(groupTruck, 1);
 				}
 				i++;
+				tcs.nChosed.put(pickup, tcs.nChosed.get(pickup)+1);
+				tcs.nChosed.put(delivery, tcs.nChosed.get(delivery)+1);
 			}
 		}
 	}
@@ -132,7 +137,7 @@ public class SearchOptimumSolution {
 		do{
 			ipRemove = R.nextInt(tcs.pickupPoints.size());
 			r1 = tcs.pickupPoints.get(ipRemove);	
-		}while(tcs.rejectPickupPoints.contains(r1));
+		}while(tcs.rejectPickupPoints.contains(r1) || !tcs.removeAllowed.get(r1));
 		
 		Point dr1 = tcs.pickup2Delivery.get(r1);
 		
@@ -170,6 +175,8 @@ public class SearchOptimumSolution {
 			
 			tcs.rejectPickupPoints.add(r1);
 			tcs.rejectDeliveryPoints.add(dr1);
+			tcs.nChosed.put(r1, tcs.nChosed.get(r1)+1);
+			tcs.nChosed.put(dr1, tcs.nChosed.get(dr1)+1);
 			
 			int ridx = tcs.XR.route(r1);
 			tcs.group2marked.put(tcs.point2Group.get(r1), 0);
@@ -185,7 +192,8 @@ public class SearchOptimumSolution {
 			for(int k=1; k<=tcs.XR.getNbRoutes(); k++){
 				Point x = tcs.XR.getStartingPointOfRoute(k);
 				for(x = tcs.XR.next(x); x != tcs.XR.getTerminatingPointOfRoute(k); x = tcs.XR.next(x)){
-
+					if(!tcs.removeAllowed.get(x))
+						continue;
 					Point dX = tcs.pickup2Delivery.get(x);
 					if(dX == null)
 						continue;
@@ -234,6 +242,8 @@ public class SearchOptimumSolution {
 			
 			r1 = removedPickup;
 			dr1 = removedDelivery;
+			tcs.nChosed.put(r1, tcs.nChosed.get(r1)+1);
+			tcs.nChosed.put(dr1, tcs.nChosed.get(dr1)+1);
 		}
 		
 	}
@@ -255,8 +265,8 @@ public class SearchOptimumSolution {
 				Point x = tcs.XR.getStartingPointOfRoute(k);
 				for(x = tcs.XR.next(x); x != tcs.XR.getTerminatingPointOfRoute(k); x = tcs.XR.next(x)){
 					
-//					if(!removeAllowed.get(x))
-//						continue;
+					if(!tcs.removeAllowed.get(x))
+						continue;
 					
 					Point dX = tcs.pickup2Delivery.get(x);
 					if(dX == null){
@@ -277,6 +287,10 @@ public class SearchOptimumSolution {
 			int ridx = tcs.XR.route(removedPickup);
 			tcs.rejectPickupPoints.add(removedPickup);
 			tcs.rejectDeliveryPoints.add(removedDelivery);
+			
+			tcs.nChosed.put(removedDelivery, tcs.nChosed.get(removedDelivery)+1);
+			tcs.nChosed.put(removedPickup, tcs.nChosed.get(removedPickup)+1);
+			
 			tcs.group2marked.put(tcs.point2Group.get(removedPickup), 0);
 			tcs.group2marked.put(tcs.point2Group.get(removedDelivery), 0);
 			if(tcs.XR.index(tcs.XR.getTerminatingPointOfRoute(ridx)) <= 1){
@@ -288,6 +302,35 @@ public class SearchOptimumSolution {
 			
 			
 			tcs.mgr.performRemoveTwoPoints(removedPickup, removedDelivery);
+		}
+	}
+	
+	public void forbidden_removal(int nRemoval){
+		
+		//ShareARide.LOGGER.log(Level.INFO,nChosed.toString());
+		
+		for(int i=0; i < tcs.pickupPoints.size(); i++){
+			Point pi = tcs.pickupPoints.get(i);
+			Point pj = tcs.pickup2Delivery.get(pi);
+			
+			if(tcs.nChosed.get(pi) > tcs.nTabu){
+				tcs.removeAllowed.put(pi, false);
+				tcs.removeAllowed.put(pj, false);
+			}
+		}
+		
+		switch(nRemoval){
+			case 0: routeRemoval(); break;
+			case 1: randomRequestRemoval(); break;
+			case 2: shaw_removal(); break;
+			case 3: worst_removal(); break;
+		}
+		
+		for(int i=0; i < tcs.pickupPoints.size(); i++){
+			Point pi = tcs.pickupPoints.get(i);
+			tcs.removeAllowed.put(pi, true);
+			Point pj = tcs.pickup2Delivery.get(pi);
+			tcs.removeAllowed.put(pj, true);
 		}
 	}
 	

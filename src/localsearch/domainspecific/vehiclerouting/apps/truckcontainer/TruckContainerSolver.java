@@ -137,6 +137,27 @@ public class TruckContainerSolver {
 	AccumulatedWeightNodesVR accContainerInvr;
 	HashMap<Point, IFunctionVR> accDisF;
 	
+	HashMap<Point, Integer> nChosed;
+	HashMap<Point, Boolean> removeAllowed;
+	
+	private int nRemovalOperators = 13;
+	private int nInsertionOperators = 14;
+	
+	//parameters
+	public int lower_removal;
+	public int upper_removal;
+	public int sigma1 = 3;
+	public int sigma2 = 1;
+	public int sigma3 = -5;
+	public double rp = 0.1;
+	public int nw = 1;
+	public double shaw1st = 0.5;
+	public double shaw2nd = 0.2;
+	public double shaw3rd = 0.1;
+	public double temperature = 200;
+	public double cooling_rate = 0.9995;
+	public int nTabu = 5;
+	
 	int INF_TIME = Integer.MAX_VALUE;
 	public static double MAX_TRAVELTIME;
 	public static final int START_TRUCK = 0;
@@ -161,6 +182,34 @@ public class TruckContainerSolver {
 	    	int nIter = 100000;
 	    	int maxStable = 1000;
 	    	int iS = 0;
+	    	
+	    	initParamsForALNS();
+	    	//insertion operators selection probabilities
+			double[] pti = new double[nInsertionOperators];
+			//removal operators selection probabilities
+			double[] ptd = new double[nRemovalOperators];
+			
+			//wi - number of times used during last iteration
+			int[] wi = new int[nInsertionOperators];
+			int[] wd = new int[nRemovalOperators];
+			
+			//pi_i - score of operator
+			int[] si = new int[nInsertionOperators];
+			int[] sd = new int[nRemovalOperators];
+			
+			
+			//init probabilites
+			for(int i=0; i<nInsertionOperators; i++){
+				pti[i] = 1.0/nInsertionOperators;
+				wi[i] = 1;
+				si[i] = 0;
+			}
+			for(int i=0; i<nRemovalOperators; i++){
+				ptd[i] = 1.0/nRemovalOperators;
+				wd[i] = 1;
+				sd[i] = 0;
+			}
+	    	
 	    	fo.println("time limit = " + timeLimit + ", nbIters = " + nIter + ", maxStable = " + maxStable);
 	    	
 	    	SearchOptimumSolution opt = new SearchOptimumSolution(this);
@@ -191,7 +240,9 @@ public class TruckContainerSolver {
 					iS = 0;
 				}
 				else{
-					i_selected_removal = r.nextInt(4);
+					i_selected_removal = get_operator(ptd);
+					//int i_selected_removal = 1;
+					wd[i_selected_removal]++;
 					switch(i_selected_removal){
 						case 0: opt.routeRemoval(); break;
 						case 1: opt.randomRequestRemoval(); break;
@@ -201,7 +252,9 @@ public class TruckContainerSolver {
 				}
 				
 				
-				int i_selected_insertion = r.nextInt(4);
+				int i_selected_insertion = get_operator(pti);
+				//int i_selected_insertion = 3;
+				wi[i_selected_insertion]++;
 				switch(i_selected_insertion){
 					case 0: opt.greedyInsertion(); break;
 					case 1: opt.greedyInsertionWithNoise(); break;
@@ -215,11 +268,10 @@ public class TruckContainerSolver {
 				double new_cost = objective.getValue();
 				int new_nbTrucks = getNbUsedTrucks();
 				int current_nb_reject_points = current_solution.get_rejectPickupPoints().size();
-				
+
 				if( new_nb_reject_points < current_nb_reject_points
 						|| (new_nb_reject_points == current_nb_reject_points && new_nbTrucks < current_nbTrucks)
 						|| (new_nb_reject_points == current_nb_reject_points && new_nbTrucks == current_nbTrucks && new_cost < current_cost)){
-					
 					int best_nb_reject_points = best_solution.get_rejectPickupPoints().size();
 					int best_nbTrucks = best_solution.get_nbTrucks();
 					
@@ -234,6 +286,14 @@ public class TruckContainerSolver {
 							+ " " + i_selected_removal + " "
 							+ System.currentTimeMillis()/1000 + " "
 							+ best_cost + " " + getNbRejectedRequests() + " " + getNbUsedTrucks());
+						si[i_selected_insertion] += sigma1;
+						if(i_selected_removal >= 0)
+							sd[i_selected_removal] += sigma1;
+					}
+					else{
+						si[i_selected_insertion] += sigma2;
+						if(i_selected_removal >= 0)
+							sd[i_selected_removal] += sigma2;
 					}
 				}
 				/*
@@ -242,11 +302,35 @@ public class TruckContainerSolver {
 				 * 			copy current current solution to new solution if don't change solution
 				 */
 				else{
-					current_solution.copy2XR(XR);
-					group2marked = current_solution.get_group2marked();
-					rejectPickupPoints = current_solution.get_rejectPickupPoints();
-					rejectDeliveryPoints = current_solution.get_rejectDeliveryPoints();
+					si[i_selected_insertion] += sigma3;
+					if(i_selected_removal >= 0)
+						sd[i_selected_removal] += sigma3;
+					double v = Math.exp(-(new_cost-current_cost)/temperature);
+					double e = Math.random();
+					if(e >= v){
+						current_solution.copy2XR(XR);
+						group2marked = current_solution.get_group2marked();
+						rejectPickupPoints = current_solution.get_rejectPickupPoints();
+						rejectDeliveryPoints = current_solution.get_rejectDeliveryPoints();
+					}
 					iS++;
+				}
+				
+				temperature = cooling_rate*temperature;
+				
+				//update probabilities
+				if(it % nw == 0){
+					for(int i=0; i<nInsertionOperators; i++){
+						pti[i] = Math.max(0, pti[i]*(1-rp) + rp*si[i]/wi[i]);
+						//wi[i] = 1;
+						//si[i] = 0;
+					}
+					
+					for(int i=0; i<nRemovalOperators; i++){
+						ptd[i] = Math.max(0, ptd[i]*(1-rp) + rp*sd[i]/wd[i]);
+						//wd[i] = 1;
+						//sd[i] = 0;
+					}
 				}
 			}
 			best_solution.copy2XR(XR);
@@ -254,6 +338,10 @@ public class TruckContainerSolver {
 			
 			rejectPickupPoints = best_solution.get_rejectPickupPoints();
 			rejectDeliveryPoints = best_solution.get_rejectDeliveryPoints();
+			
+			fo.println(it + " -1 -1 "
+					+ System.currentTimeMillis()/1000 + " "
+					+ best_cost + " " + getNbRejectedRequests() + " " + getNbUsedTrucks());
 			fo.close();
 		}catch(Exception e){
 			System.out.println(e);
@@ -690,6 +778,25 @@ public class TruckContainerSolver {
 			nwContainer.setWeight(points.get(i), point2containerWeight.get(points.get(i)));
 		}
 		MAX_TRAVELTIME = max_time;
+	}
+	
+	public void initParamsForALNS(){
+		nRemovalOperators = 4;
+		nInsertionOperators = 4;
+		lower_removal = (int) 1*(nRequest)/100;
+		upper_removal = (int) 15*(nRequest)/100;
+		
+		nChosed = new HashMap<Point, Integer>();
+		removeAllowed = new HashMap<Point, Boolean>();
+		for(int i=0; i<pickupPoints.size(); i++){
+			Point pi = pickupPoints.get(i);
+			nChosed.put(pi, 0);
+			removeAllowed.put(pi, true);
+			
+			Point pj = pickup2Delivery.get(pi);
+			nChosed.put(pj, 0);
+			removeAllowed.put(pj, true);
+		}
 	}
 	
 	public void insertMoocForAllRoutes(){
@@ -1383,9 +1490,31 @@ public class TruckContainerSolver {
 		}
 	}
 	
+	//roulette-wheel mechanism
+ 	private int get_operator(double[] p){
+ 		//String message = "probabilities input \n";
+ 		
+ 		int n = p.length;
+		double[] s = new double[n];
+		s[0] = 0+p[0];
+
+		
+		for(int i=1; i<n; i++)
+			s[i] = s[i-1]+p[i]; 
+		
+		double r = s[n-1]*Math.random();
+		
+		if(r>=0 && r <= s[0])
+			return 0;
+		
+		for(int i=1; i<n; i++){
+			if(r>s[i-1] && r<=s[i])
+				return i;
+		}
+		return -1;
+	}
+	
 	public Point getBestMoocForRequest(int r, Point p, Point pickup){
-		Mooc[] moocs = input.getMoocs();
-		Point st = XR.getStartingPointOfRoute(r);
 		Point bestMooc = null;
 		double min_d = Double.MAX_VALUE;
 		for(int i = 0; i < startMoocPoints.size(); i++){
@@ -1894,28 +2023,28 @@ public class TruckContainerSolver {
 	
 	public static void main(String[] args){
 		String dir = "data/truck-container/";
-		ArrayList<String> days = new ArrayList<String>();
-		days.add("1802");
-		days.add("1902");
-		days.add("2102");
-		days.add("2202");
-		days.add("2502");
-		days.add("2602");
-		days.add("2702");
-		days.add("0103");
-		days.add("0403");
-		days.add("0503");
-		days.add("0703");
-		days.add("1203");
-		days.add("1303");
-		days.add("1803");
-		days.add("1903");
-		days.add("2103");
-		days.add("2803");
-		days.add("2903");
+//		ArrayList<String> days = new ArrayList<String>();
+//		days.add("1802");
+//		days.add("1902");
+//		days.add("2102");
+//		days.add("2202");
+//		days.add("2502");
+//		days.add("2602");
+//		days.add("2702");
+//		days.add("0103");
+//		days.add("0403");
+//		days.add("0503");
+//		days.add("0703");
+//		days.add("1203");
+//		days.add("1303");
+//		days.add("1803");
+//		days.add("1903");
+//		days.add("2103");
+//		days.add("2803");
+//		days.add("2903");
 //		for(int i = 0; i < days.size(); i++){
 //			String fileName = "input_" + days.get(i) + ".json";
-			String fileName = "merged_input_03_addTruck.json";
+			String fileName = "random_big_data.json";
 			String outputfile = dir + "output/result-" + fileName + ".txt"; 
 			String dataFileName = dir + fileName;
 			TruckContainerSolver solver = new TruckContainerSolver();
