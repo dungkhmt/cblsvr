@@ -35,7 +35,7 @@ public class SearchOptimumSolution {
 		this.tcs = tcs;
 		
 		lower_removal = (int) 1*(tcs.nRequest)/100;
-		upper_removal = (int) tcs.nRequest/2;
+		upper_removal = (int) 30*tcs.nRequest/100;
 	}
 	
 	public void allRemoval(){
@@ -76,8 +76,8 @@ public class SearchOptimumSolution {
 	}
 
 	public void randomRequestRemoval(){
-		Random r = new Random();
-		int n = r.nextInt(tcs.pickupPoints.size()) + 1;
+		Random R = new Random();
+		int n = R.nextInt(upper_removal-lower_removal+1) + lower_removal;
 		System.out.println("randomReqRemoval:number of removed request = " + n);
 		if(n >= tcs.pickupPoints.size()){
 			tcs.mgr.performRemoveAllClientPoints();
@@ -97,7 +97,7 @@ public class SearchOptimumSolution {
 				if(tcs.rejectPickupPoints.size() == tcs.pickupPoints.size())
 					break;
 
-				int rand = r.nextInt(tcs.pickupPoints.size());
+				int rand = R.nextInt(tcs.pickupPoints.size());
 				Point pickup = tcs.pickupPoints.get(rand);
 				int ridx = tcs.XR.route(pickup);
 				if(ridx == Constants.NULL_POINT)

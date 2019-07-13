@@ -95,10 +95,10 @@ public class DataAnalysis {
 	private ConfigParam params;
 	
 	public void initParams(){
-		nbEE = 50;
-		nbEL = 50;
-		nbIE = 50;
-		nbIL = 50;
+		nbEE = 100;
+		nbEL = 100;
+		nbIE = 100;
+		nbIL = 100;
 		
 		nbRequests = nbEE + nbEL + nbIE + nbIL;
 		nbTrucks = nbRequests;
@@ -517,8 +517,10 @@ public class DataAnalysis {
 		if(truck != null && mooc != null){
 			return solver.getTravelTime(truck.getDepotTruckLocationCode(),
 					mooc.getDepotMoocLocationCode())
+					+ solver.input.getParams().getLinkMoocDuration()
 					+ solver.getTravelTime(mooc.getDepotMoocLocationCode(),
-					locationCode);
+					locationCode)
+					+ solver.input.getParams().getLinkEmptyContainerDuration();
 		}
 		return 0;
 	}
@@ -1134,6 +1136,73 @@ public class DataAnalysis {
 			updateJsonFile(dataFileName);
 		}
 	}
+	
+	public void addTrucksMoocsToList(String dataFileName, String outFileName){
+		solver = new TruckContainerSolver();
+		solver.readData(dataFileName);
+		
+		Truck[] trucks = solver.input.getTrucks();
+		Truck[] newTrucks = new Truck[trucks.length*6];
+		int maxId = -1;
+		int k = -1;
+		for(int i = 0; i < trucks.length; i++){
+			k++;
+			newTrucks[k] = trucks[i];
+			if(maxId < trucks[i].getId())
+				maxId = trucks[i].getId();
+		}
+		for(int j = 0; j < 5; j++){
+			for(int i = 0; i < trucks.length; i++){
+				k++;
+				Truck truck = new Truck(trucks[i].getId(), trucks[i].getCode(),
+						trucks[i].getWeight(), trucks[i].getDriverID(),
+						trucks[i].getDriverCode(), trucks[i].getDriverName(),
+						trucks[i].getDepotTruckCode(), trucks[i].getDepotTruckLocationCode(),
+						trucks[i].getStartWorkingTime(), trucks[i].getEndWorkingTime(),
+						trucks[i].getStatus(), trucks[i].getReturnDepotCodes(), trucks[i].getIntervals());
+				truck.setId(maxId++);
+				String code = "T-" + maxId;
+				truck.setCode(code);
+				newTrucks[k] = truck;
+			}
+		}
+		solver.input.setTrucks(newTrucks);
+		
+		Mooc[] moocs = solver.input.getMoocs();
+		Mooc[] newMoocs = new Mooc[moocs.length*3];
+		maxId = -1;
+		k = -1;
+		for(int i = 0; i < moocs.length; i++){
+			k++;
+			newMoocs[k] = moocs[i];
+			if(maxId < moocs[i].getId())
+				maxId = moocs[i].getId();
+		}
+		for(int j = 0; j < 2; j++){
+			for(int i = 0; i < moocs.length; i++){
+				k++;
+				Mooc mooc = new Mooc(moocs[i].getId(), moocs[i].getCode(), moocs[i].getCategory(),
+						moocs[i].getCategoryId(), moocs[i].getWeight(), moocs[i].getStatus(), moocs[i].getStatusId(),
+						moocs[i].getDepotMoocCode(), moocs[i].getDepotMoocLocationCode(),
+						moocs[i].getReturnDepotCodes(), moocs[i].getIntervals());
+				mooc.setId(maxId++);
+				String code = "M-" + maxId;
+				mooc.setCode(code);
+				newMoocs[k] = mooc;
+			}
+		}
+		solver.input.setMoocs(newMoocs);
+		try{
+			Gson gson = new Gson();
+			File fo = new File(outFileName);
+			FileWriter fw = new FileWriter(fo);
+			gson.toJson(solver.input, fw);
+			fw.close();
+		}
+		catch(Exception e){
+			System.out.println(e);
+		}
+	}
 
 	public static void main(String[] args){
 		DataAnalysis da = new DataAnalysis();
@@ -1143,10 +1212,13 @@ public class DataAnalysis {
 		//merge cac filde du lieu thanh 1 file de test
 		//da.mergeFile();
 		
+		//them truck vao file
+		da.addTrucksMoocsToList("data/truck-container/merged_input_03.json", "data/truck-container/merged_input_03_addTruck.json");
+		
 		//tao file du lieu lon de test
 		//sua cac params trong initParams function
 		
-		String fileName = "data/truck-container/random_big_data-200reqs.json";
-		da.createJsonFile(fileName);
+		//String fileName = "data/truck-container/random_big_data-400reqs.json";
+		//da.createJsonFile(fileName);
 	}
 }

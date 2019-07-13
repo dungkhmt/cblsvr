@@ -157,8 +157,8 @@ public class TruckContainerSolver {
 			
 			PrintWriter fo = new PrintWriter(new File(outputfile));
 			int it = 0;
-			int timeLimit = 36000;
-	    	int nIter = 1000;
+			int timeLimit = 36000000;
+	    	int nIter = 100000;
 	    	int maxStable = 1000;
 	    	int iS = 0;
 	    	fo.println("time limit = " + timeLimit + ", nbIters = " + nIter + ", maxStable = " + maxStable);
@@ -269,6 +269,35 @@ public class TruckContainerSolver {
 				return false;
 		}
 		return true;
+	}
+	
+	public void checkRejectedRequestsInfo(){
+		ArrayList<Integer> grs = new ArrayList<Integer>();
+		for(int i = 0; i < rejectPickupPoints.size(); i++){
+			Point pickup = rejectPickupPoints.get(i);
+			int groupId = point2Group.get(pickup);
+			
+			if(group2marked.get(groupId) == 1 && grs.contains(groupId))
+				continue;
+			grs.add(groupId);
+			System.out.println("p = " + pickup.getID());
+			Point delivery = pickup2Delivery.get(pickup);
+			Truck truck = input.getTrucks()[11];//getNearestTruck(pickup.getLocationCode());
+			Mooc mooc = getNearestMooc(truck.getDepotTruckLocationCode());
+			long d = DateTimeUtils.dateTime2Int(truck.getStartWorkingTime())
+					+ getTravelTime(truck.getDepotTruckLocationCode(), mooc.getDepotMoocLocationCode())
+					+ input.getParams().getLinkMoocDuration()
+					+ getTravelTime(mooc.getDepotMoocLocationCode(), pickup.getLocationCode());
+			if(d >= lastestAllowedArrivalTime.get(pickup))
+				System.out.println("pick = " + pickup.getLocationCode()
+						+ ", d = " + DateTimeUtils.unixTimeStamp2DateTime(d)
+						+ ", late = " + DateTimeUtils.unixTimeStamp2DateTime(lastestAllowedArrivalTime.get(pickup)) );
+			d += getTravelTime(pickup.getLocationCode(), delivery.getLocationCode());
+			if(d >= lastestAllowedArrivalTime.get(delivery))
+				System.out.println("del = " + delivery.getLocationCode()
+						+ ", d = " + DateTimeUtils.unixTimeStamp2DateTime(d)
+						+ ", late = " + DateTimeUtils.unixTimeStamp2DateTime(lastestAllowedArrivalTime.get(delivery)) );
+		}
 	}
 	
 	public void init(){
@@ -1405,6 +1434,58 @@ public class TruckContainerSolver {
 		}
 		return bestMooc;
 	}
+	
+	public int getNbRejectedRequests(){
+		Set<Integer> grs = new HashSet<Integer>();
+		for(int i = 0; i < rejectPickupPoints.size(); i++){
+			Point pickup = rejectPickupPoints.get(i);
+			int groupId = point2Group.get(pickup);
+			
+			if(group2marked.get(groupId) == 1)
+				continue;
+			grs.add(groupId);
+		}
+		return grs.size();
+	}
+	
+	public int getNbUsedTrucks(){
+		int nb = 0;
+		for(int r = 1; r <= XR.getNbRoutes(); r++){
+			int a = XR.index(XR.getTerminatingPointOfRoute(r));
+			if(XR.index(XR.getTerminatingPointOfRoute(r)) > 3)
+				nb++;
+		}
+		return nb;
+	}
+	
+	public Truck getNearestTruck(String locationCode){
+		int minTime = Integer.MAX_VALUE;
+		Truck truck = null;
+		for(int i = 0; i < input.getTrucks().length; i++){
+			int d = getTravelTime(input.getTrucks()[i].getDepotTruckLocationCode(),
+					locationCode);
+			if(d < minTime){
+				minTime = d;
+				truck = input.getTrucks()[i];
+			}
+		}
+		return truck;
+	}
+	
+	public Mooc getNearestMooc(String locationCode){
+		int minTime = Integer.MAX_VALUE;
+		Mooc mooc = null;
+		for(int i = 0; i < input.getMoocs().length; i++){
+			int d = getTravelTime(input.getMoocs()[i].getDepotMoocLocationCode(),
+					locationCode);
+			if(d < minTime){
+				minTime = d;
+				mooc = input.getMoocs()[i];
+			}
+		}
+		return mooc;
+	}
+	
 	public int getTravelTime(String src, String dest) {
 		if (mLocationCode2Index.get(src) == null
 				|| mLocationCode2Index.get(dest) == null) {
@@ -1574,6 +1655,7 @@ public class TruckContainerSolver {
 		double currtime = System.currentTimeMillis();
 		int n = 0;
 		for(int i = 0; i < pickup2Delivery.size(); i++){
+			System.out.println("req " + i + "/" + pickup2Delivery.size());
 			Point pickup = pickupPoints.get(i);
 			int groupId = point2Group.get(pickup);
 			if(XR.route(pickup) != Constants.NULL_POINT
@@ -1591,7 +1673,8 @@ public class TruckContainerSolver {
 				int groupTruck = point2Group.get(st);
 				if(group2marked.get(groupTruck) == 1 && XR.index(XR.getTerminatingPointOfRoute(r)) <= 1)
 					continue;
-				
+//				if(pickup.getID() == 985 && (r == 23 || r == 27))
+//					System.out.println("ds");
 				for(Point p = st; p != XR.getTerminatingPointOfRoute(r); p = XR.next(p)){
 					for(Point q = p; q != XR.getTerminatingPointOfRoute(r); q = XR.next(q)){
 //						if(pickup.getID() == 1271 && p.getID() == 121 && q.getID() == 1222)
@@ -1641,6 +1724,7 @@ public class TruckContainerSolver {
 				+ ", nb trucks = " + nB
 				+ ", cost = " + objective.getValue()
 				+ ", time for inserting reqs = " + (System.currentTimeMillis() - currtime)/1000);
+		//checkRejectedRequestsInfo();
 	}
 	
 	public void removeAllMoocFromRoutes(){
@@ -1740,54 +1824,33 @@ public class TruckContainerSolver {
 			Truck truck = startPoint2Truck.get(st);
 
 			for(Point p = st; p != XR.getTerminatingPointOfRoute(r); p = XR.next(p)){
-				
-				if(S.evaluateAddOnePoint(pickup, p) > 0)
-					continue;
 				for(Point q = p; q != XR.getTerminatingPointOfRoute(r); q = XR.next(q)){
 					System.out.println("pick = " + pickup.getID()
 							+ ", p = " + p.getID()
 							+ ", del = " + delivery.getID()
 							+ ", q = " + q.getID());
-					System.out.println("s vio = " + S.evaluateAddTwoPoints(pickup, p, delivery, q));
 					System.out.println("arrTime p = " + DateTimeUtils.unixTimeStamp2DateTime((long)eat.getEarliestAllowedArrivalTime(p)));
 					System.out.println("travelTime p ->pick = " + eat.getTravelTime(p, pickup));
-					System.out.println("arrTime q = " + DateTimeUtils.unixTimeStamp2DateTime((long)eat.getEarliestAllowedArrivalTime(q)));
-					System.out.println("travelTime q ->del = " + eat.getTravelTime(p, delivery));
-					System.out.println("acc = " +  accContainerInvr.getSumWeights(p));
-					System.out.println("weight at pickup = " + accContainerInvr.getWeights(pickup));
-					if(S.evaluateAddOnePoint(delivery, q) > 0)
-						continue;
-
-					if(S.evaluateAddTwoPoints(pickup, p, delivery, q) == 0){
-						System.out.println("Time window ok");
+					System.out.println("late = " + DateTimeUtils.unixTimeStamp2DateTime((long)lastestAllowedArrivalTime.get(pickup)));
+					System.out.println("arrTime q = " + DateTimeUtils.unixTimeStamp2DateTime((long)eat.getEarliestAllowedArrivalTime(pickup)));
+					System.out.println("travelTime pick ->del = " + eat.getTravelTime(pickup, delivery));
+					System.out.println("arrTime del = " + DateTimeUtils.unixTimeStamp2DateTime((long)(eat.getEarliestAllowedArrivalTime(pickup)
+							+ eat.getTravelTime(pickup, delivery))));
+					System.out.println("late del = " + DateTimeUtils.unixTimeStamp2DateTime((long)lastestAllowedArrivalTime.get(delivery)));
+					
+					mgr.performAddTwoPoints(pickup, p, delivery, q);
+					insertMoocToRoutes(r);
+					if(S.violations() == 0){
+						System.out.println("route = " + r + " is ok");
 					}
+					else
+						System.out.println("pick = " + pickup.getID() + " not ok");
+					mgr.performRemoveTwoPoints(pickup, delivery);
+					removeMoocOnRoutes(r);
 				}
 			}
 		}
 		System.out.println("stop");
-	}
-	
-	public int getNbRejectedRequests(){
-		Set<Integer> grs = new HashSet<Integer>();
-		for(int i = 0; i < rejectPickupPoints.size(); i++){
-			Point pickup = rejectPickupPoints.get(i);
-			int groupId = point2Group.get(pickup);
-			
-			if(group2marked.get(groupId) == 1)
-				continue;
-			grs.add(groupId);
-		}
-		return grs.size();
-	}
-	
-	public int getNbUsedTrucks(){
-		int nb = 0;
-		for(int r = 1; r <= XR.getNbRoutes(); r++){
-			int a = XR.index(XR.getTerminatingPointOfRoute(r));
-			if(XR.index(XR.getTerminatingPointOfRoute(r)) > 3)
-				nb++;
-		}
-		return nb;
 	}
 	
 	public void printSolution(String outputfile){
@@ -1816,13 +1879,17 @@ public class TruckContainerSolver {
 			FileOutputStream write = new FileOutputStream(outputfile, true);
 			PrintWriter fo = new PrintWriter(write);
 			fo.println(s);
-			fo.println("end time = " + System.currentTimeMillis()/1000 + ", nbR = " + nbR
+			fo.println("end time = " + DateTimeUtils.unixTimeStamp2DateTime(System.currentTimeMillis()) 
+					+ ", total reqs = " + nRequest
+					+ ", #RejectedReqs = " + nbR
 					+ ", nb Trucks = " + nB
 					+ ", cost = " + objective.getValue());
+			
 			fo.close();
 		}catch(Exception e){
 			
 		}
+		
 	}
 	
 	public static void main(String[] args){
@@ -1848,7 +1915,7 @@ public class TruckContainerSolver {
 		days.add("2903");
 //		for(int i = 0; i < days.size(); i++){
 //			String fileName = "input_" + days.get(i) + ".json";
-			String fileName = "random_big_data-200reqs.json";
+			String fileName = "merged_input_03_addTruck.json";
 			String outputfile = dir + "output/result-" + fileName + ".txt"; 
 			String dataFileName = dir + fileName;
 			TruckContainerSolver solver = new TruckContainerSolver();
