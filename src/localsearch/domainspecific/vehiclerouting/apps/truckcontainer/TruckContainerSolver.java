@@ -233,7 +233,6 @@ public class TruckContainerSolver {
 				
 				removeAllMoocFromRoutes();
 				
-				Random r = new Random();
 				int i_selected_removal = -1;
 				if(iS >= maxStable){
 					opt.allRemoval();
@@ -248,6 +247,10 @@ public class TruckContainerSolver {
 						case 1: opt.randomRequestRemoval(); break;
 						case 2: opt.shaw_removal(); break;
 						case 3: opt.worst_removal(); break;
+						case 4: opt.forbidden_removal(0); break;
+						case 5: opt.forbidden_removal(1); break;
+						case 6: opt.forbidden_removal(2); break;
+						case 7: opt.forbidden_removal(3); break;
 					}
 				}
 				
@@ -260,6 +263,10 @@ public class TruckContainerSolver {
 					case 1: opt.greedyInsertionWithNoise(); break;
 					case 2: opt.regret_n_insertion(2); break;
 					case 3: opt.first_possible_insertion(); break;
+					case 4: opt.sort_before_insertion(0); break;
+					case 5: opt.sort_before_insertion(1); break;
+					case 6: opt.sort_before_insertion(2); break;
+					case 7: opt.sort_before_insertion(3); break;
 				}
 				
 				//insertMoocToRoutes();
@@ -781,8 +788,8 @@ public class TruckContainerSolver {
 	}
 	
 	public void initParamsForALNS(){
-		nRemovalOperators = 4;
-		nInsertionOperators = 4;
+		nRemovalOperators = 8;
+		nInsertionOperators = 8;
 		lower_removal = (int) 1*(nRequest)/100;
 		upper_removal = (int) 15*(nRequest)/100;
 		
@@ -2044,7 +2051,7 @@ public class TruckContainerSolver {
 //		days.add("2903");
 //		for(int i = 0; i < days.size(); i++){
 //			String fileName = "input_" + days.get(i) + ".json";
-			String fileName = "random_big_data.json";
+			String fileName = "random_big_data-8reqs.json";
 			String outputfile = dir + "output/result-" + fileName + ".txt"; 
 			String dataFileName = dir + fileName;
 			TruckContainerSolver solver = new TruckContainerSolver();

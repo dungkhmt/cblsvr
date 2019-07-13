@@ -1,8 +1,10 @@
 package localsearch.domainspecific.vehiclerouting.apps.truckcontainer;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.logging.Level;
@@ -307,7 +309,7 @@ public class SearchOptimumSolution {
 	
 	public void forbidden_removal(int nRemoval){
 		
-		//ShareARide.LOGGER.log(Level.INFO,nChosed.toString());
+		System.out.println("forbidden_removal");
 		
 		for(int i=0; i < tcs.pickupPoints.size(); i++){
 			Point pi = tcs.pickupPoints.get(i);
@@ -605,5 +607,53 @@ public class SearchOptimumSolution {
 			}
 		}
 		tcs.insertMoocForAllRoutes();
+	}
+	
+	public void sort_before_insertion(int iInsertion){
+		System.out.println("sort_before_insertion");
+		
+		sort_reject_people();
+		
+		switch(iInsertion){
+			case 0: greedyInsertion(); break;
+			case 1: greedyInsertionWithNoise(); break;
+			case 2: regret_n_insertion(2); break;
+			case 3: first_possible_insertion(); break;
+		}
+		
+		Collections.shuffle(tcs.rejectPickupPoints);
+	}
+	
+	private void sort_reject_people(){
+		HashMap<Point, Integer> time_flexibility = new HashMap<Point, Integer>();
+		
+		for(int i = 0; i < tcs.rejectPickupPoints.size(); i++){
+			Point pickup = tcs.rejectPickupPoints.get(i);
+			Point delivery = tcs.pickup2Delivery.get(pickup);
+			
+			int lp = tcs.lastestAllowedArrivalTime.get(pickup);
+			int ud = tcs.earliestAllowedArrivalTime.get(delivery);
+			
+			time_flexibility.put(pickup, ud-lp);
+		}
+		
+		List<Point> keys = new ArrayList<Point>(time_flexibility.keySet());
+		List<Integer> values = new ArrayList<Integer>(time_flexibility.values());
+		Collections.sort(values);
+		
+		ArrayList<Point> rejectPointSorted = new ArrayList<Point>();
+		for(int i = 0; i < values.size(); i++){
+			int v = values.get(i);
+			for(int j = 0; j < keys.size(); j++){
+				Point p = keys.get(j);
+				int vs = time_flexibility.get(p);
+				if(vs == v){
+					rejectPointSorted.add(p);
+					keys.remove(p);
+					break;
+				}
+			}
+		}
+		tcs.rejectPickupPoints = rejectPointSorted;
 	}
 }
