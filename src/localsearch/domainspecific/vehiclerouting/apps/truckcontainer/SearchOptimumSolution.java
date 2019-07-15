@@ -66,7 +66,7 @@ public class SearchOptimumSolution {
 			tcs.nChosed.put(x, tcs.nChosed.get(x)+1);
 		}
 		int groupTruck = tcs.point2Group.get(tcs.XR.getStartingPointOfRoute(k));
-		tcs.group2marked.put(groupTruck, 1);
+		tcs.group2marked.put(groupTruck, 0);
 	}
 
 	public void randomRequestRemoval(){
@@ -106,7 +106,7 @@ public class SearchOptimumSolution {
 				tcs.group2marked.put(tcs.point2Group.get(delivery), 0);
 				if(tcs.XR.index(tcs.XR.getTerminatingPointOfRoute(ridx)) <= 1){
 					int groupTruck = tcs.point2Group.get(tcs.XR.getStartingPointOfRoute(ridx));
-					tcs.group2marked.put(groupTruck, 1);
+					tcs.group2marked.put(groupTruck, 0);
 				}
 				i++;
 				tcs.nChosed.put(pickup, tcs.nChosed.get(pickup)+1);
@@ -174,11 +174,12 @@ public class SearchOptimumSolution {
 			int ridx = tcs.XR.route(r1);
 			tcs.group2marked.put(tcs.point2Group.get(r1), 0);
 			tcs.group2marked.put(tcs.point2Group.get(dr1), 0);
+			tcs.mgr.performRemoveTwoPoints(r1, dr1);
+			
 			if(tcs.XR.index(tcs.XR.getTerminatingPointOfRoute(ridx)) <= 1){
 				int groupTruck = tcs.point2Group.get(tcs.XR.getStartingPointOfRoute(ridx));
-				tcs.group2marked.put(groupTruck, 1);
+				tcs.group2marked.put(groupTruck, 0);
 			}
-			tcs.mgr.performRemoveTwoPoints(r1, dr1);
 			/*
 			 * find the request is the most related with r1
 			 */
@@ -285,16 +286,12 @@ public class SearchOptimumSolution {
 			tcs.nChosed.put(removedPickup, tcs.nChosed.get(removedPickup)+1);
 			
 			tcs.group2marked.put(tcs.point2Group.get(removedPickup), 0);
-			tcs.group2marked.put(tcs.point2Group.get(removedDelivery), 0);
+			tcs.group2marked.put(tcs.point2Group.get(removedDelivery), 0);	
+			tcs.mgr.performRemoveTwoPoints(removedPickup, removedDelivery);
 			if(tcs.XR.index(tcs.XR.getTerminatingPointOfRoute(ridx)) <= 1){
 				int groupTruck = tcs.point2Group.get(tcs.XR.getStartingPointOfRoute(ridx));
-				tcs.group2marked.put(groupTruck, 1);
+				tcs.group2marked.put(groupTruck, 0);
 			}
-//			nChosed.put(removedDelivery, nChosed.get(removedDelivery)+1);
-//			nChosed.put(removedPickup, nChosed.get(removedPickup)+1);
-			
-			
-			tcs.mgr.performRemoveTwoPoints(removedPickup, removedDelivery);
 		}
 	}
 	

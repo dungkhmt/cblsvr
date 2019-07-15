@@ -17,6 +17,7 @@ import com.google.gson.Gson;
 
 import localsearch.domainspecific.vehiclerouting.apps.sharedaride.ShareARide;
 import localsearch.domainspecific.vehiclerouting.apps.sharedaride.SolutionShareARide;
+import localsearch.domainspecific.vehiclerouting.apps.sharedaride.Search.VariableNeighborhoodSearch;
 import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.constraints.ContainerCapacityConstraint;
 import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.constraints.ContainerCarriedByTrailerConstraint;
 import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.constraints.MoocCapacityConstraint;
@@ -50,13 +51,16 @@ import localsearch.domainspecific.vehiclerouting.vrp.entities.NodeWeightsManager
 import localsearch.domainspecific.vehiclerouting.vrp.entities.Point;
 import localsearch.domainspecific.vehiclerouting.vrp.functions.AccumulatedEdgeWeightsOnPathVR;
 import localsearch.domainspecific.vehiclerouting.vrp.functions.CapacityConstraintViolationsVR;
+import localsearch.domainspecific.vehiclerouting.vrp.functions.ConstraintViolationsVR;
+import localsearch.domainspecific.vehiclerouting.vrp.functions.LexMultiFunctions;
 import localsearch.domainspecific.vehiclerouting.vrp.functions.TotalCostVR;
 import localsearch.domainspecific.vehiclerouting.vrp.invariants.AccumulatedWeightEdgesVR;
 import localsearch.domainspecific.vehiclerouting.vrp.invariants.AccumulatedWeightNodesVR;
 import localsearch.domainspecific.vehiclerouting.vrp.invariants.EarliestArrivalTimeVR;
+import localsearch.domainspecific.vehiclerouting.vrp.neighborhoodexploration.INeighborhoodExplorer;
 import localsearch.domainspecific.vehiclerouting.vrp.utils.DateTimeUtils;
 
-public class TruckContainerSolver {
+public class SolverWithLocalSearch {
 	public ContainerTruckMoocInput input;
 	
 	ArrayList<Point> points;
@@ -169,192 +173,191 @@ public class TruckContainerSolver {
 	public static final int PORT	 	= 6;
 	public static final int WAREHOUSE 	= 7;
 	
-	public TruckContainerSolver(){
+	public SolverWithLocalSearch(){
 		
 	}
 	
-	public void adaptiveSearchOperators(String outputfile){	
-		try{
-			
-			PrintWriter fo = new PrintWriter(new File(outputfile));
-			int it = 0;
-			int timeLimit = 36000000;
-	    	int nIter = 100000;
-	    	int maxStable = 1000;
-	    	int iS = 0;
-	    	
-	    	initParamsForALNS();
-	    	//insertion operators selection probabilities
-			double[] pti = new double[nInsertionOperators];
-			//removal operators selection probabilities
-			double[] ptd = new double[nRemovalOperators];
-			
-			//wi - number of times used during last iteration
-			int[] wi = new int[nInsertionOperators];
-			int[] wd = new int[nRemovalOperators];
-			
-			//pi_i - score of operator
-			int[] si = new int[nInsertionOperators];
-			int[] sd = new int[nRemovalOperators];
-			
-			
-			//init probabilites
-			for(int i=0; i<nInsertionOperators; i++){
-				pti[i] = 1.0/nInsertionOperators;
-				wi[i] = 1;
-				si[i] = 0;
-			}
-			for(int i=0; i<nRemovalOperators; i++){
-				ptd[i] = 1.0/nRemovalOperators;
-				wd[i] = 1;
-				sd[i] = 0;
-			}
-	    	
-	    	fo.println("time limit = " + timeLimit + ", nbIters = " + nIter + ", maxStable = " + maxStable);
-	    	
-	    	SearchOptimumSolution opt = new SearchOptimumSolution(this);
-	    	
-			double best_cost = objective.getValue();
-
-			TruckContainerSolution best_solution = new TruckContainerSolution(XR, rejectPickupPoints,
-					rejectDeliveryPoints, best_cost, getNbUsedTrucks(), getNbRejectedRequests(), point2Group, group2marked);
-	
-			double start_search_time = System.currentTimeMillis();
-			
-			fo.println("#Request = " + nRequest);
-			fo.println("iter=====insertion=====removal=====time=====cost=====nbReject=====nbTrucks");
-			fo.println("0 -1 -1 " + " " + System.currentTimeMillis()/1000 + " " + best_cost + " " + getNbRejectedRequests() + " " + getNbUsedTrucks());
-	
-			while( (System.currentTimeMillis()-start_search_time) < timeLimit && it++ < nIter){
-				System.out.println("nb of iterator: " + it);
-				double current_cost = objective.getValue();
-				int current_nbTrucks = getNbUsedTrucks();
-				TruckContainerSolution current_solution = new TruckContainerSolution(XR, rejectPickupPoints, 
-					rejectDeliveryPoints, current_cost, current_nbTrucks, group2marked);
-				
-				removeAllMoocFromRoutes();
-				
-				int i_selected_removal = -1;
-				if(iS >= maxStable){
-					opt.allRemoval();
-					iS = 0;
-				}
-				else{
-					i_selected_removal = get_operator(ptd);
-					//int i_selected_removal = 1;
-					wd[i_selected_removal]++;
-					switch(i_selected_removal){
-						case 0: opt.routeRemoval(); break;
-						case 1: opt.randomRequestRemoval(); break;
-						case 2: opt.shaw_removal(); break;
-						case 3: opt.worst_removal(); break;
-						case 4: opt.forbidden_removal(0); break;
-						case 5: opt.forbidden_removal(1); break;
-						case 6: opt.forbidden_removal(2); break;
-						case 7: opt.forbidden_removal(3); break;
-					}
-				}
-				
-				
-				int i_selected_insertion = get_operator(pti);
-				//int i_selected_insertion = 3;
-				wi[i_selected_insertion]++;
-				switch(i_selected_insertion){
-					case 0: opt.greedyInsertion(); break;
-					case 1: opt.greedyInsertionWithNoise(); break;
-					case 2: opt.regret_n_insertion(2); break;
-					case 3: opt.first_possible_insertion(); break;
-					case 4: opt.sort_before_insertion(0); break;
-					case 5: opt.sort_before_insertion(1); break;
-					case 6: opt.sort_before_insertion(2); break;
-					case 7: opt.sort_before_insertion(3); break;
-				}
-				
-				//insertMoocToRoutes();
-				//System.out.println("s.vio = " + S.violations());
-				int new_nb_reject_points = rejectPickupPoints.size();
-				double new_cost = objective.getValue();
-				int new_nbTrucks = getNbUsedTrucks();
-				int current_nb_reject_points = current_solution.get_rejectPickupPoints().size();
-
-				if( new_nb_reject_points < current_nb_reject_points
-						|| (new_nb_reject_points == current_nb_reject_points && new_nbTrucks < current_nbTrucks)
-						|| (new_nb_reject_points == current_nb_reject_points && new_nbTrucks == current_nbTrucks && new_cost < current_cost)){
-					int best_nb_reject_points = best_solution.get_rejectPickupPoints().size();
-					int best_nbTrucks = best_solution.get_nbTrucks();
-					
-					if(new_nb_reject_points < best_nb_reject_points
-							|| (new_nb_reject_points == best_nb_reject_points && new_nbTrucks < best_nbTrucks)
-							|| (new_nb_reject_points == best_nb_reject_points && new_nbTrucks == best_nbTrucks && new_cost < best_cost)){
-						
-						best_cost = new_cost;
-						best_solution = new TruckContainerSolution(XR, rejectPickupPoints, rejectDeliveryPoints,
-								new_cost, new_nbTrucks, group2marked);
-						fo.println(it + " " + i_selected_insertion 
-							+ " " + i_selected_removal + " "
-							+ System.currentTimeMillis()/1000 + " "
-							+ best_cost + " " + getNbRejectedRequests() + " " + getNbUsedTrucks());
-						si[i_selected_insertion] += sigma1;
-						if(i_selected_removal >= 0)
-							sd[i_selected_removal] += sigma1;
-					}
-					else{
-						si[i_selected_insertion] += sigma2;
-						if(i_selected_removal >= 0)
-							sd[i_selected_removal] += sigma2;
-					}
-				}
-				/*
-				 * if new solution has cost worst than current solution
-				 * 		because XR is new solution
-				 * 			copy current current solution to new solution if don't change solution
-				 */
-				else{
-					si[i_selected_insertion] += sigma3;
-					if(i_selected_removal >= 0)
-						sd[i_selected_removal] += sigma3;
-					double v = Math.exp(-(new_cost-current_cost)/temperature);
-					double e = Math.random();
-					if(e >= v){
-						current_solution.copy2XR(XR);
-						group2marked = current_solution.get_group2marked();
-						rejectPickupPoints = current_solution.get_rejectPickupPoints();
-						rejectDeliveryPoints = current_solution.get_rejectDeliveryPoints();
-					}
-					iS++;
-				}
-				
-				temperature = cooling_rate*temperature;
-				
-				//update probabilities
-				if(it % nw == 0){
-					for(int i=0; i<nInsertionOperators; i++){
-						pti[i] = Math.max(0, pti[i]*(1-rp) + rp*si[i]/wi[i]);
-						//wi[i] = 1;
-						//si[i] = 0;
-					}
-					
-					for(int i=0; i<nRemovalOperators; i++){
-						ptd[i] = Math.max(0, ptd[i]*(1-rp) + rp*sd[i]/wd[i]);
-						//wd[i] = 1;
-						//sd[i] = 0;
-					}
-				}
-			}
-			best_solution.copy2XR(XR);
-			group2marked = best_solution.get_group2marked();
-			
-			rejectPickupPoints = best_solution.get_rejectPickupPoints();
-			rejectDeliveryPoints = best_solution.get_rejectDeliveryPoints();
-			
-			fo.println(it + " -1 -1 "
-					+ System.currentTimeMillis()/1000 + " "
-					+ best_cost + " " + getNbRejectedRequests() + " " + getNbUsedTrucks());
-			fo.close();
-		}catch(Exception e){
-			System.out.println(e);
-		}
-	}
+//	public void adaptiveSearchOperators(String outputfile){	
+//		try{
+//			
+//			PrintWriter fo = new PrintWriter(new File(outputfile));
+//			int it = 0;
+//			int timeLimit = 36000000;
+//	    	int nIter = 100000;
+//	    	int maxStable = 1000;
+//	    	int iS = 0;
+//	    	
+//	    	initParamsForALNS();
+//	    	//insertion operators selection probabilities
+//			double[] pti = new double[nInsertionOperators];
+//			//removal operators selection probabilities
+//			double[] ptd = new double[nRemovalOperators];
+//			
+//			//wi - number of times used during last iteration
+//			int[] wi = new int[nInsertionOperators];
+//			int[] wd = new int[nRemovalOperators];
+//			
+//			//pi_i - score of operator
+//			int[] si = new int[nInsertionOperators];
+//			int[] sd = new int[nRemovalOperators];
+//			
+//			
+//			//init probabilites
+//			for(int i=0; i<nInsertionOperators; i++){
+//				pti[i] = 1.0/nInsertionOperators;
+//				wi[i] = 1;
+//				si[i] = 0;
+//			}
+//			for(int i=0; i<nRemovalOperators; i++){
+//				ptd[i] = 1.0/nRemovalOperators;
+//				wd[i] = 1;
+//				sd[i] = 0;
+//			}
+//	    	
+//	    	fo.println("time limit = " + timeLimit + ", nbIters = " + nIter + ", maxStable = " + maxStable);
+//	    	
+//	    	SearchOptimumSolution opt = new SearchOptimumSolution(this);
+//	    	
+//			double best_cost = objective.getValue();
+//
+//			TruckContainerSolution best_solution = new TruckContainerSolution(XR, rejectPickupPoints,
+//					rejectDeliveryPoints, best_cost, getNbUsedTrucks(), group2marked);
+//	
+//			double start_search_time = System.currentTimeMillis();
+//			
+//			fo.println("iter=====insertion=====removal=====time=====cost=====nbReject=====nbTrucks");
+//			fo.println("0 -1 -1 " + " " + System.currentTimeMillis()/1000 + " " + best_cost + " " + getNbRejectedRequests() + " " + getNbUsedTrucks());
+//	
+//			while( (System.currentTimeMillis()-start_search_time) < timeLimit && it++ < nIter){
+//				System.out.println("nb of iterator: " + it);
+//				double current_cost = objective.getValue();
+//				int current_nbTrucks = getNbUsedTrucks();
+//				TruckContainerSolution current_solution = new TruckContainerSolution(XR, rejectPickupPoints, 
+//					rejectDeliveryPoints, current_cost, current_nbTrucks, group2marked);
+//				
+//				removeAllMoocFromRoutes();
+//				
+//				int i_selected_removal = -1;
+//				if(iS >= maxStable){
+//					opt.allRemoval();
+//					iS = 0;
+//				}
+//				else{
+//					i_selected_removal = get_operator(ptd);
+//					//int i_selected_removal = 1;
+//					wd[i_selected_removal]++;
+//					switch(i_selected_removal){
+//						case 0: opt.routeRemoval(); break;
+//						case 1: opt.randomRequestRemoval(); break;
+//						case 2: opt.shaw_removal(); break;
+//						case 3: opt.worst_removal(); break;
+//						case 4: opt.forbidden_removal(0); break;
+//						case 5: opt.forbidden_removal(1); break;
+//						case 6: opt.forbidden_removal(2); break;
+//						case 7: opt.forbidden_removal(3); break;
+//					}
+//				}
+//				
+//				
+//				int i_selected_insertion = get_operator(pti);
+//				//int i_selected_insertion = 3;
+//				wi[i_selected_insertion]++;
+//				switch(i_selected_insertion){
+//					case 0: opt.greedyInsertion(); break;
+//					case 1: opt.greedyInsertionWithNoise(); break;
+//					case 2: opt.regret_n_insertion(2); break;
+//					case 3: opt.first_possible_insertion(); break;
+//					case 4: opt.sort_before_insertion(0); break;
+//					case 5: opt.sort_before_insertion(1); break;
+//					case 6: opt.sort_before_insertion(2); break;
+//					case 7: opt.sort_before_insertion(3); break;
+//				}
+//				
+//				//insertMoocToRoutes();
+//				//System.out.println("s.vio = " + S.violations());
+//				int new_nb_reject_points = rejectPickupPoints.size();
+//				double new_cost = objective.getValue();
+//				int new_nbTrucks = getNbUsedTrucks();
+//				int current_nb_reject_points = current_solution.get_rejectPickupPoints().size();
+//
+//				if( new_nb_reject_points < current_nb_reject_points
+//						|| (new_nb_reject_points == current_nb_reject_points && new_nbTrucks < current_nbTrucks)
+//						|| (new_nb_reject_points == current_nb_reject_points && new_nbTrucks == current_nbTrucks && new_cost < current_cost)){
+//					int best_nb_reject_points = best_solution.get_rejectPickupPoints().size();
+//					int best_nbTrucks = best_solution.get_nbTrucks();
+//					
+//					if(new_nb_reject_points < best_nb_reject_points
+//							|| (new_nb_reject_points == best_nb_reject_points && new_nbTrucks < best_nbTrucks)
+//							|| (new_nb_reject_points == best_nb_reject_points && new_nbTrucks == best_nbTrucks && new_cost < best_cost)){
+//						
+//						best_cost = new_cost;
+//						best_solution = new TruckContainerSolution(XR, rejectPickupPoints, rejectDeliveryPoints,
+//								new_cost, new_nbTrucks, group2marked);
+//						fo.println(it + " " + i_selected_insertion 
+//							+ " " + i_selected_removal + " "
+//							+ System.currentTimeMillis()/1000 + " "
+//							+ best_cost + " " + getNbRejectedRequests() + " " + getNbUsedTrucks());
+//						si[i_selected_insertion] += sigma1;
+//						if(i_selected_removal >= 0)
+//							sd[i_selected_removal] += sigma1;
+//					}
+//					else{
+//						si[i_selected_insertion] += sigma2;
+//						if(i_selected_removal >= 0)
+//							sd[i_selected_removal] += sigma2;
+//					}
+//				}
+//				/*
+//				 * if new solution has cost worst than current solution
+//				 * 		because XR is new solution
+//				 * 			copy current current solution to new solution if don't change solution
+//				 */
+//				else{
+//					si[i_selected_insertion] += sigma3;
+//					if(i_selected_removal >= 0)
+//						sd[i_selected_removal] += sigma3;
+//					double v = Math.exp(-(new_cost-current_cost)/temperature);
+//					double e = Math.random();
+//					if(e >= v){
+//						current_solution.copy2XR(XR);
+//						group2marked = current_solution.get_group2marked();
+//						rejectPickupPoints = current_solution.get_rejectPickupPoints();
+//						rejectDeliveryPoints = current_solution.get_rejectDeliveryPoints();
+//					}
+//					iS++;
+//				}
+//				
+//				temperature = cooling_rate*temperature;
+//				
+//				//update probabilities
+//				if(it % nw == 0){
+//					for(int i=0; i<nInsertionOperators; i++){
+//						pti[i] = Math.max(0, pti[i]*(1-rp) + rp*si[i]/wi[i]);
+//						//wi[i] = 1;
+//						//si[i] = 0;
+//					}
+//					
+//					for(int i=0; i<nRemovalOperators; i++){
+//						ptd[i] = Math.max(0, ptd[i]*(1-rp) + rp*sd[i]/wd[i]);
+//						//wd[i] = 1;
+//						//sd[i] = 0;
+//					}
+//				}
+//			}
+//			best_solution.copy2XR(XR);
+//			group2marked = best_solution.get_group2marked();
+//			
+//			rejectPickupPoints = best_solution.get_rejectPickupPoints();
+//			rejectDeliveryPoints = best_solution.get_rejectDeliveryPoints();
+//			
+//			fo.println(it + " -1 -1 "
+//					+ System.currentTimeMillis()/1000 + " "
+//					+ best_cost + " " + getNbRejectedRequests() + " " + getNbUsedTrucks());
+//			fo.close();
+//		}catch(Exception e){
+//			System.out.println(e);
+//		}
+//	}
 	
 	public boolean checkCapacityContainerConstraint(Point x, Point y){
 		int k = XR.route(y);
@@ -1895,6 +1898,18 @@ public class TruckContainerSolver {
 		}
 	}
 	
+	public void localSearchForImprovement(String outputfile)
+	{
+		int it = 0;
+		int timeLimit = 36000000;
+    	int nIter = 100000;
+    	int maxStable = 1000;
+    	int iS = 0;
+    	
+    	SearchOptimumByLocalSearch sa = new SearchOptimumByLocalSearch(this);
+    	sa.explore(nIter, timeLimit, maxStable, outputfile);
+	}
+	
 	public void stateModel(){
 		mgr = new VRManager();
 		XR = new VarRoutesVR(mgr);
@@ -2011,16 +2026,18 @@ public class TruckContainerSolver {
 		int nB = getNbUsedTrucks();
 		System.out.println("Search done. At end search number of reject points = " + nbR
 				+ ", nb Trucks = " + nB
-				+ ",  cost = " + objective.getValue());
+				+ ",  cost = " + objective.getValue()
+				+ ", vio = " + S.violations());
 		try{
 			FileOutputStream write = new FileOutputStream(outputfile, true);
 			PrintWriter fo = new PrintWriter(write);
 			fo.println(s);
-			fo.println("end time = " + DateTimeUtils.unixTimeStamp2DateTime(System.currentTimeMillis()) 
+			fo.println("end time = " + DateTimeUtils.unixTimeStamp2DateTime(System.currentTimeMillis()/1000) 
 					+ ", total reqs = " + nRequest
 					+ ", #RejectedReqs = " + nbR
 					+ ", nb Trucks = " + nB
-					+ ", cost = " + objective.getValue());
+					+ ", cost = " + objective.getValue()
+					+ ", vio = " + S.violations());
 			
 			fo.close();
 		}catch(Exception e){
@@ -2055,13 +2072,14 @@ public class TruckContainerSolver {
 			String fileName = "random_big_data-8reqs.json";
 			String outputfile = dir + "output/result-" + fileName + ".txt"; 
 			String dataFileName = dir + fileName;
-			TruckContainerSolver solver = new TruckContainerSolver();
+			SolverWithLocalSearch solver = new SolverWithLocalSearch();
 			solver.readData(dataFileName);
 			solver.init();
 			solver.stateModel();
 			solver.greedyInitSolution2();
-	
-			solver.adaptiveSearchOperators(outputfile);
+			solver.printSolution(outputfile);
+			//solver.adaptiveSearchOperators(outputfile);
+			solver.localSearchForImprovement(outputfile);
 			solver.printSolution(outputfile);
 //		}
 	}

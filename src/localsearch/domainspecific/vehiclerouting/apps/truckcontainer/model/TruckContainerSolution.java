@@ -2,6 +2,8 @@ package localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 import localsearch.domainspecific.vehiclerouting.vrp.VRManager;
 import localsearch.domainspecific.vehiclerouting.vrp.VarRoutesVR;
@@ -12,15 +14,19 @@ public class TruckContainerSolution {
 	private ArrayList<Point> _rejectPickupPoints;
 	private ArrayList<Point> _rejectDeliveryPoints;
 	private HashMap<Integer, Integer> _group2marked;
+	private HashMap<Point, Integer> _point2Group;
 
 	private double _cost;
 	private int _nbTrucks;
+	private int _nbReject;
 	
 	public TruckContainerSolution(VarRoutesVR XR, ArrayList<Point> rejectPickupPoints, 
-			ArrayList<Point> rejectDeliveryPoints, double cost, int nbTrucks, HashMap<Integer, Integer> group2marked){
+			ArrayList<Point> rejectDeliveryPoints, double cost, int nbTrucks, int nbReject,
+			HashMap<Point, Integer> point2Group, HashMap<Integer, Integer> group2marked){
 		this._rejectPickupPoints = new ArrayList<Point>();
 		this._rejectDeliveryPoints = new ArrayList<Point>();
 		this._group2marked = new HashMap<Integer, Integer>();
+		this._point2Group = new HashMap<Point, Integer>();
 		
 		for(int i=0; i<rejectPickupPoints.size(); i++){
 			_rejectPickupPoints.add(rejectPickupPoints.get(i));
@@ -32,6 +38,10 @@ public class TruckContainerSolution {
 		
 		for(int key : group2marked.keySet()){
 			_group2marked.put(key, group2marked.get(key));
+		}
+		
+		for(Point key : point2Group.keySet()){
+			_point2Group.put(key, point2Group.get(key));
 		}
 		
 		_route = new ArrayList<ArrayList<Point>>();
@@ -50,6 +60,7 @@ public class TruckContainerSolution {
 		
 		this._cost = cost;
 		this._nbTrucks = nbTrucks;
+		this._nbReject = nbReject;
 	}
 	
 	public void copy2XR(VarRoutesVR XR){
@@ -75,6 +86,14 @@ public class TruckContainerSolution {
 
 	public ArrayList<Point> get_rejectPickupPoints() {
 		return _rejectPickupPoints;
+	}
+
+	public HashMap<Point, Integer> get_point2Group() {
+		return _point2Group;
+	}
+
+	public void set_point2Group(HashMap<Point, Integer> _point2Group) {
+		this._point2Group = _point2Group;
 	}
 
 	public void set_rejectPickupPoints(ArrayList<Point> _rejectPickupPoints) {
@@ -104,6 +123,14 @@ public class TruckContainerSolution {
 	public void set_nbTrucks(int _nbTrucks) {
 		this._nbTrucks = _nbTrucks;
 	}
+	
+	public int get_nbReject() {
+		return _nbReject;
+	}
+
+	public void set_nbReject(int _nbReject) {
+		this._nbReject = _nbReject;
+	}
 
 	public HashMap<Integer, Integer> get_group2marked() {
 		return _group2marked;
@@ -111,5 +138,18 @@ public class TruckContainerSolution {
 
 	public void set_group2marked(HashMap<Integer, Integer> _group2marked) {
 		this._group2marked = _group2marked;
+	}
+	
+	public int getNbRejectedRequests(){
+		Set<Integer> grs = new HashSet<Integer>();
+		for(int i = 0; i < _rejectPickupPoints.size(); i++){
+			Point pickup = _rejectPickupPoints.get(i);
+			int groupId = _point2Group.get(pickup);
+			
+			if(_group2marked.get(groupId) == 1)
+				continue;
+			grs.add(groupId);
+		}
+		return grs.size();
 	}
 }
