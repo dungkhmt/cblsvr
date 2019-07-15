@@ -2051,7 +2051,7 @@ public class TruckContainerSolver {
 //		days.add("2903");
 //		for(int i = 0; i < days.size(); i++){
 //			String fileName = "input_" + days.get(i) + ".json";
-			String fileName = "random_big_data-8reqs.json";
+			String fileName = "merged_input_03_addTruck.json";
 			String outputfile = dir + "output/result-" + fileName + ".txt"; 
 			String dataFileName = dir + fileName;
 			TruckContainerSolver solver = new TruckContainerSolver();

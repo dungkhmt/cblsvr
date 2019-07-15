@@ -26,18 +26,9 @@ import localsearch.domainspecific.vehiclerouting.vrp.invariants.EarliestArrivalT
 public class SearchOptimumSolution {
 	TruckContainerSolver tcs;
 	
-	private int lower_removal;
-	private int upper_removal;
-	private double shaw1st = 0.5;
-	private double shaw2nd = 0.2;
-	private double shaw3rd = 0.1;
-	
 	public SearchOptimumSolution(TruckContainerSolver tcs){
 		super();
 		this.tcs = tcs;
-		
-		lower_removal = (int) 1*(tcs.nRequest)/100;
-		upper_removal = (int) 30*tcs.nRequest/100;
 	}
 	
 	public void allRemoval(){
@@ -80,7 +71,7 @@ public class SearchOptimumSolution {
 
 	public void randomRequestRemoval(){
 		Random R = new Random();
-		int n = R.nextInt(upper_removal-lower_removal+1) + lower_removal;
+		int n = R.nextInt(tcs.upper_removal-tcs.lower_removal+1) + tcs.lower_removal;
 		System.out.println("randomReqRemoval:number of removed request = " + n);
 		if(n >= tcs.pickupPoints.size()){
 			tcs.mgr.performRemoveAllClientPoints();
@@ -126,7 +117,7 @@ public class SearchOptimumSolution {
 	
 	public void shaw_removal(){
 		Random R = new Random();
-		int nRemove = R.nextInt(upper_removal-lower_removal+1) + lower_removal;
+		int nRemove = R.nextInt(tcs.upper_removal-tcs.lower_removal+1) + tcs.lower_removal;
 		
 		System.out.println("Shaw removal : number of request removed = " + nRemove);
 		
@@ -231,9 +222,9 @@ public class SearchOptimumSolution {
 						lr1x = -1;
 					}
 					
-					double related = shaw1st*(tcs.awm.getDistance(r1, x) + tcs.awm.getDistance(dX, dr1))+
-							shaw2nd*(Math.abs(depatureTimeR1-depatureTimeX) + Math.abs(depatureTimeDX-depatureTimeDR1))+
-							shaw3rd*lr1x;
+					double related = tcs.shaw1st*(tcs.awm.getDistance(r1, x) + tcs.awm.getDistance(dX, dr1))+
+							tcs.shaw2nd*(Math.abs(depatureTimeR1-depatureTimeX) + Math.abs(depatureTimeDX-depatureTimeDR1))+
+							tcs.shaw3rd*lr1x;
 					if(related < relatedMin){
 						relatedMin = related;
 						removedPickup = x;
@@ -252,7 +243,7 @@ public class SearchOptimumSolution {
 	
 	public void worst_removal(){
 		Random R = new Random();
-		int nRemove = R.nextInt(upper_removal-lower_removal+1) + lower_removal;
+		int nRemove = R.nextInt(tcs.upper_removal-tcs.lower_removal+1) + tcs.lower_removal;
 		System.out.println("worstRemoval: nRemove = " + nRemove);
 		
 		int inRemove = 0;
