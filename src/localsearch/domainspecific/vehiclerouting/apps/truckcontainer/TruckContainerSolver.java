@@ -230,7 +230,7 @@ public class TruckContainerSolver {
 				double current_cost = objective.getValue();
 				int current_nbTrucks = getNbUsedTrucks();
 				TruckContainerSolution current_solution = new TruckContainerSolution(XR, rejectPickupPoints, 
-					rejectDeliveryPoints, current_cost, current_nbTrucks, group2marked);
+					rejectDeliveryPoints, current_cost, current_nbTrucks, getNbRejectedRequests(), point2Group, group2marked);
 				
 				removeAllMoocFromRoutes();
 				
@@ -289,7 +289,7 @@ public class TruckContainerSolver {
 						
 						best_cost = new_cost;
 						best_solution = new TruckContainerSolution(XR, rejectPickupPoints, rejectDeliveryPoints,
-								new_cost, new_nbTrucks, group2marked);
+								new_cost, new_nbTrucks, new_nb_reject_points, point2Group, group2marked);
 						fo.println(it + " " + i_selected_insertion 
 							+ " " + i_selected_removal + " "
 							+ System.currentTimeMillis()/1000 + " "
