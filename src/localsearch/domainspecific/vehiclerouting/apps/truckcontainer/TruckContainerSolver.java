@@ -1486,16 +1486,16 @@ public class TruckContainerSolver {
 			mCode2Port.put(input.getPorts()[i].getCode(), input.getPorts()[i]);
 		}
 		
-		try{
-			Gson gson = new Gson();
-			File fo = new File(dataFileName);
-			FileWriter fw = new FileWriter(fo);
-			gson.toJson(input, fw);
-			fw.close();
-		}
-		catch(Exception e){
-			System.out.println(e);
-		}
+//		try{
+//			Gson gson = new Gson();
+//			File fo = new File(dataFileName);
+//			FileWriter fw = new FileWriter(fo);
+//			gson.toJson(input, fw);
+//			fw.close();
+//		}
+//		catch(Exception e){
+//			System.out.println(e);
+//		}
 	}
 	
 	//roulette-wheel mechanism
@@ -2053,7 +2053,7 @@ public class TruckContainerSolver {
 //		for(int i = 0; i < days.size(); i++){
 //			String fileName = "input_" + days.get(i) + ".json";
 			String fileName = "random_big_data-8reqs.json";
-			String outputfile = dir + "output/result-" + fileName + ".txt"; 
+			String outputfile = dir + "output/result-" + fileName + "-ALNS.txt"; 
 			String dataFileName = dir + fileName;
 			TruckContainerSolver solver = new TruckContainerSolver();
 			solver.readData(dataFileName);

@@ -1169,7 +1169,7 @@ public class DataAnalysis {
 		solver.input.setTrucks(newTrucks);
 		
 		Mooc[] moocs = solver.input.getMoocs();
-		Mooc[] newMoocs = new Mooc[moocs.length*3];
+		Mooc[] newMoocs = new Mooc[moocs.length*4];
 		maxId = -1;
 		k = -1;
 		for(int i = 0; i < moocs.length; i++){
@@ -1178,7 +1178,7 @@ public class DataAnalysis {
 			if(maxId < moocs[i].getId())
 				maxId = moocs[i].getId();
 		}
-		for(int j = 0; j < 2; j++){
+		for(int j = 0; j < 3; j++){
 			for(int i = 0; i < moocs.length; i++){
 				k++;
 				Mooc mooc = new Mooc(moocs[i].getId(), moocs[i].getCode(), moocs[i].getCategory(),
@@ -1213,7 +1213,7 @@ public class DataAnalysis {
 		//da.mergeFile();
 		
 		//them truck vao file
-		da.addTrucksMoocsToList("data/truck-container/merged_input_03.json", "data/truck-container/merged_input_03_addTruck.json");
+		da.addTrucksMoocsToList("data/truck-container/merged_input_03.json", "data/truck-container/merged_input_03_addTruckMooc.json");
 		
 		//tao file du lieu lon de test
 		//sua cac params trong initParams function

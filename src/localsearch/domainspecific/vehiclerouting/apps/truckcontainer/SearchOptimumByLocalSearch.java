@@ -28,8 +28,8 @@ public class SearchOptimumByLocalSearch {
 	private int best_nbReject;
 	
 	public int sigma1 = 5;
-	public int sigma2 = 1;
-	public int sigma3 = -5;
+	public int sigma2 = 2;
+	public int sigma3 = -1;
 	public double rp = 0.1;
 	public int nw = 1;
 	
@@ -98,7 +98,7 @@ public class SearchOptimumByLocalSearch {
 			opt2eff.put(i, 0);
 		}
 		
-		System.out.println("current rejectsize = " + tcs.rejectPickupPoints.size()
+		System.out.println("current rejectsize = " + tcs.getNbRejectedRequests()
 				+ ", current nbTrucks = " + tcs.getNbUsedTrucks()
 				+ ", current cos = " + tcs.objective.getValue()
 				+ ", current vio = " + tcs.S.violations());
@@ -124,13 +124,17 @@ public class SearchOptimumByLocalSearch {
 			if(cnt > maxStable){
 				int nR = tcs.getNbRejectedRequests();
 				int nT = tcs.getNbUsedTrucks();
+//				if(nR < best_solution.get_nbReject()
+//					|| (nR == best_solution.get_nbReject() && tcs.objective.getValue() < best_solution.get_cost()))
 				if(nR < best_solution.get_nbReject()
 					|| (nR == best_solution.get_nbReject() && nT < best_solution.get_nbTrucks())
-					|| (nR == best_solution.get_nbReject() && nT == best_solution.get_nbTrucks() && tcs.objective.getValue() < best_solution.get_cost()))
+					|| (nR == best_solution.get_nbReject() && nT == best_solution.get_nbTrucks() 
+					&& tcs.objective.getValue() < best_solution.get_cost()))
 					best_solution = new TruckContainerSolution(tcs.XR, tcs.rejectPickupPoints,
 					tcs.rejectDeliveryPoints, tcs.objective.getValue(), tcs.getNbUsedTrucks(), tcs.getNbRejectedRequests(),
 					tcs.point2Group, tcs.group2marked);
 				allRemoval();
+				greedyInsertion();
 				cnt = 0;
 			}
 			best_objective = tcs.objective.getValue();
@@ -138,7 +142,7 @@ public class SearchOptimumByLocalSearch {
 			best_nbReject = tcs.getNbRejectedRequests();
 			tcs.removeAllMoocFromRoutes();
 			
-			System.out.println(it + "/" + maxIters + ", best Truck = " + best_nbTrucks + ", best obj = " + best_objective);
+			System.out.println(it + "/" + maxIters + ", best Truck = " + best_nbTrucks + ", best obj = " + best_objective + ", vio = "+ tcs.S.violations());
 			isOpt = false;
 			//int op = r.nextInt(nbOpt);
 			int op = get_operator(pti);
@@ -152,14 +156,30 @@ public class SearchOptimumByLocalSearch {
 			tcs.insertMoocForAllRoutes();
 			int nu;
 			if(isOpt){
-				si[op] += sigma1;
+				int nR = tcs.getNbRejectedRequests();
+				int nT = tcs.getNbUsedTrucks();
+				double new_cost = tcs.objective.getValue();
+//				if(nR < best_solution.get_nbReject()
+//					|| (nR == best_solution.get_nbReject() && new_cost < best_solution.get_cost())){
+				if(nR < best_solution.get_nbReject()
+					|| (nR == best_solution.get_nbReject() && nT < best_solution.get_nbTrucks())
+					|| (nR == best_solution.get_nbReject() && nT < best_solution.get_nbTrucks() 
+					&& new_cost < best_solution.get_cost())){
+					best_solution = new TruckContainerSolution(tcs.XR, tcs.rejectPickupPoints,
+						tcs.rejectDeliveryPoints, tcs.objective.getValue(), tcs.getNbUsedTrucks(), tcs.getNbRejectedRequests(),
+						tcs.point2Group, tcs.group2marked);
+					si[op] += sigma1;
+					System.out.println("======================" + tcs.S.violations());
+				}
+				else
+					si[op] += sigma2;
 				cnt = 0;
 				try{
 					FileOutputStream write = new FileOutputStream(outputfile, true);
 					PrintWriter fo = new PrintWriter(write);
-					fo.println("iter=====opt=====time=====cost=====nbReject=====nbTrucks");
+					fo.println("iter=====opt=====time=====cost=====nbReject=====nbTrucks=====vio");
 					fo.println(it + " " + op + " " + DateTimeUtils.unixTimeStamp2DateTime(System.currentTimeMillis()/1000) + " " + tcs.objective.getValue()
-							+ " " + tcs.getNbRejectedRequests() + " " + tcs.getNbUsedTrucks());
+							+ " " + tcs.getNbRejectedRequests() + " " + tcs.getNbUsedTrucks() + " " + tcs.S.violations());
 					fo.close();
 					nu = opt2eff.get(op) + 1;
 					opt2eff.put(op, nu);
@@ -169,7 +189,7 @@ public class SearchOptimumByLocalSearch {
 				}
 			}
 			else{
-				si[op] += sigma2;
+				si[op] += sigma3;
 				cnt++;
 			}
 			nu = opt2nbUsed.get(op) + 1;
@@ -182,8 +202,9 @@ public class SearchOptimumByLocalSearch {
 			}
 			greedyInsertion();
 		}
-		
+		System.out.println(tcs.S.violations());
 		best_solution.copy2XR(tcs.XR);
+		System.out.println(tcs.S.violations());
 		tcs.group2marked = best_solution.get_group2marked();
 		tcs.point2Group = best_solution.get_point2Group();
 		tcs.rejectPickupPoints = best_solution.get_rejectPickupPoints();
@@ -396,9 +417,11 @@ public class SearchOptimumByLocalSearch {
 				tcs.mgr.performAddTwoPoints(pickup, p, delivery, q);
 				tcs.insertMoocForAllRoutes();
 				if(tcs.S.violations() == 0){
-					double new_cost = tcs.objective.getValue();
+					double new_cost = tcs.objective.getValue();						
 					int nT = tcs.getNbUsedTrucks();
 					int nR = tcs.getNbRejectedRequests();
+//					if(nR < best_nbReject
+//						|| (nR == best_nbReject && new_cost < best_objective)){
 					if(nR < best_nbReject
 						|| (nR == best_nbReject && nT < best_nbTrucks)
 						|| (nR == best_nbReject && nT == best_nbTrucks && new_cost < best_objective)){
@@ -475,9 +498,11 @@ public class SearchOptimumByLocalSearch {
 							tcs.mgr.performAddTwoPoints(pickup1, p2, delivery1, q2);	
 							tcs.insertMoocToRoutes(r2);
 							if(tcs.S.violations() == 0){
-								int nT = tcs.getNbUsedTrucks();
 								double new_cost = tcs.objective.getValue();
+								int nT = tcs.getNbUsedTrucks();
 								int nR = tcs.getNbRejectedRequests();
+//								if(nR < best_nbReject
+//									|| (nR == best_nbReject && new_cost < best_objective)){
 								if(nR < best_nbReject
 									|| (nR == best_nbReject && nT < best_nbTrucks)
 									|| (nR == best_nbReject && nT == best_nbTrucks && new_cost < best_objective)){
@@ -522,6 +547,8 @@ public class SearchOptimumByLocalSearch {
 		if(tcs.S.violations() == 0){
 			int new_nbTrucks = tcs.getNbUsedTrucks();
 			int nR = tcs.getNbRejectedRequests();
+//			if(nR < best_nbReject
+//				|| (nR == best_nbReject && tcs.objective.getValue() < best_objective)){
 			if(nR < best_nbReject
 				|| (nR == best_nbReject && new_nbTrucks < best_nbTrucks)
 				|| (nR == best_nbReject && new_nbTrucks == best_nbTrucks && tcs.objective.getValue() < best_objective)){
@@ -545,6 +572,8 @@ public class SearchOptimumByLocalSearch {
 		if(tcs.S.violations() > 0){
 			int new_nbTrucks = tcs.getNbUsedTrucks();
 			int nR = tcs.getNbRejectedRequests();
+//			if(nR < best_nbReject
+//				|| (nR == best_nbReject && tcs.objective.getValue() < best_objective)){
 			if(nR < best_nbReject
 				|| (nR == best_nbReject && new_nbTrucks < best_nbTrucks)
 				|| (nR == best_nbReject && new_nbTrucks == best_nbTrucks && tcs.objective.getValue() < best_objective)){

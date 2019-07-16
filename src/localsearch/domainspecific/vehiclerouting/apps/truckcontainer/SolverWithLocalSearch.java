@@ -1489,16 +1489,16 @@ public class SolverWithLocalSearch {
 			mCode2Port.put(input.getPorts()[i].getCode(), input.getPorts()[i]);
 		}
 		
-		try{
-			Gson gson = new Gson();
-			File fo = new File(dataFileName);
-			FileWriter fw = new FileWriter(fo);
-			gson.toJson(input, fw);
-			fw.close();
-		}
-		catch(Exception e){
-			System.out.println(e);
-		}
+//		try{
+//			Gson gson = new Gson();
+//			File fo = new File(dataFileName);
+//			FileWriter fw = new FileWriter(fo);
+//			gson.toJson(input, fw);
+//			fw.close();
+//		}
+//		catch(Exception e){
+//			System.out.println(e);
+//		}
 	}
 	
 	//roulette-wheel mechanism
@@ -1903,7 +1903,7 @@ public class SolverWithLocalSearch {
 		int it = 0;
 		int timeLimit = 36000000;
     	int nIter = 100000;
-    	int maxStable = 1000;
+    	int maxStable = 10000;
     	int iS = 0;
     	
     	SearchOptimumByLocalSearch sa = new SearchOptimumByLocalSearch(this);
@@ -2069,8 +2069,8 @@ public class SolverWithLocalSearch {
 //		days.add("2903");
 //		for(int i = 0; i < days.size(); i++){
 //			String fileName = "input_" + days.get(i) + ".json";
-			String fileName = "random_big_data-8reqs.json";
-			String outputfile = dir + "output/result-" + fileName + ".txt"; 
+			String fileName = "random_big_data-400reqs.json";
+			String outputfile = dir + "output/result-" + fileName + "-LCS.txt"; 
 			String dataFileName = dir + fileName;
 			SolverWithLocalSearch solver = new SolverWithLocalSearch();
 			solver.readData(dataFileName);
