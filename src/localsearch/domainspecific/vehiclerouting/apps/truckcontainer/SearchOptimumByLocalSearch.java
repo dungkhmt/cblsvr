@@ -248,6 +248,8 @@ public class SearchOptimumByLocalSearch {
 				break;
 			pickup1 = null;
 		}
+		if(pickup1 == null)
+			return;
 		int r1 = tcs.XR.route(pickup1);
 		Point pickup2 = null;
 		it = 0;
@@ -285,6 +287,8 @@ public class SearchOptimumByLocalSearch {
 				break;
 			p1 = null;
 		}
+		if(p1 == null)
+			return;
 		int r1 = tcs.XR.route(p1);
 		Point p2 = null;
 		it = 0;
@@ -325,6 +329,8 @@ public class SearchOptimumByLocalSearch {
 				break;
 			x1 = null;
 		}
+		if(x1 == null)
+			return;
 		int r1 = tcs.XR.route(x1);
 		Point y1 = null;
 		for(Point p = tcs.XR.next(x1); p != tcs.XR.getTerminatingPointOfRoute(r1); p = tcs.XR.next(p)){
