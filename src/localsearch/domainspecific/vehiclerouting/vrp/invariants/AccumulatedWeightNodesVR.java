@@ -50,7 +50,6 @@ public class AccumulatedWeightNodesVR implements InvariantVR {
 	}
 	
 	protected int getIndex(Point p) {
-		//if(p == null) System.out.println(name() + "::getIndex(" + null + ")");
 		return map.get(p);
 	}
 	

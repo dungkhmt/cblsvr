@@ -27,9 +27,9 @@ public class SearchOptimumByLocalSearch {
 	private int best_nbTrucks;
 	private int best_nbReject;
 	
-	public int sigma1 = 5;
-	public int sigma2 = 2;
-	public int sigma3 = -1;
+	public int sigma1 = 10;
+	public int sigma2 = 5;
+	public int sigma3 = 1;
 	public double rp = 0.1;
 	public int nw = 1;
 	
@@ -77,14 +77,14 @@ public class SearchOptimumByLocalSearch {
 	}
 	
 	public void explore(int maxIters, int maxTime, int maxStable, String outputfile){
-		Random ran = new Random();
 		int it = 0;
 		double t0 = System.currentTimeMillis()/1000;
 		try{
 			PrintWriter fo = new PrintWriter(new File(outputfile));
 			fo.println("nRequests = " + tcs.nRequest + ", time limit = " + maxTime + ", nbIters = " + maxIters);
-			fo.println("0 -1 -1 " + " " + DateTimeUtils.unixTimeStamp2DateTime(System.currentTimeMillis()/1000) + " " + tcs.objective.getValue() 
-					+ " " + tcs.getNbRejectedRequests() + " " + tcs.getNbUsedTrucks());
+			fo.println("iter=====opt=====time=====cost=====nbReject=====nbTrucks=====vio");
+			fo.println("0 -1 " + " " + DateTimeUtils.unixTimeStamp2DateTime(System.currentTimeMillis()/1000) + " " + tcs.objective.getValue() 
+					+ " " + tcs.getNbRejectedRequests() + " " + tcs.getNbUsedTrucks() + " " + tcs.S.violations());
 			fo.close();
 		}
 		catch(Exception e){
@@ -122,6 +122,9 @@ public class SearchOptimumByLocalSearch {
 		
 		while(it++ < maxIters && System.currentTimeMillis()/1000 - t0 < maxTime){
 			if(cnt > maxStable){
+				allRemoval();
+				greedyInsertion();
+				cnt = 0;
 				int nR = tcs.getNbRejectedRequests();
 				int nT = tcs.getNbUsedTrucks();
 //				if(nR < best_solution.get_nbReject()
@@ -129,13 +132,21 @@ public class SearchOptimumByLocalSearch {
 				if(nR < best_solution.get_nbReject()
 					|| (nR == best_solution.get_nbReject() && nT < best_solution.get_nbTrucks())
 					|| (nR == best_solution.get_nbReject() && nT == best_solution.get_nbTrucks() 
-					&& tcs.objective.getValue() < best_solution.get_cost()))
+					&& tcs.objective.getValue() < best_solution.get_cost())){
 					best_solution = new TruckContainerSolution(tcs.XR, tcs.rejectPickupPoints,
 					tcs.rejectDeliveryPoints, tcs.objective.getValue(), tcs.getNbUsedTrucks(), tcs.getNbRejectedRequests(),
 					tcs.point2Group, tcs.group2marked);
-				allRemoval();
-				greedyInsertion();
-				cnt = 0;
+					try{
+						FileOutputStream write = new FileOutputStream(outputfile, true);
+						PrintWriter fo = new PrintWriter(write);
+						fo.println(it + " -1 " + " " + DateTimeUtils.unixTimeStamp2DateTime(System.currentTimeMillis()/1000) + " " + tcs.objective.getValue()
+								+ " " + tcs.getNbRejectedRequests() + " " + tcs.getNbUsedTrucks() + " " + tcs.S.violations());
+						fo.close();
+					}
+					catch(Exception e){
+						
+					}
+				}
 			}
 			best_objective = tcs.objective.getValue();
 			best_nbTrucks = tcs.getNbUsedTrucks();
@@ -169,24 +180,22 @@ public class SearchOptimumByLocalSearch {
 						tcs.rejectDeliveryPoints, tcs.objective.getValue(), tcs.getNbUsedTrucks(), tcs.getNbRejectedRequests(),
 						tcs.point2Group, tcs.group2marked);
 					si[op] += sigma1;
-					System.out.println("======================" + tcs.S.violations());
+					nu = opt2eff.get(op) + 1;
+					opt2eff.put(op, nu);
+					try{
+						FileOutputStream write = new FileOutputStream(outputfile, true);
+						PrintWriter fo = new PrintWriter(write);
+						fo.println(it + " " + op + " " + DateTimeUtils.unixTimeStamp2DateTime(System.currentTimeMillis()/1000) + " " + tcs.objective.getValue()
+								+ " " + tcs.getNbRejectedRequests() + " " + tcs.getNbUsedTrucks() + " " + tcs.S.violations());
+						fo.close();
+					}
+					catch(Exception e){
+						
+					}
 				}
 				else
 					si[op] += sigma2;
 				cnt = 0;
-				try{
-					FileOutputStream write = new FileOutputStream(outputfile, true);
-					PrintWriter fo = new PrintWriter(write);
-					fo.println("iter=====opt=====time=====cost=====nbReject=====nbTrucks=====vio");
-					fo.println(it + " " + op + " " + DateTimeUtils.unixTimeStamp2DateTime(System.currentTimeMillis()/1000) + " " + tcs.objective.getValue()
-							+ " " + tcs.getNbRejectedRequests() + " " + tcs.getNbUsedTrucks() + " " + tcs.S.violations());
-					fo.close();
-					nu = opt2eff.get(op) + 1;
-					opt2eff.put(op, nu);
-				}
-				catch(Exception e){
-					
-				}
 			}
 			else{
 				si[op] += sigma3;
@@ -202,9 +211,7 @@ public class SearchOptimumByLocalSearch {
 			}
 			greedyInsertion();
 		}
-		System.out.println(tcs.S.violations());
 		best_solution.copy2XR(tcs.XR);
-		System.out.println(tcs.S.violations());
 		tcs.group2marked = best_solution.get_group2marked();
 		tcs.point2Group = best_solution.get_point2Group();
 		tcs.rejectPickupPoints = best_solution.get_rejectPickupPoints();
@@ -340,6 +347,8 @@ public class SearchOptimumByLocalSearch {
 				break;
 			x2 = null;
 		}
+		if(x2 == null)
+			return;
 		Point y2 = null;
 		for(Point p = tcs.XR.next(x2); p != tcs.XR.getTerminatingPointOfRoute(r2); p = tcs.XR.next(p)){
 			if(tcs.accContainerInvr.getSumWeights(p) == 0){
@@ -360,23 +369,29 @@ public class SearchOptimumByLocalSearch {
 		while(pickup == null){
 			int i = ran.nextInt(n);
 			 pickup = tcs.pickupPoints.get(i);
-			 int groupId = tcs.point2Group.get(pickup);
-			 if(tcs.XR.route(pickup) == Constants.NULL_POINT
-				&& tcs.group2marked.get(groupId) == 1){
-				 pickup = null;
-			 }
+			 if(tcs.XR.route(pickup) != Constants.NULL_POINT)
+				break;
+			 pickup = null;
 			 if(it++ > n)
 				 break;
 		}
+		if(pickup == null)
+			return;
 		int r = -1;
+		int rp = tcs.XR.route(pickup);
+		int groupPick = tcs.point2Group.get(tcs.XR.getStartingPointOfRoute(rp));
 		it = 0;
 		n = tcs.XR.getNbRoutes();
 		while(r == -1){
 			r = ran.nextInt(tcs.XR.getNbRoutes()) + 1;
 			int groupId = tcs.point2Group.get(tcs.XR.getStartingPointOfRoute(r));
-			if(tcs.group2marked.get(groupId) == 1 && tcs.XR.index(tcs.XR.getTerminatingPointOfRoute(r)) <= 1){
-				r = -1;
-			}
+			if(tcs.group2marked.get(groupId) == 0
+				|| (tcs.group2marked.get(groupId) == 1 && tcs.XR.index(tcs.XR.getTerminatingPointOfRoute(r)) > 1)
+				|| (tcs.group2marked.get(groupId) == 1 && tcs.XR.index(tcs.XR.getTerminatingPointOfRoute(r)) <= 1
+				&& groupId == groupPick && tcs.XR.index(tcs.XR.getTerminatingPointOfRoute(rp)) <= 3))
+				break;
+			
+			r = -1;
 			if(it++ > n)
 				break;
 		}
@@ -390,24 +405,19 @@ public class SearchOptimumByLocalSearch {
 		int groupId = tcs.point2Group.get(pickup);
 		Point delivery = tcs.pickup2Delivery.get(pickup);
 		int ridx = -1;
-		Point pre_pick = null;
-		Point pre_delivery = null;
-		if(tcs.XR.route(pickup) != Constants.NULL_POINT){
-			ridx = tcs.XR.route(pickup);
-			Point start = tcs.XR.getStartingPointOfRoute(r);
-			if(ridx != r && tcs.group2marked.get(tcs.point2Group.get(start)) == 0)
-				return;
-			pre_pick = tcs.XR.prev(pickup);
-			pre_delivery = tcs.XR.prev(delivery);
-			if(pre_delivery == pickup)
-				pre_delivery = pre_pick;
-			tcs.mgr.performRemoveTwoPoints(pickup, delivery);
 
-			if(tcs.XR.index(tcs.XR.getTerminatingPointOfRoute(ridx)) <= 1){
-				int groupTruck = tcs.point2Group.get(tcs.XR.getStartingPointOfRoute(ridx));
-				tcs.group2marked.put(groupTruck, 0);
-				isRemoveRoute = true;
-			}
+		ridx = tcs.XR.route(pickup);
+		Point start = tcs.XR.getStartingPointOfRoute(r);
+		Point pre_pick = tcs.XR.prev(pickup);
+		Point pre_delivery = tcs.XR.prev(delivery);
+		if(pre_delivery == pickup)
+			pre_delivery = pre_pick;
+		tcs.mgr.performRemoveTwoPoints(pickup, delivery);
+
+		if(tcs.XR.index(tcs.XR.getTerminatingPointOfRoute(ridx)) <= 1){
+			int groupTruck = tcs.point2Group.get(tcs.XR.getStartingPointOfRoute(ridx));
+			tcs.group2marked.put(groupTruck, 0);
+			isRemoveRoute = true;
 		}
 		Point best_pre_pick = null;
 		Point best_pre_delivery = null;
@@ -432,17 +442,14 @@ public class SearchOptimumByLocalSearch {
 						best_pre_delivery = q;
 					}
 				}
-				temperature = cooling_rate*temperature;
-				tcs.mgr.performRemoveTwoPoints(pickup, delivery);
+//				temperature = cooling_rate*temperature;
 				tcs.removeAllMoocFromRoutes();
+				tcs.mgr.performRemoveTwoPoints(pickup, delivery);
 			}
 		}
 		if(best_pre_pick != null && best_pre_delivery != null){
 			tcs.mgr.performAddTwoPoints(pickup, best_pre_pick, delivery, best_pre_delivery);
-			if(ridx == -1){
-				tcs.rejectPickupPoints.remove(pickup);
-				tcs.rejectDeliveryPoints.remove(delivery);
-			}
+
 			int groupTruck = tcs.point2Group.get(st);
 			tcs.group2marked.put(groupTruck, 1);
 			tcs.group2marked.put(groupId, 1);
@@ -453,11 +460,9 @@ public class SearchOptimumByLocalSearch {
 			isOpt = true;
 		}
 		else{
-			if(ridx != -1){
-				tcs.mgr.performAddTwoPoints(pickup, pre_pick, delivery, pre_delivery);
-				int groupTruck = tcs.point2Group.get(tcs.XR.getStartingPointOfRoute(ridx));
-				tcs.group2marked.put(groupTruck, 1);
-			}
+			tcs.mgr.performAddTwoPoints(pickup, pre_pick, delivery, pre_delivery);
+			int groupTruck = tcs.point2Group.get(tcs.XR.getStartingPointOfRoute(ridx));
+			tcs.group2marked.put(groupTruck, 1);
 		}
 	}
 	
@@ -480,61 +485,86 @@ public class SearchOptimumByLocalSearch {
 
 		tcs.mgr.performRemoveTwoPoints(pickup1, delivery1);
 		tcs.mgr.performRemoveTwoPoints(pickup2, delivery2);
-		Point best_pre_pick1 = null;
-		Point best_pre_delivery1 = null;
-		Point best_pre_pick2 = null;
-		Point best_pre_delivery2 = null;
-		Point st1 = tcs.XR.getStartingPointOfRoute(r1);
-		Point st2 = tcs.XR.getStartingPointOfRoute(r2);
-		for(Point p1 = st1; p1 != tcs.XR.getTerminatingPointOfRoute(r1); p1 = tcs.XR.next(p1)){
-			for(Point q1 = p1; q1 != tcs.XR.getTerminatingPointOfRoute(r1); q1 = tcs.XR.next(q1)){
-				for(Point p2 = st2; p2 != tcs.XR.getTerminatingPointOfRoute(r2); p2 = tcs.XR.next(p2)){
-					for(Point q2 = p2; q2 != tcs.XR.getTerminatingPointOfRoute(r2); q2 = tcs.XR.next(q2)){
-//						System.out.println(q2.getID());
-						tcs.mgr.performAddTwoPoints(pickup2, p1, delivery2, q1);
-						tcs.insertMoocForAllRoutes();
-						if(tcs.S.violations() == 0){
-							tcs.removeAllMoocFromRoutes();
-							tcs.mgr.performAddTwoPoints(pickup1, p2, delivery1, q2);	
-							tcs.insertMoocToRoutes(r2);
-							if(tcs.S.violations() == 0){
-								double new_cost = tcs.objective.getValue();
-								int nT = tcs.getNbUsedTrucks();
-								int nR = tcs.getNbRejectedRequests();
-//								if(nR < best_nbReject
-//									|| (nR == best_nbReject && new_cost < best_objective)){
-								if(nR < best_nbReject
-									|| (nR == best_nbReject && nT < best_nbTrucks)
-									|| (nR == best_nbReject && nT == best_nbTrucks && new_cost < best_objective)){
-									best_objective = new_cost;
-									best_nbReject = nR;
-									best_nbTrucks = nT;
-									best_pre_pick1 = p1;
-									best_pre_delivery1 = q1;
-									best_pre_pick2 = p2;
-									best_pre_delivery2 = q2;
-								}
-							}
-							tcs.mgr.performRemoveTwoPoints(pickup1, delivery1);
-							tcs.removeAllMoocFromRoutes();
-						}
-						tcs.mgr.performRemoveTwoPoints(pickup2, delivery2);
-						tcs.removeAllMoocFromRoutes();
-						
-					}
-				}
+		
+		tcs.mgr.performAddTwoPoints(pickup2, pre_pick1, delivery2, pre_delivery1);
+		tcs.mgr.performAddTwoPoints(pickup1, pre_pick2, delivery1, pre_delivery2);
+		
+		tcs.insertMoocForAllRoutes();
+		if(tcs.S.violations() == 0){
+			double new_cost = tcs.objective.getValue();
+			int nT = tcs.getNbUsedTrucks();
+			int nR = tcs.getNbRejectedRequests();
+//			if(nR < best_nbReject
+//				|| (nR == best_nbReject && new_cost < best_objective)){
+			if(nR < best_nbReject
+				|| (nR == best_nbReject && nT < best_nbTrucks)
+				|| (nR == best_nbReject && nT == best_nbTrucks && new_cost < best_objective)){
+				tcs.removeAllMoocFromRoutes();
+				isOpt = true;
+				return;
 			}
 		}
-
-		if(best_pre_pick1 != null){
-			tcs.mgr.performAddTwoPoints(pickup2, best_pre_pick1, delivery2, best_pre_delivery1);
-			tcs.mgr.performAddTwoPoints(pickup1, best_pre_pick2, delivery1, best_pre_delivery2);
-			isOpt = true;
-		}
-		else{
-			tcs.mgr.performAddTwoPoints(pickup1, pre_pick1, delivery1, pre_delivery1);
-			tcs.mgr.performAddTwoPoints(pickup2, pre_pick2, delivery2, pre_delivery2);
-		}
+		tcs.removeAllMoocFromRoutes();
+		tcs.mgr.performRemoveTwoPoints(pickup1, delivery1);
+		tcs.mgr.performRemoveTwoPoints(pickup2, delivery2);
+		tcs.mgr.performAddTwoPoints(pickup1, pre_pick1, delivery1, pre_delivery1);
+		tcs.mgr.performAddTwoPoints(pickup2, pre_pick2, delivery2, pre_delivery2);
+		
+//		Point best_pre_pick1 = null;
+//		Point best_pre_delivery1 = null;
+//		Point best_pre_pick2 = null;
+//		Point best_pre_delivery2 = null;
+//		Point st1 = tcs.XR.getStartingPointOfRoute(r1);
+//		Point st2 = tcs.XR.getStartingPointOfRoute(r2);
+//		for(Point p1 = st1; p1 != tcs.XR.getTerminatingPointOfRoute(r1); p1 = tcs.XR.next(p1)){
+//			for(Point q1 = p1; q1 != tcs.XR.getTerminatingPointOfRoute(r1); q1 = tcs.XR.next(q1)){
+//				for(Point p2 = st2; p2 != tcs.XR.getTerminatingPointOfRoute(r2); p2 = tcs.XR.next(p2)){
+//					for(Point q2 = p2; q2 != tcs.XR.getTerminatingPointOfRoute(r2); q2 = tcs.XR.next(q2)){
+////						System.out.println(q2.getID());
+//						tcs.mgr.performAddTwoPoints(pickup2, p1, delivery2, q1);
+//						tcs.insertMoocForAllRoutes();
+//						if(tcs.S.violations() == 0){
+//							tcs.removeAllMoocFromRoutes();
+//							tcs.mgr.performAddTwoPoints(pickup1, p2, delivery1, q2);	
+//							tcs.insertMoocToRoutes(r2);
+//							if(tcs.S.violations() == 0){
+//								double new_cost = tcs.objective.getValue();
+//								int nT = tcs.getNbUsedTrucks();
+//								int nR = tcs.getNbRejectedRequests();
+////								if(nR < best_nbReject
+////									|| (nR == best_nbReject && new_cost < best_objective)){
+//								if(nR < best_nbReject
+//									|| (nR == best_nbReject && nT < best_nbTrucks)
+//									|| (nR == best_nbReject && nT == best_nbTrucks && new_cost < best_objective)){
+//									best_objective = new_cost;
+//									best_nbReject = nR;
+//									best_nbTrucks = nT;
+//									best_pre_pick1 = p1;
+//									best_pre_delivery1 = q1;
+//									best_pre_pick2 = p2;
+//									best_pre_delivery2 = q2;
+//								}
+//							}
+//							tcs.mgr.performRemoveTwoPoints(pickup1, delivery1);
+//							tcs.removeAllMoocFromRoutes();
+//						}
+//						tcs.mgr.performRemoveTwoPoints(pickup2, delivery2);
+//						tcs.removeAllMoocFromRoutes();
+//						
+//					}
+//				}
+//			}
+//		}
+//
+//		if(best_pre_pick1 != null){
+//			tcs.mgr.performAddTwoPoints(pickup2, best_pre_pick1, delivery2, best_pre_delivery1);
+//			tcs.mgr.performAddTwoPoints(pickup1, best_pre_pick2, delivery1, best_pre_delivery2);
+//			isOpt = true;
+//		}
+//		else{
+//			tcs.mgr.performAddTwoPoints(pickup1, pre_pick1, delivery1, pre_delivery1);
+//			tcs.mgr.performAddTwoPoints(pickup2, pre_pick2, delivery2, pre_delivery2);
+//		}
 	}
 	
 	public void TwoOptMove5(Point pickup1, Point pickup2){

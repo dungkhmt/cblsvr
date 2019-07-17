@@ -46,17 +46,17 @@ public class createDataFileForMIP {
 	
 	public void init(){
 		Random r = new Random();
-		pickTruckTime = 1;
+		pickTruckTime = 0;
 		pickMoocTime = 2;
 		pickContTime = 3;
-		delTruckTime = 1;
+		delTruckTime = 0;
 		delMoocTime = 2;
 		delContTime = 3;
-		nEE = 1;
+		nEE = 2;
 		nEL = 1;
 		nIE = 1;
-		nIL = 1;
-		nTrucks = (nEE + nEL + nIE + nIL)/2;
+		nIL = 2;
+		nTrucks = (nEE + nEL + nIE + nIL)/3;
 		nMoocs = nTrucks;
 		nContainers = nEE;// + r.nextInt(3);
 		nReturnedContainers = nIE;// + r.nextInt(3);
@@ -152,7 +152,7 @@ public class createDataFileForMIP {
 					+ mooc2cont + ser.get(depotMoocs.get(i%2))
 					+ cont2wh + ser.get(depotContainers.get(i))
 					- r.nextInt(10);
-			int l = e + r.nextInt(40) + 50;
+			int l = e + r.nextInt(40) + 150;
 			ear.put(id, e);
 			late.put(id, l);
 			ser.put(id, delContTime);
@@ -167,14 +167,15 @@ public class createDataFileForMIP {
 			int truck2mooc = r.nextInt(20) + 5;
 			int mooc2wh = r.nextInt(20) + 5;
 			int wh2cont = r.nextInt(20) + 5;
-			matrix[depotTrucks.get((i + nEE)%2)][depotMoocs.get((i + nEE))%2] = truck2mooc;
-			matrix[depotMoocs.get((i + nEE)%2)][id] = mooc2wh;
+			int idx = (i + nEE)%2;
+			matrix[depotTrucks.get(idx)][depotMoocs.get(idx)] = truck2mooc;
+			matrix[depotMoocs.get(idx)][id] = mooc2wh;
 			matrix[id][returnDepotContainers.get(i)] = wh2cont;
 			int e = truck2mooc + ser.get(depotTrucks.get((i + nEE)%2))
 					+ mooc2wh + ser.get(depotMoocs.get((i + nEE)%2))
 					+ wh2cont + ser.get(returnDepotContainers.get(i))
 					- r.nextInt(10);
-			int l = e + r.nextInt(40) + 50;
+			int l = e + r.nextInt(40) + 150;
 			ear.put(id, e);
 			late.put(id, l);
 			ser.put(id, pickContTime);
@@ -189,12 +190,13 @@ public class createDataFileForMIP {
 			intermediateContainers.add(id);
 			int truck2mooc = r.nextInt(20) + 5;
 			int mooc2wh = r.nextInt(20) + 5;
-			matrix[depotTrucks.get((i + nEE + nIE)%2)][depotMoocs.get((i + nEE + nIE)%2)] = truck2mooc;
-			matrix[depotMoocs.get((i + nEE + nIE)%2)][id] = mooc2wh;
-			int e = truck2mooc + ser.get(depotTrucks.get((i + nEE + nIE)%2))
-					+ mooc2wh + ser.get(depotMoocs.get((i + nEE + nIE)%2))
+			int idx = (i + nEE + nIE)%2;
+			matrix[depotTrucks.get(idx)][depotMoocs.get(idx)] = truck2mooc;
+			matrix[depotMoocs.get(idx)][id] = mooc2wh;
+			int e = truck2mooc + ser.get(depotTrucks.get(idx))
+					+ mooc2wh + ser.get(depotMoocs.get(idx))
 					- r.nextInt(10);
-			int l = e + r.nextInt(40) + 50;
+			int l = e + r.nextInt(40) + 150;
 			ear.put(id, e);
 			late.put(id, l);
 			ser.put(id, pickContTime);
@@ -209,7 +211,7 @@ public class createDataFileForMIP {
 			matrix[id - 1][id] = wh2port;
 			e = e + wh2port
 					- r.nextInt(10);
-			l = e + r.nextInt(40) + 50;
+			l = e + r.nextInt(40) + 150;
 			ear.put(id, e);
 			late.put(id, l);
 			ser.put(id, delContTime);
@@ -224,12 +226,13 @@ public class createDataFileForMIP {
 			intermediateContainers.add(id);
 			int truck2mooc = r.nextInt(20) + 5;
 			int mooc2port = r.nextInt(20) + 5;
-			matrix[depotTrucks.get((i + nEE + nIE + nEL)%2)][depotMoocs.get((i + nEE + nIE + nEL)%2)] = truck2mooc;
-			matrix[depotMoocs.get((i + nEE + nIE + nEL)%2)][id] = mooc2port;
-			int e = truck2mooc + ser.get(depotTrucks.get((i + nEE + nIE + nEL)%2))
-					+ mooc2port + ser.get(depotMoocs.get((i + nEE + nIE + nEL)%2))
+			int idx = (i + nEE + nIE + nEL)%2;
+			matrix[depotTrucks.get(idx)][depotMoocs.get(idx)] = truck2mooc;
+			matrix[depotMoocs.get(idx)][id] = mooc2port;
+			int e = truck2mooc + ser.get(depotTrucks.get(idx))
+					+ mooc2port + ser.get(depotMoocs.get(idx))
 					- r.nextInt(10);
-			int l = e + r.nextInt(40) + 50;
+			int l = e + r.nextInt(40) + 150;
 			ear.put(id, e);
 			late.put(id, l);
 			ser.put(id, pickContTime);
@@ -242,7 +245,7 @@ public class createDataFileForMIP {
 			matrix[id - 1][id] = port2wh;
 			e = e + port2wh
 					- r.nextInt(10);
-			l = e + r.nextInt(40) + 50;
+			l = e + r.nextInt(40) + 150;
 			ear.put(id, e);
 			late.put(id, l);
 			ser.put(id, delContTime);

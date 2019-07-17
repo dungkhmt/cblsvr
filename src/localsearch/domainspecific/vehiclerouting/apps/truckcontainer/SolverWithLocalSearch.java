@@ -1247,79 +1247,79 @@ public class SolverWithLocalSearch {
 		Random ran = new Random();
 		additionalContainers = new ArrayList<Container>();
 		int idxCode = -1;
-		if(input.getImRequests() != null){
-			for (int i = 0; i < input.getImRequests().length; i++) {
-				ImportContainerTruckMoocRequest R = input.getImRequests()[i];
-				for (int j = 0; j < R.getContainerRequest().length; j++) {
-					ImportContainerRequest r = R.getContainerRequest()[j];
-
-					idxCode++;
-					String code = "A-" + idxCode;
-					String depotContainerCode = null;
-					if(r.getDepotContainerCode() != null)
-						depotContainerCode = r.getDepotContainerCode()[0];
-					else{
-						int idx = ran.nextInt(input.getDepotContainers().length);
-						depotContainerCode = input.getDepotContainers()[idx].getCode();
-					}
-					Container c = new Container(code, (int) r.getWeight(),
-							r.getContainerCategory(), depotContainerCode,
-							r.getDepotContainerCode());
-					additionalContainers.add(c);
-					r.setContainerCode(code);
-				}
-			}
-		}
-		if(input.getImEmptyRequests() != null){
-			for (int i = 0; i < input.getImEmptyRequests().length; i++) {
-				ImportEmptyRequests R = input.getImEmptyRequests()[i];
-				idxCode++;
-				String code = "A-" + idxCode;
-				String depotContainerCode = null;
-				if(R.getDepotContainerCode() != null)
-					depotContainerCode = R.getDepotContainerCode();
-				else{
-					int idx = ran.nextInt(input.getDepotContainers().length);
-					depotContainerCode = input.getDepotContainers()[idx].getCode();
-				}
-				DepotContainer[] dpc = input.getDepotContainers();
-				for(int k = 0; k < dpc.length; k++){
-					if(dpc[k].getCode().equals(depotContainerCode))
-						dpc[k].setReturnedContainer(true);
-				}
-				input.setDepotContainers(dpc);
-				
-				String[] returnDepot = new String[1];
-				returnDepot[0] = new String();
-				returnDepot[0] = depotContainerCode;
-				Container c = new Container(code, (int) R.getWeight(),
-						R.getContainerCategory(), depotContainerCode,
-						returnDepot);
-				additionalContainers.add(c);
-				R.setContainerCode(code);
-			}
-		}
-		ArrayList<String> containerCodes = new ArrayList<String>();
-		
-		Container[] temp = input.getContainers();
-		ArrayList<Container> cL = new ArrayList<Container>();
-		for (int i = 0; i < temp.length; i++) {
-			if(!containerCodes.contains(temp[i].getCode())){
-				containerCodes.add(temp[i].getCode());
-				cL.add(temp[i]);
-			}
-		}
-		Container[] L = new Container[cL.size()
-				+ additionalContainers.size()];
-		for (int i = 0; i < cL.size(); i++) {
-			L[i] = cL.get(i);
-			L[i].setImportedContainer(false);
-		}
-		for (int i = 0; i < additionalContainers.size(); i++) {
-			L[i + cL.size()] = additionalContainers.get(i);
-			L[i + cL.size()].setImportedContainer(true);
-		}
-		input.setContainers(L);
+//		if(input.getImRequests() != null){
+//			for (int i = 0; i < input.getImRequests().length; i++) {
+//				ImportContainerTruckMoocRequest R = input.getImRequests()[i];
+//				for (int j = 0; j < R.getContainerRequest().length; j++) {
+//					ImportContainerRequest r = R.getContainerRequest()[j];
+//
+//					idxCode++;
+//					String code = "A-" + idxCode;
+//					String depotContainerCode = null;
+//					if(r.getDepotContainerCode() != null)
+//						depotContainerCode = r.getDepotContainerCode()[0];
+//					else{
+//						int idx = ran.nextInt(input.getDepotContainers().length);
+//						depotContainerCode = input.getDepotContainers()[idx].getCode();
+//					}
+//					Container c = new Container(code, (int) r.getWeight(),
+//							r.getContainerCategory(), depotContainerCode,
+//							r.getDepotContainerCode());
+//					additionalContainers.add(c);
+//					r.setContainerCode(code);
+//				}
+//			}
+//		}
+//		if(input.getImEmptyRequests() != null){
+//			for (int i = 0; i < input.getImEmptyRequests().length; i++) {
+//				ImportEmptyRequests R = input.getImEmptyRequests()[i];
+//				idxCode++;
+//				String code = "A-" + idxCode;
+//				String depotContainerCode = null;
+//				if(R.getDepotContainerCode() != null)
+//					depotContainerCode = R.getDepotContainerCode();
+//				else{
+//					int idx = ran.nextInt(input.getDepotContainers().length);
+//					depotContainerCode = input.getDepotContainers()[idx].getCode();
+//				}
+//				DepotContainer[] dpc = input.getDepotContainers();
+//				for(int k = 0; k < dpc.length; k++){
+//					if(dpc[k].getCode().equals(depotContainerCode))
+//						dpc[k].setReturnedContainer(true);
+//				}
+//				input.setDepotContainers(dpc);
+//				
+//				String[] returnDepot = new String[1];
+//				returnDepot[0] = new String();
+//				returnDepot[0] = depotContainerCode;
+//				Container c = new Container(code, (int) R.getWeight(),
+//						R.getContainerCategory(), depotContainerCode,
+//						returnDepot);
+//				additionalContainers.add(c);
+//				R.setContainerCode(code);
+//			}
+//		}
+//		ArrayList<String> containerCodes = new ArrayList<String>();
+//		
+//		Container[] temp = input.getContainers();
+//		ArrayList<Container> cL = new ArrayList<Container>();
+//		for (int i = 0; i < temp.length; i++) {
+//			if(!containerCodes.contains(temp[i].getCode())){
+//				containerCodes.add(temp[i].getCode());
+//				cL.add(temp[i]);
+//			}
+//		}
+//		Container[] L = new Container[cL.size()
+//				+ additionalContainers.size()];
+//		for (int i = 0; i < cL.size(); i++) {
+//			L[i] = cL.get(i);
+//			L[i].setImportedContainer(false);
+//		}
+//		for (int i = 0; i < additionalContainers.size(); i++) {
+//			L[i + cL.size()] = additionalContainers.get(i);
+//			L[i + cL.size()].setImportedContainer(true);
+//		}
+//		input.setContainers(L);
 
 		HashSet<String> s_locationCode = new HashSet<String>();
 		for (int i = 0; i < input.getDistance().length; i++) {
@@ -1350,18 +1350,18 @@ public class SolverWithLocalSearch {
 
 			travelTime[is][id] = e.getTravelTime();
 		}
-		ArrayList<DepotContainer> dcL = new ArrayList<DepotContainer>();
-		ArrayList<String> codes = new ArrayList<String>();
-		for (int i = 0; i < input.getDepotContainers().length; i++) {
-			if(!codes.contains(input.getDepotContainers()[i].getCode())){
-				codes.add(input.getDepotContainers()[i].getCode());
-				dcL.add(input.getDepotContainers()[i]);
-			}
-		}
-		DepotContainer[] dpc = new DepotContainer[dcL.size()];
-		for(int i = 0; i < dcL.size(); i++)
-			dpc[i] = dcL.get(i);
-		input.setDepotContainers(dpc);
+//		ArrayList<DepotContainer> dcL = new ArrayList<DepotContainer>();
+//		ArrayList<String> codes = new ArrayList<String>();
+//		for (int i = 0; i < input.getDepotContainers().length; i++) {
+//			if(!codes.contains(input.getDepotContainers()[i].getCode())){
+//				codes.add(input.getDepotContainers()[i].getCode());
+//				dcL.add(input.getDepotContainers()[i]);
+//			}
+//		}
+//		DepotContainer[] dpc = new DepotContainer[dcL.size()];
+//		for(int i = 0; i < dcL.size(); i++)
+//			dpc[i] = dcL.get(i);
+//		input.setDepotContainers(dpc);
 		
 		mCode2DepotContainer = new HashMap<String, DepotContainer>();
 		for (int i = 0; i < input.getDepotContainers().length; i++) {
@@ -1369,18 +1369,18 @@ public class SolverWithLocalSearch {
 					input.getDepotContainers()[i]);
 		}
 
-		ArrayList<DepotMooc> depotMoocList = new ArrayList<DepotMooc>();
-		codes = new ArrayList<String>();
-		for (int i = 0; i < input.getDepotMoocs().length; i++) {
-			if(!codes.contains(input.getDepotMoocs()[i].getCode())){
-				codes.add(input.getDepotMoocs()[i].getCode());
-				depotMoocList.add(input.getDepotMoocs()[i]);
-			}
-		}
-		DepotMooc[] dpm = new DepotMooc[depotMoocList.size()];
-		for(int i = 0; i < depotMoocList.size(); i++)
-			dpm[i] = depotMoocList.get(i);
-		input.setDepotMoocs(dpm);
+//		ArrayList<DepotMooc> depotMoocList = new ArrayList<DepotMooc>();
+//		codes = new ArrayList<String>();
+//		for (int i = 0; i < input.getDepotMoocs().length; i++) {
+//			if(!codes.contains(input.getDepotMoocs()[i].getCode())){
+//				codes.add(input.getDepotMoocs()[i].getCode());
+//				depotMoocList.add(input.getDepotMoocs()[i]);
+//			}
+//		}
+//		DepotMooc[] dpm = new DepotMooc[depotMoocList.size()];
+//		for(int i = 0; i < depotMoocList.size(); i++)
+//			dpm[i] = depotMoocList.get(i);
+//		input.setDepotMoocs(dpm);
 		
 		mCode2DepotMooc = new HashMap<String, DepotMooc>();
 		for (int i = 0; i < input.getDepotMoocs().length; i++) {
@@ -1388,18 +1388,18 @@ public class SolverWithLocalSearch {
 					input.getDepotMoocs()[i]);
 		}
 		
-		ArrayList<DepotTruck> depotTruckList = new ArrayList<DepotTruck>();
-		codes = new ArrayList<String>();
-		for (int i = 0; i < input.getDepotTrucks().length; i++) {
-			if(!codes.contains(input.getDepotTrucks()[i].getCode())){
-				codes.add(input.getDepotTrucks()[i].getCode());
-				depotTruckList.add(input.getDepotTrucks()[i]);
-			}
-		}
-		DepotTruck[] dpt = new DepotTruck[depotTruckList.size()];
-		for(int i = 0; i < depotTruckList.size(); i++)
-			dpt[i] = depotTruckList.get(i);
-		input.setDepotTrucks(dpt);
+//		ArrayList<DepotTruck> depotTruckList = new ArrayList<DepotTruck>();
+//		codes = new ArrayList<String>();
+//		for (int i = 0; i < input.getDepotTrucks().length; i++) {
+//			if(!codes.contains(input.getDepotTrucks()[i].getCode())){
+//				codes.add(input.getDepotTrucks()[i].getCode());
+//				depotTruckList.add(input.getDepotTrucks()[i]);
+//			}
+//		}
+//		DepotTruck[] dpt = new DepotTruck[depotTruckList.size()];
+//		for(int i = 0; i < depotTruckList.size(); i++)
+//			dpt[i] = depotTruckList.get(i);
+//		input.setDepotTrucks(dpt);
 		
 		mCode2DepotTruck = new HashMap<String, DepotTruck>();
 		for (int i = 0; i < input.getDepotTrucks().length; i++) {
@@ -1407,18 +1407,18 @@ public class SolverWithLocalSearch {
 					input.getDepotTrucks()[i]);
 		}
 		
-		ArrayList<Warehouse> whList = new ArrayList<Warehouse>();
-		codes = new ArrayList<String>();
-		for (int i = 0; i < input.getWarehouses().length; i++) {
-			if(!codes.contains(input.getWarehouses()[i].getCode())){
-				codes.add(input.getWarehouses()[i].getCode());
-				whList.add(input.getWarehouses()[i]);
-			}
-		}
-		Warehouse[] whs = new Warehouse[whList.size()];
-		for(int i = 0; i < whList.size(); i++)
-			whs[i] = whList.get(i);
-		input.setWarehouses(whs);
+//		ArrayList<Warehouse> whList = new ArrayList<Warehouse>();
+//		codes = new ArrayList<String>();
+//		for (int i = 0; i < input.getWarehouses().length; i++) {
+//			if(!codes.contains(input.getWarehouses()[i].getCode())){
+//				codes.add(input.getWarehouses()[i].getCode());
+//				whList.add(input.getWarehouses()[i]);
+//			}
+//		}
+//		Warehouse[] whs = new Warehouse[whList.size()];
+//		for(int i = 0; i < whList.size(); i++)
+//			whs[i] = whList.get(i);
+//		input.setWarehouses(whs);
 		
 		mCode2Warehouse = new HashMap<String, Warehouse>();
 		for (int i = 0; i < input.getWarehouses().length; i++) {
@@ -1426,18 +1426,18 @@ public class SolverWithLocalSearch {
 					input.getWarehouses()[i]);
 		}
 		
-		ArrayList<Mooc> moocList = new ArrayList<Mooc>();
-		codes = new ArrayList<String>();
-		for (int i = 0; i < input.getMoocs().length; i++) {
-			if(!codes.contains(input.getMoocs()[i].getCode())){
-				codes.add(input.getMoocs()[i].getCode());
-				moocList.add(input.getMoocs()[i]);
-			}
-		}
-		Mooc[] ms = new Mooc[moocList.size()];
-		for(int i = 0; i < moocList.size(); i++)
-			ms[i] = moocList.get(i);
-		input.setMoocs(ms);
+//		ArrayList<Mooc> moocList = new ArrayList<Mooc>();
+//		codes = new ArrayList<String>();
+//		for (int i = 0; i < input.getMoocs().length; i++) {
+//			if(!codes.contains(input.getMoocs()[i].getCode())){
+//				codes.add(input.getMoocs()[i].getCode());
+//				moocList.add(input.getMoocs()[i]);
+//			}
+//		}
+//		Mooc[] ms = new Mooc[moocList.size()];
+//		for(int i = 0; i < moocList.size(); i++)
+//			ms[i] = moocList.get(i);
+//		input.setMoocs(ms);
 		
 		mCode2Mooc = new HashMap<String, Mooc>();
 		for (int i = 0; i < input.getMoocs().length; i++) {
@@ -1445,18 +1445,18 @@ public class SolverWithLocalSearch {
 			mCode2Mooc.put(mooc.getCode(), mooc);
 		}
 		
-		ArrayList<Truck> truckList = new ArrayList<Truck>();
-		codes = new ArrayList<String>();
-		for (int i = 0; i < input.getTrucks().length; i++) {
-			if(!codes.contains(input.getTrucks()[i].getCode())){
-				codes.add(input.getTrucks()[i].getCode());
-				truckList.add(input.getTrucks()[i]);
-			}
-		}
-		Truck[] ts = new Truck[truckList.size()];
-		for(int i = 0; i < truckList.size(); i++)
-			ts[i] = truckList.get(i);
-		input.setTrucks(ts);
+//		ArrayList<Truck> truckList = new ArrayList<Truck>();
+//		codes = new ArrayList<String>();
+//		for (int i = 0; i < input.getTrucks().length; i++) {
+//			if(!codes.contains(input.getTrucks()[i].getCode())){
+//				codes.add(input.getTrucks()[i].getCode());
+//				truckList.add(input.getTrucks()[i]);
+//			}
+//		}
+//		Truck[] ts = new Truck[truckList.size()];
+//		for(int i = 0; i < truckList.size(); i++)
+//			ts[i] = truckList.get(i);
+//		input.setTrucks(ts);
 
 		mCode2Truck = new HashMap<String, Truck>();
 		for (int i = 0; i < input.getTrucks().length; i++) {
@@ -1471,18 +1471,18 @@ public class SolverWithLocalSearch {
 			mCode2Container.put(c.getCode(), c);
 		}
 
-		ArrayList<Port> portList = new ArrayList<Port>();
-		codes = new ArrayList<String>();
-		for (int i = 0; i < input.getPorts().length; i++) {
-			if(!codes.contains(input.getPorts()[i].getCode())){
-				codes.add(input.getPorts()[i].getCode());
-				portList.add(input.getPorts()[i]);
-			}
-		}
-		Port[] ps = new Port[portList.size()];
-		for(int i = 0; i < portList.size(); i++)
-			ps[i] = portList.get(i);
-		input.setPorts(ps);
+//		ArrayList<Port> portList = new ArrayList<Port>();
+//		codes = new ArrayList<String>();
+//		for (int i = 0; i < input.getPorts().length; i++) {
+//			if(!codes.contains(input.getPorts()[i].getCode())){
+//				codes.add(input.getPorts()[i].getCode());
+//				portList.add(input.getPorts()[i]);
+//			}
+//		}
+//		Port[] ps = new Port[portList.size()];
+//		for(int i = 0; i < portList.size(); i++)
+//			ps[i] = portList.get(i);
+//		input.setPorts(ps);
 		
 		mCode2Port = new HashMap<String, Port>();
 		for (int i = 0; i < input.getPorts().length; i++) {
@@ -2069,7 +2069,7 @@ public class SolverWithLocalSearch {
 //		days.add("2903");
 //		for(int i = 0; i < days.size(); i++){
 //			String fileName = "input_" + days.get(i) + ".json";
-			String fileName = "random_big_data-400reqs.json";
+			String fileName = "random_big_data-8reqs.json";
 			String outputfile = dir + "output/result-" + fileName + "-LCS.txt"; 
 			String dataFileName = dir + fileName;
 			SolverWithLocalSearch solver = new SolverWithLocalSearch();
@@ -2077,7 +2077,7 @@ public class SolverWithLocalSearch {
 			solver.init();
 			solver.stateModel();
 			solver.greedyInitSolution2();
-			solver.printSolution(outputfile);
+			//solver.printSolution(outputfile);
 			//solver.adaptiveSearchOperators(outputfile);
 			solver.localSearchForImprovement(outputfile);
 			solver.printSolution(outputfile);
