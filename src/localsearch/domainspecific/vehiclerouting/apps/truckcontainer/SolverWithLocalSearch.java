@@ -463,7 +463,8 @@ public class SolverWithLocalSearch {
 						truck.getStartWorkingTime())));
 				serviceDuration.put(sp, 0);
 				lastestAllowedArrivalTime.put(sp,INF_TIME);
-				
+				System.out.println("truck " + i + ", return depot " + j + ", sp =" + id + ", group = " + groupId 
+						+ ", ear = " + earliestAllowedArrivalTime.get(sp) + ", late = " + lastestAllowedArrivalTime.get(sp));
 				id++;
 				DepotTruck depotTruck = mCode2DepotTruck.get(truck.getReturnDepotCodes()[j]);
 				Point tp = new Point(id, depotTruck.getLocationCode());
@@ -477,7 +478,8 @@ public class SolverWithLocalSearch {
 						input.getTrucks()[i].getStartWorkingTime())));
 				serviceDuration.put(tp, 0);
 				lastestAllowedArrivalTime.put(tp, INF_TIME);
-				
+				System.out.println("truck " + i + ", return depot " + j + ", tp =" + id + ", group = " + groupId 
+						+ ", ear = " + earliestAllowedArrivalTime.get(tp) + ", late = " + lastestAllowedArrivalTime.get(tp));
 				//pickup2Delivery.put(sp, tp);
 				//delivery2Pickup.put(tp, sp);
 				
@@ -507,7 +509,8 @@ public class SolverWithLocalSearch {
 				earliestAllowedArrivalTime.put(sp, 0);
 				serviceDuration.put(sp, input.getParams().getLinkMoocDuration());
 				lastestAllowedArrivalTime.put(sp,INF_TIME);
-				
+				System.out.println("mooc " + i + ", return depot " + j + ", sp =" + id + ", group = " + groupId 
+						+ ", ear = " + earliestAllowedArrivalTime.get(sp) + ", late = " + lastestAllowedArrivalTime.get(sp));
 				id++;
 				String moocCode = mooc.getReturnDepotCodes()[j];
 				DepotMooc depotMooc = mCode2DepotMooc.get(moocCode);
@@ -520,7 +523,8 @@ public class SolverWithLocalSearch {
 				earliestAllowedArrivalTime.put(tp, 0);
 				serviceDuration.put(tp, 0);
 				lastestAllowedArrivalTime.put(tp, INF_TIME);
-				
+				System.out.println("mooc " + i + ", return depot " + j + ", tp =" + id + ", group = " + groupId 
+						+ ", ear = " + earliestAllowedArrivalTime.get(tp) + ", late = " + lastestAllowedArrivalTime.get(tp));
 				start2stopMoocPoint.put(sp, tp);
 				stop2startMoocPoint.put(tp, sp);
 				
@@ -591,6 +595,11 @@ public class SolverWithLocalSearch {
 				earliestAllowedArrivalTime.put(delivery, early);
 				serviceDuration.put(delivery, (int)(input.getParams().getUnlinkEmptyContainerDuration()));
 				lastestAllowedArrivalTime.put(delivery, latest);
+				
+				System.out.println("EE " + i + ", container depot " + j + ", pick =" + pickup.getID() + ", group = " + groupId 
+						+ ", ear = " + earliestAllowedArrivalTime.get(pickup) + ", late = " + lastestAllowedArrivalTime.get(pickup));
+				System.out.println("EE " + i + ", container depot " + j + ", del =" + delivery.getID() + ", group = " + groupId 
+						+ ", ear = " + earliestAllowedArrivalTime.get(delivery) + ", late = " + lastestAllowedArrivalTime.get(delivery));
 			}
 		}
 		
@@ -650,6 +659,11 @@ public class SolverWithLocalSearch {
 			serviceDuration.put(delivery, (int)(input.getParams().getUnlinkLoadedContainerDuration()));
 			lastestAllowedArrivalTime.put(delivery, latest);
 			
+			System.out.println("EL " + i + ", pick =" + pickup.getID() + ", group = " + groupId 
+					+ ", ear = " + earliestAllowedArrivalTime.get(pickup) + ", late = " + lastestAllowedArrivalTime.get(pickup));
+			System.out.println("EL " + i + ", del =" + delivery.getID() + ", group = " + groupId 
+					+ ", ear = " + earliestAllowedArrivalTime.get(delivery) + ", late = " + lastestAllowedArrivalTime.get(delivery));
+			
 		}
 
 		for(int i = 0; i < imEmptyRequests.length; i++){
@@ -705,6 +719,10 @@ public class SolverWithLocalSearch {
 					earliestAllowedArrivalTime.put(delivery, early);
 					serviceDuration.put(delivery, (int)(input.getParams().getUnlinkEmptyContainerDuration()));
 					lastestAllowedArrivalTime.put(delivery, latest);
+					System.out.println("IE " + i + ", return container depot " + j + ", pick =" + pickup.getID() + ", group = " + groupId 
+							+ ", ear = " + earliestAllowedArrivalTime.get(pickup) + ", late = " + lastestAllowedArrivalTime.get(pickup));
+					System.out.println("IE " + i + ", return container depot " + j + ", del =" + delivery.getID() + ", group = " + groupId 
+							+ ", ear = " + earliestAllowedArrivalTime.get(delivery) + ", late = " + lastestAllowedArrivalTime.get(delivery));
 				}
 			}
 		}
@@ -772,6 +790,10 @@ public class SolverWithLocalSearch {
 			serviceDuration.put(delivery, (int)(input.getParams().getUnlinkLoadedContainerDuration()));
 			lastestAllowedArrivalTime.put(delivery, latest);
 			
+			System.out.println("IL " + i + ", pick =" + pickup.getID() + ", group = " + groupId 
+					+ ", ear = " + earliestAllowedArrivalTime.get(pickup) + ", late = " + lastestAllowedArrivalTime.get(pickup));
+			System.out.println("IL " + i + ", del =" + delivery.getID() + ", group = " + groupId 
+					+ ", ear = " + earliestAllowedArrivalTime.get(delivery) + ", late = " + lastestAllowedArrivalTime.get(delivery));
 		}
 		
 		nwMooc = new NodeWeightsManager(points);
@@ -2069,7 +2091,7 @@ public class SolverWithLocalSearch {
 //		days.add("2903");
 //		for(int i = 0; i < days.size(); i++){
 //			String fileName = "input_" + days.get(i) + ".json";
-			String fileName = "random_big_data-8reqs.json";
+			String fileName = "random_big_data-4reqs.json";
 			String outputfile = dir + "output/result-" + fileName + "-LCS.txt"; 
 			String dataFileName = dir + fileName;
 			SolverWithLocalSearch solver = new SolverWithLocalSearch();

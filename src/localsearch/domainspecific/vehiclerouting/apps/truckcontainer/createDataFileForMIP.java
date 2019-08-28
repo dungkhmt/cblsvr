@@ -52,11 +52,11 @@ public class createDataFileForMIP {
 		delTruckTime = 0;
 		delMoocTime = 2;
 		delContTime = 3;
-		nEE = 2;
-		nEL = 1;
-		nIE = 1;
-		nIL = 2;
-		nTrucks = (nEE + nEL + nIE + nIL)/3;
+		nEE = 200;
+		nEL = 200;
+		nIE = 200;
+		nIL = 200;
+		nTrucks = (nEE + nEL + nIE + nIL)/4;
 		nMoocs = nTrucks;
 		nContainers = nEE;// + r.nextInt(3);
 		nReturnedContainers = nIE;// + r.nextInt(3);
@@ -82,12 +82,12 @@ public class createDataFileForMIP {
 			id++;
 			depotTrucks.add(id);
 			ear.put(id, 0);
-			late.put(id, 10000);
+			late.put(id, 1000000);
 			ser.put(id, pickTruckTime);
 			id++;
 			terminalTrucks.add(id);
 			ear.put(id, 0);
-			late.put(id, 10000);
+			late.put(id, 1000000);
 			ser.put(id, delTruckTime);
 		}
 		depotMoocs = new ArrayList<Integer>();
@@ -97,13 +97,13 @@ public class createDataFileForMIP {
 			depotMoocs.add(id);
 			intermediateTrucks.add(id);
 			ear.put(id, 0);
-			late.put(id, 10000);
+			late.put(id, 1000000);
 			ser.put(id, pickMoocTime);
 			id++;
 			terminalMoocs.add(id);
 			intermediateTrucks.add(id);
 			ear.put(id, 0);
-			late.put(id, 10000);
+			late.put(id, 1000000);
 			ser.put(id, delMoocTime);
 		}
 		depotContainers = new ArrayList<Integer>();
@@ -114,12 +114,12 @@ public class createDataFileForMIP {
 			intermediateTrucks.add(id);
 			intermediateMoocs.add(id);
 			ear.put(id, 0);
-			late.put(id, 10000);
+			late.put(id, 1000000);
 			ser.put(id, pickContTime);
 			id++;
 			terminalContainers.add(id);
 			ear.put(id, 0);
-			late.put(id, 10000);
+			late.put(id, 1000000);
 			ser.put(id, delContTime);
 //			intermediateTrucks.add(id);
 //			intermediateMoocs.add(id);
@@ -132,7 +132,7 @@ public class createDataFileForMIP {
 			intermediateMoocs.add(id);
 			intermediateContainers.add(id);
 			ear.put(id, 0);
-			late.put(id, 10000);
+			late.put(id, 1000000);
 			ser.put(id, delContTime);
 		}
 		whEE = new ArrayList<Integer>();
@@ -142,17 +142,18 @@ public class createDataFileForMIP {
 			intermediateTrucks.add(id);
 			intermediateMoocs.add(id);
 			intermediateContainers.add(id);
-			int truck2mooc = r.nextInt(20) + 5;
-			int mooc2cont = r.nextInt(20) + 5;
-			int cont2wh = r.nextInt(20) + 5;
+			int startService = r.nextInt(57600);
+			int truck2mooc = r.nextInt(2000) + 200;
+			int mooc2cont = r.nextInt(2000) + 200;
+			int cont2wh = r.nextInt(2000) + 200;
 			matrix[depotTrucks.get(i%2)][depotMoocs.get(i%2)] = truck2mooc;
 			matrix[depotMoocs.get(i%2)][depotContainers.get(i)] = mooc2cont;
 			matrix[depotContainers.get(i)][id] = cont2wh;
-			int e = truck2mooc + ser.get(depotTrucks.get(i%2))
+			int e = startService + truck2mooc + ser.get(depotTrucks.get(i%2))
 					+ mooc2cont + ser.get(depotMoocs.get(i%2))
 					+ cont2wh + ser.get(depotContainers.get(i))
-					- r.nextInt(10);
-			int l = e + r.nextInt(40) + 150;
+					- r.nextInt(200) - 200;
+			int l = e + r.nextInt(200) + 400;
 			ear.put(id, e);
 			late.put(id, l);
 			ser.put(id, delContTime);
@@ -164,18 +165,19 @@ public class createDataFileForMIP {
 			intermediateTrucks.add(id);
 			intermediateMoocs.add(id);
 			intermediateContainers.add(id);
-			int truck2mooc = r.nextInt(20) + 5;
-			int mooc2wh = r.nextInt(20) + 5;
-			int wh2cont = r.nextInt(20) + 5;
+			int startService = r.nextInt(57600);
+			int truck2mooc = r.nextInt(2000) + 200;
+			int mooc2wh = r.nextInt(2000) + 200;
+			int wh2cont = r.nextInt(2000) + 200;
 			int idx = (i + nEE)%2;
 			matrix[depotTrucks.get(idx)][depotMoocs.get(idx)] = truck2mooc;
 			matrix[depotMoocs.get(idx)][id] = mooc2wh;
 			matrix[id][returnDepotContainers.get(i)] = wh2cont;
-			int e = truck2mooc + ser.get(depotTrucks.get((i + nEE)%2))
+			int e = startService + truck2mooc + ser.get(depotTrucks.get((i + nEE)%2))
 					+ mooc2wh + ser.get(depotMoocs.get((i + nEE)%2))
 					+ wh2cont + ser.get(returnDepotContainers.get(i))
-					- r.nextInt(10);
-			int l = e + r.nextInt(40) + 150;
+					- r.nextInt(200) - 200;
+			int l = e + r.nextInt(200) + 400;
 			ear.put(id, e);
 			late.put(id, l);
 			ser.put(id, pickContTime);
@@ -188,15 +190,16 @@ public class createDataFileForMIP {
 			intermediateTrucks.add(id);
 			intermediateMoocs.add(id);
 			intermediateContainers.add(id);
-			int truck2mooc = r.nextInt(20) + 5;
-			int mooc2wh = r.nextInt(20) + 5;
+			int startService = r.nextInt(57600);
+			int truck2mooc = r.nextInt(2000) + 200;
+			int mooc2wh = r.nextInt(2000) + 200;
 			int idx = (i + nEE + nIE)%2;
 			matrix[depotTrucks.get(idx)][depotMoocs.get(idx)] = truck2mooc;
 			matrix[depotMoocs.get(idx)][id] = mooc2wh;
-			int e = truck2mooc + ser.get(depotTrucks.get(idx))
+			int e = startService + truck2mooc + ser.get(depotTrucks.get(idx))
 					+ mooc2wh + ser.get(depotMoocs.get(idx))
-					- r.nextInt(10);
-			int l = e + r.nextInt(40) + 150;
+					- r.nextInt(200) - 200;
+			int l = e + r.nextInt(200) + 400;
 			ear.put(id, e);
 			late.put(id, l);
 			ser.put(id, pickContTime);
@@ -207,11 +210,11 @@ public class createDataFileForMIP {
 			intermediateMoocs.add(id);
 			intermediateContainers.add(id);
 			
-			int wh2port = r.nextInt(20) + 5;
+			int wh2port = r.nextInt(2000) + 200;
 			matrix[id - 1][id] = wh2port;
 			e = e + wh2port
-					- r.nextInt(10);
-			l = e + r.nextInt(40) + 150;
+					- r.nextInt(200) - 200;
+			l = e + r.nextInt(200) + 400;
 			ear.put(id, e);
 			late.put(id, l);
 			ser.put(id, delContTime);
@@ -224,15 +227,16 @@ public class createDataFileForMIP {
 			intermediateTrucks.add(id);
 			intermediateMoocs.add(id);
 			intermediateContainers.add(id);
-			int truck2mooc = r.nextInt(20) + 5;
-			int mooc2port = r.nextInt(20) + 5;
+			int startService = r.nextInt(57600);
+			int truck2mooc = r.nextInt(2000) + 200;
+			int mooc2port = r.nextInt(2000) + 200;
 			int idx = (i + nEE + nIE + nEL)%2;
 			matrix[depotTrucks.get(idx)][depotMoocs.get(idx)] = truck2mooc;
 			matrix[depotMoocs.get(idx)][id] = mooc2port;
-			int e = truck2mooc + ser.get(depotTrucks.get(idx))
+			int e = startService + truck2mooc + ser.get(depotTrucks.get(idx))
 					+ mooc2port + ser.get(depotMoocs.get(idx))
-					- r.nextInt(10);
-			int l = e + r.nextInt(40) + 150;
+					- r.nextInt(200) - 200;
+			int l = e + r.nextInt(200) + 400;
 			ear.put(id, e);
 			late.put(id, l);
 			ser.put(id, pickContTime);
@@ -241,11 +245,11 @@ public class createDataFileForMIP {
 			intermediateTrucks.add(id);
 			intermediateMoocs.add(id);
 			intermediateContainers.add(id);
-			int port2wh = r.nextInt(20) + 5;
+			int port2wh = r.nextInt(2000) + 200;
 			matrix[id - 1][id] = port2wh;
 			e = e + port2wh
-					- r.nextInt(10);
-			l = e + r.nextInt(40) + 150;
+					- r.nextInt(200) - 200;
+			l = e + r.nextInt(200) + 400;
 			ear.put(id, e);
 			late.put(id, l);
 			ser.put(id, delContTime);
@@ -259,7 +263,7 @@ public class createDataFileForMIP {
 					if(matrix[j][i] != -1)
 						matrix[i][j] = matrix[j][i];
 					else{
-						int d = r.nextInt(20) + 5;
+						int d = r.nextInt(2000) + 200;
 						matrix[i][j] = d;
 						matrix[j][i] = d;
 					}
@@ -294,7 +298,7 @@ public class createDataFileForMIP {
 			for(int i = 0; i < nMoocs; i++)
 				f.println(depotMoocs.get(i) + " " + terminalMoocs.get(i));
 			
-			f.println("#nb containers");
+			f.println("#nb containers(for export empty request): the emptyContainer must be pickup at each one");
 			f.println(nContainers);
 			f.println("#intermediate Container points");
 			str = "";
@@ -305,7 +309,7 @@ public class createDataFileForMIP {
 			for(int i = 0; i < nContainers; i++)
 				f.println(depotContainers.get(i) + " " + terminalContainers.get(i));
 			
-			f.println("#nb returned container depots");
+			f.println("#nb returned container depots (for import empty request): the emptyContainer must be delivery at each one");
 			f.println(nReturnedContainers);
 			f.println("#return-depot container");
 			str = "";
@@ -313,22 +317,22 @@ public class createDataFileForMIP {
 				str += returnDepotContainers.get(i) + " ";
 			f.println(str);
 			
-			f.println("#export empty");
+			f.println("#export empty: [warehouse isBreakRomooc]");
 			f.println(nEE);
 			for(int i = 0; i < nEE; i++)
 				f.println(whEE.get(i) + " " + r.nextInt(1));
 			
-			f.println("#import empty");
+			f.println("#import empty: [warehouse]");
 			f.println(nIE);
 			for(int i = 0; i < nIE; i++)
 				f.println(whIE.get(i));
 			
-			f.println("#export laden");
+			f.println("#export laden: [warehouse port isBreakRomooc]");
 			f.println(nEL);
 			for(int i = 0; i < nEL; i++)
 				f.println(whEL.get(i) + " " + portEL.get(i) + " " + r.nextInt(1));
 			
-			f.println("#import laden");
+			f.println("#import laden: [port warehouse isBreakRomooc]");
 			f.println(nIL);
 			for(int i = 0; i < nIL; i++)
 				f.println(portIL.get(i) + " " + whIL.get(i) + " " + r.nextInt(1));
@@ -336,11 +340,11 @@ public class createDataFileForMIP {
 			f.println("#nb Logical points");
 			f.println(nLogicalPoints);
 			
-			f.println("#time window");
+			f.println("#time window: [pointId earliestArrivalTime latestArrivalTime servingTime]");
 			for(int i = 0; i < nLogicalPoints; i++)
 				f.println(i + " " + ear.get(i) + " " + late.get(i) + " " + ser.get(i));
 			
-			f.println("#distances");
+			f.println("#travel distance(time) matrix:[from to travelTime]");
 			f.println(nLogicalPoints * (nLogicalPoints-1));
 			for(int i = 0; i < nLogicalPoints; i++)
 				for(int j = 0; j < nLogicalPoints; j++){

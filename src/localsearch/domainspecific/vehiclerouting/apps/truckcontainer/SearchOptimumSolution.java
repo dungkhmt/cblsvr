@@ -87,7 +87,8 @@ public class SearchOptimumSolution {
 		}
 		else{
 			int i = 0;
-			while(i < n){
+			int c = 0;
+			while(i < n && c++ < tcs.pickupPoints.size()){
 				if(tcs.rejectPickupPoints.size() == tcs.pickupPoints.size())
 					break;
 
@@ -127,12 +128,20 @@ public class SearchOptimumSolution {
 		 * select randomly request r1 and its delivery dr1
 		 */
 		Point r1 = null;
+		int c = 0;
 		do{
+			if(tcs.rejectPickupPoints.size() == tcs.pickupPoints.size()
+				|| c++ < tcs.pickupPoints.size()){
+				r1 = null;
+				break;
+			}
 			ipRemove = R.nextInt(tcs.pickupPoints.size());
 			r1 = tcs.pickupPoints.get(ipRemove);	
-		}while(tcs.rejectPickupPoints.contains(r1) || !tcs.removeAllowed.get(r1));
+		}while(nRemove > 0 && (tcs.rejectPickupPoints.contains(r1) || !tcs.removeAllowed.get(r1)));
 		
-		Point dr1 = tcs.pickup2Delivery.get(r1);
+		Point dr1 = null;
+		if(r1 != null)
+			dr1 = tcs.pickup2Delivery.get(r1);
 		
 		/*
 		 * Remove request most related with r1
@@ -148,6 +157,8 @@ public class SearchOptimumSolution {
 			/*
 			 * Compute arrival time at request r1 and its delivery dr1
 			 */
+			System.out.println(r1 + " " + inRemove);
+			System.out.println(routeOfR1);
 			double arrivalTimeR1 = tcs.eat.getEarliestArrivalTime(tcs.XR.prev(r1))+
 					tcs.serviceDuration.get(tcs.XR.prev(r1))+
 					tcs.awm.getDistance(tcs.XR.prev(r1), r1);
@@ -236,8 +247,10 @@ public class SearchOptimumSolution {
 			
 			r1 = removedPickup;
 			dr1 = removedDelivery;
-			tcs.nChosed.put(r1, tcs.nChosed.get(r1)+1);
-			tcs.nChosed.put(dr1, tcs.nChosed.get(dr1)+1);
+			if(r1 != null){
+				tcs.nChosed.put(r1, tcs.nChosed.get(r1)+1);
+				tcs.nChosed.put(dr1, tcs.nChosed.get(dr1)+1);
+			}
 		}
 		
 	}
@@ -248,7 +261,8 @@ public class SearchOptimumSolution {
 		System.out.println("worstRemoval: nRemove = " + nRemove);
 		
 		int inRemove = 0;
-		while(inRemove++ != nRemove){
+		int c = 0;
+		while(inRemove++ != nRemove && c++ < tcs.pickupPoints.size()){
 			if(tcs.rejectPickupPoints.size() == tcs.pickupPoints.size())
 				break;
 			double maxCost = Double.MIN_VALUE;
@@ -326,7 +340,7 @@ public class SearchOptimumSolution {
 	
 	public void greedyInsertion(){
 		System.out.println("greedyInsertion");
-		
+		int c = 0;
 		for(int i = 0; i < tcs.rejectPickupPoints.size(); i++){
 			Point pickup = tcs.rejectPickupPoints.get(i);
 			int groupId = tcs.point2Group.get(pickup);
@@ -334,6 +348,7 @@ public class SearchOptimumSolution {
 			if(tcs.XR.route(pickup) != Constants.NULL_POINT
 				|| tcs.group2marked.get(groupId) == 1)
 				continue;
+			System.out.println(c++);
 			Point delivery = tcs.pickup2Delivery.get(pickup);
 			//add the request to route
 			Point pre_pick = null;
@@ -343,9 +358,9 @@ public class SearchOptimumSolution {
 				Point st = tcs.XR.getStartingPointOfRoute(r);
 				
 				int groupTruck = tcs.point2Group.get(st);
-				if(tcs.group2marked.get(groupTruck) == 1 && tcs.XR.index(tcs.XR.getTerminatingPointOfRoute(r)) <= 1)
+				if(tcs.group2marked.get(groupTruck) == 1 
+						&& tcs.XR.index(tcs.XR.getTerminatingPointOfRoute(r)) <= 1)
 					continue;
-				
 				for(Point p = st; p != tcs.XR.getTerminatingPointOfRoute(r); p = tcs.XR.next(p)){
 					for(Point q = p; q != tcs.XR.getTerminatingPointOfRoute(r); q = tcs.XR.next(q)){
 //						if((tcs.XR.prev(p)!= null && tcs.XR.prev(p).getID() % 2 == 1

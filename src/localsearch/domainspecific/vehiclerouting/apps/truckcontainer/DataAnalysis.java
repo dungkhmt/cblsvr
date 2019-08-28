@@ -95,30 +95,30 @@ public class DataAnalysis {
 	private ConfigParam params;
 	
 	public void initParams(){
-		nbEE = 100;
-		nbEL = 100;
-		nbIE = 100;
-		nbIL = 100;
+		nbEE = 20;
+		nbEL = 15;
+		nbIE = 15;
+		nbIL = 20;
 		
 		nbRequests = nbEE + nbEL + nbIE + nbIL;
-		nbTrucks = nbRequests;
+		nbTrucks = nbRequests/5;
 		nbMoocs = nbTrucks;
 		nbContainers = nbRequests;
-		nbDepotTrucks = (int)(nbTrucks / 50) >= 5 ? (int)(nbTrucks / 50) : 5;
-		nbDepotMoocs = (int)(nbMoocs / 50) >= 5 ? (int)(nbMoocs / 50) : 5;
-		nbDepotContainers = (int)(nbContainers / 50) >= 5 ? (int)(nbContainers / 50) : 5;
-		nbWarehouses = (int)(nbRequests / 50) >= 5 ? (int)(nbRequests / 50) : 5;
-		nbPorts = (nbEL + nbIL)/50 >= 5 ? (nbEL + nbIL)/50 : 5;
+		nbDepotTrucks = (int)(nbTrucks / 50) >= 3 ? (int)(nbTrucks / 50) : 3;
+		nbDepotMoocs = (int)(nbMoocs / 50) >= 3 ? (int)(nbMoocs / 50) : 3;
+		nbDepotContainers = (int)(nbContainers / 50) >= 3 ? (int)(nbContainers / 50) : 3;
+		nbWarehouses = (int)(nbRequests / 50) >= 3 ? (int)(nbRequests / 50) : 3;
+		nbPorts = (nbEL + nbIL)/50 >= 3 ? (nbEL + nbIL)/50 : 3;
 		
 		beginTime = 1560250800;
 		minEarliestTime = 1560272400;
 		maxLatestTime = 1560531599;
-		rangeTime = 259200;
+		rangeTime = 25200;
 		duration = (int)(maxLatestTime - minEarliestTime);
 		input = new ContainerTruckMoocInput();
 		
 		nbLogicalPoints = nbTrucks + nbMoocs + nbContainers
-				+ nbDepotTrucks + nbDepotMoocs + nbDepotContainers
+				+ nbDepotTrucks + nbDepotMoocs + nbDepotContainers*2
 				+ nbWarehouses + nbPorts;
 	}
 	
@@ -189,7 +189,7 @@ public class DataAnalysis {
 	
 	public void createDepotContainers(){
 		Random r = new Random();
-		depotContainers = new DepotContainer[nbDepotContainers];
+		depotContainers = new DepotContainer[nbDepotContainers*2];
 		for(int i = 0; i < nbDepotContainers; i++){
 			DepotContainer dp = new DepotContainer();
 			int idx = r.nextInt(codes.size());
@@ -197,6 +197,15 @@ public class DataAnalysis {
 			dp.setLocationCode(codes.get(idx));
 			codes.remove(idx);
 			depotContainers[i] = dp;
+		}
+		for(int i = 0; i < nbDepotContainers; i++){
+			DepotContainer dp = new DepotContainer();
+			int idx = r.nextInt(codes.size());
+			dp.setCode(codes.get(idx));
+			dp.setLocationCode(codes.get(idx));
+			dp.setReturnedContainer(true);
+			codes.remove(idx);
+			depotContainers[i+ nbDepotContainers] = dp;
 		}
 		input.setDepotContainers(depotContainers);
 	}
@@ -1213,12 +1222,12 @@ public class DataAnalysis {
 		//da.mergeFile();
 		
 		//them truck vao file
-		da.addTrucksMoocsToList("data/truck-container/merged_input_03.json", "data/truck-container/merged_input_03_addTruckMooc.json");
+		//da.addTrucksMoocsToList("data/truck-container/merged_input_03.json", "data/truck-container/merged_input_03_addTruckMooc.json");
 		
 		//tao file du lieu lon de test
 		//sua cac params trong initParams function
 		
-		//String fileName = "data/truck-container/random_big_data-400reqs.json";
-		//da.createJsonFile(fileName);
+		String fileName = "data/truck-container/random_big_data-70reqs.json";
+		da.createJsonFile(fileName);
 	}
 }

@@ -29,7 +29,7 @@ public class SearchOptimumByLocalSearch {
 	
 	public int sigma1 = 10;
 	public int sigma2 = 5;
-	public int sigma3 = 1;
+	public int sigma3 = -1;
 	public double rp = 0.1;
 	public int nw = 1;
 	
