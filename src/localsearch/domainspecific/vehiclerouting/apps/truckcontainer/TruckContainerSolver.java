@@ -176,7 +176,7 @@ public class TruckContainerSolver {
 	public void adaptiveSearchOperators(String outputfile){	
 		int it = 0;
 		int timeLimit = 36000000;
-    	int nIter = 100000;
+    	int nIter = 10000;
     	int maxStable = 1000;
     	int iS = 0;
     	
@@ -2064,7 +2064,7 @@ public class TruckContainerSolver {
 //		days.add("2903");
 //		for(int i = 0; i < days.size(); i++){
 //			String fileName = "input_" + days.get(i) + ".json";
-			String fileName = "random_big_data-70reqs.json";
+			String fileName = "random_big_data-150reqs.json";
 			String outputfile = dir + "output/result-" + fileName + "-ALNS-up.txt"; 
 			String dataFileName = dir + fileName;
 			TruckContainerSolver solver = new TruckContainerSolver();

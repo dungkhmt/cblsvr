@@ -1924,7 +1924,7 @@ public class SolverWithLocalSearch {
 	{
 		int it = 0;
 		int timeLimit = 36000000;
-    	int nIter = 100000;
+    	int nIter = 10000;
     	int maxStable = 10000;
     	int iS = 0;
     	
@@ -2070,39 +2070,19 @@ public class SolverWithLocalSearch {
 	
 	public static void main(String[] args){
 		String dir = "data/truck-container/";
-//		ArrayList<String> days = new ArrayList<String>();
-//		days.add("1802");
-//		days.add("1902");
-//		days.add("2102");
-//		days.add("2202");
-//		days.add("2502");
-//		days.add("2602");
-//		days.add("2702");
-//		days.add("0103");
-//		days.add("0403");
-//		days.add("0503");
-//		days.add("0703");
-//		days.add("1203");
-//		days.add("1303");
-//		days.add("1803");
-//		days.add("1903");
-//		days.add("2103");
-//		days.add("2803");
-//		days.add("2903");
-//		for(int i = 0; i < days.size(); i++){
-//			String fileName = "input_" + days.get(i) + ".json";
-			String fileName = "random_big_data-4reqs.json";
-			String outputfile = dir + "output/result-" + fileName + "-LCS.txt"; 
-			String dataFileName = dir + fileName;
-			SolverWithLocalSearch solver = new SolverWithLocalSearch();
-			solver.readData(dataFileName);
-			solver.init();
-			solver.stateModel();
-			solver.greedyInitSolution2();
-			//solver.printSolution(outputfile);
-			//solver.adaptiveSearchOperators(outputfile);
-			solver.localSearchForImprovement(outputfile);
-			solver.printSolution(outputfile);
-//		}
+
+		String fileName = "random_big_data-8reqs.json";
+		String outputfile = dir + "output/result-" + fileName + "-LCS.txt"; 
+		String dataFileName = dir + fileName;
+		SolverWithLocalSearch solver = new SolverWithLocalSearch();
+		solver.readData(dataFileName);
+		solver.init();
+		solver.stateModel();
+		solver.greedyInitSolution2();
+		//solver.printSolution(outputfile);
+		//solver.adaptiveSearchOperators(outputfile);
+		solver.localSearchForImprovement(outputfile);
+		solver.printSolution(outputfile);
+
 	}
 }

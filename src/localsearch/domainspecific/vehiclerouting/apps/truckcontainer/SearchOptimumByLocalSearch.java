@@ -27,8 +27,8 @@ public class SearchOptimumByLocalSearch {
 	private int best_nbTrucks;
 	private int best_nbReject;
 	
-	public int sigma1 = 10;
-	public int sigma2 = 5;
+	public int sigma1 = 5;
+	public int sigma2 = 3;
 	public int sigma3 = -1;
 	public double rp = 0.1;
 	public int nw = 1;
@@ -80,7 +80,8 @@ public class SearchOptimumByLocalSearch {
 		int it = 0;
 		double t0 = System.currentTimeMillis()/1000;
 		try{
-			PrintWriter fo = new PrintWriter(new File(outputfile));
+			FileOutputStream write = new FileOutputStream(outputfile);
+			PrintWriter fo = new PrintWriter(write);
 			fo.println("nRequests = " + tcs.nRequest + ", time limit = " + maxTime + ", nbIters = " + maxIters);
 			fo.println("iter=====opt=====time=====cost=====nbReject=====nbTrucks=====vio");
 			fo.println("0 -1 " + " " + DateTimeUtils.unixTimeStamp2DateTime(System.currentTimeMillis()/1000) + " " + tcs.objective.getValue() 
@@ -90,7 +91,7 @@ public class SearchOptimumByLocalSearch {
 		catch(Exception e){
 			
 		}
-		int nbOpt = 4;
+		int nbOpt = 5;
 		opt2nbUsed = new HashMap<Integer, Integer>();
 		opt2eff = new HashMap<Integer, Integer>();
 		for(int i = 0; i < nbOpt; i++){
@@ -163,6 +164,7 @@ public class SearchOptimumByLocalSearch {
 				case 1: exploreForTwoRequestExchangeRoute(); break;
 				case 2: exploreForTwoOptMove5(); break;
 				case 3: exploreForCrossExchangeMove(); break;
+				case 4: exploreForTwoRequestExchangeBestRoute();
 			}
 			tcs.insertMoocForAllRoutes();
 			int nu;
@@ -206,7 +208,7 @@ public class SearchOptimumByLocalSearch {
 			
 			if(it % nw == 0){
 				for(int i=0; i<nbOpt; i++){
-					pti[i] = Math.max(0, pti[i]*(1-rp) + rp*si[i]/wi[i]);
+					pti[i] = Math.max(0.01, pti[i]*(1-rp) + rp*si[i]/wi[i]);
 				}
 			}
 			greedyInsertion();
@@ -264,6 +266,42 @@ public class SearchOptimumByLocalSearch {
 		}
 		if(pickup1 != null && pickup2 != null)
 			twoRequestExchangeRoute(pickup1, pickup2);
+		
+	}
+	
+	private void exploreForTwoRequestExchangeBestRoute(){
+		if(tcs.getNbUsedTrucks() == 1)
+			return;
+		Random ran = new Random();
+		Point pickup1 = null;
+		int it = 0;
+		int n = tcs.pickupPoints.size();
+		while(it++ < n){
+			int i = ran.nextInt(n);
+			pickup1 = tcs.pickupPoints.get(i);
+			if(tcs.XR.route(pickup1) != Constants.NULL_POINT)
+				break;
+			pickup1 = null;
+		}
+		if(pickup1 == null)
+			return;
+		int r1 = tcs.XR.route(pickup1);
+		Point pickup2 = null;
+		it = 0;
+		while(it++ < n){
+			int i = ran.nextInt(n);
+			pickup2 = tcs.pickupPoints.get(i);
+			int r2 = tcs.XR.route(pickup2);
+			if(r2 != Constants.NULL_POINT
+				&& r2 != r1)
+				break;
+			pickup2 = null;
+		}
+		if(pickup1 != null && pickup2 != null){
+			if(tcs.XR.route(pickup1) == Constants.NULL_POINT || tcs.XR.route(pickup2) == Constants.NULL_POINT)
+				System.out.println("sad");
+			twoRequestExchangeBestRoute(pickup1, pickup2);
+		}
 		
 	}
 	
@@ -571,6 +609,90 @@ public class SearchOptimumByLocalSearch {
 //			tcs.mgr.performAddTwoPoints(pickup1, pre_pick1, delivery1, pre_delivery1);
 //			tcs.mgr.performAddTwoPoints(pickup2, pre_pick2, delivery2, pre_delivery2);
 //		}
+	}
+	
+	private void twoRequestExchangeBestRoute(Point pickup1, Point pickup2){
+		System.out.println("twoRequestExchangeBestRoute");
+		
+		Point delivery1 = tcs.pickup2Delivery.get(pickup1);
+		Point delivery2 = tcs.pickup2Delivery.get(pickup2);
+		int r1 = tcs.XR.route(pickup1);
+		int r2 = tcs.XR.route(pickup2);
+		Point curr_pick1 = tcs.XR.prev(pickup1);
+		Point curr_delivery1 = tcs.XR.prev(delivery1);
+		if(curr_delivery1 == pickup1)
+			curr_delivery1 = curr_pick1;
+		
+		Point curr_pick2 = tcs.XR.prev(pickup2);
+		Point curr_delivery2 = tcs.XR.prev(delivery2);
+		if(curr_delivery2 == pickup2)
+			curr_delivery2 = curr_pick2;
+		
+		Point pre_pick1 = null;
+		Point pre_delivery1 = null;
+		
+		Point pre_pick2 = null;
+		Point pre_delivery2 = null;
+
+		tcs.mgr.performRemoveTwoPoints(pickup1, delivery1);
+		tcs.mgr.performRemoveTwoPoints(pickup2, delivery2);
+		
+		double best_cost = Double.MAX_VALUE;
+		for(Point p = tcs.XR.getStartingPointOfRoute(r1); p != tcs.XR.getTerminatingPointOfRoute(r1);
+				p = tcs.XR.next(p)){
+			for(Point q = p; q != tcs.XR.getTerminatingPointOfRoute(r1); q = tcs.XR.next(q)){
+//				if(pickup.getID() == 1271 && p.getID() == 121 && q.getID() == 1222)
+//					System.out.println("f");
+				tcs.mgr.performAddTwoPoints(pickup2, p, delivery2, q);
+				tcs.insertMoocToRoutes(r1);
+				if(tcs.S.violations() == 0){
+					double new_cost = tcs.objective.getValue();
+//					if(nR < best_nbReject
+//						|| (nR == best_nbReject && new_cost < best_objective)){
+					if(new_cost < best_cost){
+						best_cost = new_cost;
+						pre_pick2 = p;
+						pre_delivery2 = q;
+					}
+				}
+				tcs.mgr.performRemoveTwoPoints(pickup2, delivery2);
+				tcs.removeMoocOnRoutes(r1);
+			}
+		}
+		
+		best_cost = Double.MAX_VALUE;
+		for(Point p = tcs.XR.getStartingPointOfRoute(r2); p != tcs.XR.getTerminatingPointOfRoute(r2);
+				p = tcs.XR.next(p)){
+			for(Point q = p; q != tcs.XR.getTerminatingPointOfRoute(r2); q = tcs.XR.next(q)){
+//				if(pickup.getID() == 1271 && p.getID() == 121 && q.getID() == 1222)
+//					System.out.println("f");
+				tcs.mgr.performAddTwoPoints(pickup1, p, delivery1, q);
+				tcs.insertMoocToRoutes(r2);
+				if(tcs.S.violations() == 0){
+					double new_cost = tcs.objective.getValue();
+//					if(nR < best_nbReject
+//						|| (nR == best_nbReject && new_cost < best_objective)){
+					if(new_cost < best_cost){
+						best_cost = new_cost;
+						pre_pick1 = p;
+						pre_delivery1 = q;
+					}
+				}
+				tcs.mgr.performRemoveTwoPoints(pickup1, delivery1);
+				tcs.removeMoocOnRoutes(r2);
+			}
+		}
+		if(pre_pick1 != null && pre_pick2 != null){
+			tcs.mgr.performAddTwoPoints(pickup1, pre_pick1, delivery1, pre_delivery1);
+			tcs.mgr.performAddTwoPoints(pickup2, pre_pick2, delivery2, pre_delivery2);
+			isOpt = true;
+		}
+		else{
+//			tcs.mgr.performRemoveTwoPoints(pickup1, delivery1);
+//			tcs.mgr.performRemoveTwoPoints(pickup2, delivery2);
+			tcs.mgr.performAddTwoPoints(pickup1, curr_pick1, delivery1, curr_delivery1);
+			tcs.mgr.performAddTwoPoints(pickup2, curr_pick2, delivery2, curr_delivery2);
+		}
 	}
 	
 	public void TwoOptMove5(Point pickup1, Point pickup2){
