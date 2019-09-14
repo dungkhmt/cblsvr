@@ -1,9 +1,11 @@
 package localsearch.domainspecific.vehiclerouting.apps.truckcontainer;
 
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -42,7 +44,7 @@ import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.Wareh
 import localsearch.domainspecific.vehiclerouting.vrp.utils.DateTimeUtils;
 import localsearch.domainspecific.vehiclerouting.vrp.utils.ScannerInput;
 
-public class DataAnalysis {
+public class createDataFileForMIPandHeuristic {
 	TruckContainerSolver solver;
 	ContainerTruckMoocInput input;
 	int a = 0;
@@ -63,9 +65,9 @@ public class DataAnalysis {
 	int nbDepotContainers;
 	int nbWarehouses;
 	int nbPorts;
-	long beginTime;
-	long minEarliestTime;
-	long maxLatestTime;
+	String beginTime;
+	String minEarliestTime;
+	String maxLatestTime;
 	int duration;//thoi gian giua max latest va min earliest
 	int rangeTime;//thoi gian giua earliest va latest
 	int[][] matrix;
@@ -89,39 +91,56 @@ public class DataAnalysis {
 	
 	private Container[] containers;
 	private ArrayList<Container> temp_containers;
-	
 	DistanceElement[] distance;
 
 	private ConfigParam params;
 	
+	
+	public ArrayList<Integer> intermediateTrucks;
+	public ArrayList<Integer> intermediateMoocs;
+	public ArrayList<Integer> intermediateContainers;
+	public int nReturnedContainers;
+	public ArrayList<Integer> returnDepotContainers;
+	public HashMap<String, Integer> early;
+	public HashMap<String, Integer> latest;
+	public HashMap<String, Integer> serving;
+	public ArrayList<String> mCode;
+	
+	
 	public void initParams(){
-		nbEE = 35;
-		nbEL = 35;
-		nbIE = 40;
-		nbIL = 40;
+		intermediateTrucks = new ArrayList<Integer>();
+		intermediateMoocs = new ArrayList<Integer>();
+		intermediateContainers = new ArrayList<Integer>();
+		returnDepotContainers = new ArrayList<Integer>();
+		early = new HashMap<String, Integer>();
+		latest = new HashMap<String, Integer>();
+		serving = new HashMap<String, Integer>();
+		
+		
+		nbEE = 1;
+		nbEL = 1;
+		nbIE = 1;
+		nbIL = 1;
 		
 		nbRequests = nbEE + nbEL + nbIE + nbIL;
-		nbTrucks = nbRequests/5;
+		nbTrucks = nbRequests;
 		nbMoocs = nbTrucks;
-		nbContainers = nbRequests;
-		nbDepotTrucks = (int)(nbTrucks / 50) >= 3 ? (int)(nbTrucks / 50) : 3;
-		nbDepotMoocs = (int)(nbMoocs / 50) >= 3 ? (int)(nbMoocs / 50) : 3;
-		nbDepotContainers = (int)(nbContainers / 50) >= 3 ? (int)(nbContainers / 50) : 3;
-		nbWarehouses = (int)(nbRequests / 50) >= 3 ? (int)(nbRequests / 50) : 3;
-		nbPorts = (nbEL + nbIL)/50 >= 3 ? (nbEL + nbIL)/50 : 3;
+		nbContainers = nbEE;
+		nReturnedContainers = nbIE;
+		nbDepotTrucks = nbTrucks * 2;
+		nbDepotMoocs = nbMoocs * 2;
+		nbDepotContainers = nbContainers * 2 + nbIE;
+		nbWarehouses = nbRequests;
+		nbPorts = (nbEL + nbIL);
 		
-		beginTime = 1560250800;
-		String t = DateTimeUtils.unixTimeStamp2DateTime((long)beginTime);
-		minEarliestTime = 1560272400;
-		t = DateTimeUtils.unixTimeStamp2DateTime((long)minEarliestTime);
-		maxLatestTime = 1560531599;
-		t = DateTimeUtils.unixTimeStamp2DateTime((long)maxLatestTime);
-		rangeTime = 25200;
-		duration = (int)(maxLatestTime - minEarliestTime);
+		beginTime = "2019-07-18 18:00:00";
+		minEarliestTime = "2019-07-18 18:00:00";
+		maxLatestTime = "2019-07-18 18:15:00";
+
+		duration = (int)(DateTimeUtils.dateTime2Int(maxLatestTime) - DateTimeUtils.dateTime2Int(minEarliestTime));
 		input = new ContainerTruckMoocInput();
 		
-		nbLogicalPoints = nbTrucks + nbMoocs + nbContainers
-				+ nbDepotTrucks + nbDepotMoocs + nbDepotContainers*2
+		nbLogicalPoints = nbDepotTrucks + nbDepotMoocs + nbDepotContainers
 				+ nbWarehouses + nbPorts;
 	}
 	
@@ -131,12 +150,14 @@ public class DataAnalysis {
 		Random r = new Random();
 		distance = new DistanceElement[nbLogicalPoints*(nbLogicalPoints-1)];
 		codes = new ArrayList<String>();
+		mCode = new ArrayList<String>();
 		mCode2idx = new HashMap<String, Integer>();
 		matrix = new int[nbLogicalPoints][nbLogicalPoints]; 
 		for(int i = 0; i < nbLogicalPoints; i++){
 			String s = "P-" + i;
 			codes.add(s);
 			mCode2idx.put(s, i);
+			mCode.add(s);
 		}
 		for(int i = 0; i < nbLogicalPoints; i++)
 			for(int j = 0; j < nbLogicalPoints; j++)
@@ -147,8 +168,8 @@ public class DataAnalysis {
 				if(i == j)
 					continue;
 				DistanceElement e = new DistanceElement();
-				double d = r.nextInt(40000) + 1000;
-				double t = (d * 3600) / 30000;
+				double d = r.nextInt(40) + 2;
+				double t = d;
 				e.setSrcCode(codes.get(i));
 				e.setDestCode(codes.get(j));
 				e.setDistance(d);
@@ -182,33 +203,47 @@ public class DataAnalysis {
 		for(int i = 0; i < nbDepotMoocs; i++){
 			DepotMooc dp = new DepotMooc();
 			int idx = r.nextInt(codes.size());
+			int idp = Integer.parseInt(codes.get(idx).split("-")[1]);
 			dp.setCode(codes.get(idx));
 			dp.setLocationCode(codes.get(idx));
 			codes.remove(idx);
 			depotMoocs[i] = dp;
+			
+			intermediateTrucks.add(idp);
 		}
 		input.setDepotMoocs(depotMoocs);
 	}
 	
 	public void createDepotContainers(){
 		Random r = new Random();
-		depotContainers = new DepotContainer[nbDepotContainers*2];
-		for(int i = 0; i < nbDepotContainers; i++){
+		depotContainers = new DepotContainer[nbDepotContainers];
+		for(int i = 0; i < nbEE*2; i++){
 			DepotContainer dp = new DepotContainer();
 			int idx = r.nextInt(codes.size());
 			dp.setCode(codes.get(idx));
 			dp.setLocationCode(codes.get(idx));
+			int idp = Integer.parseInt(codes.get(idx).split("-")[1]);
 			codes.remove(idx);
 			depotContainers[i] = dp;
+			
+			intermediateTrucks.add(idp);
+			intermediateMoocs.add(idp);
 		}
-		for(int i = 0; i < nbDepotContainers; i++){
+		for(int i = 0; i < nbIE; i++){
 			DepotContainer dp = new DepotContainer();
 			int idx = r.nextInt(codes.size());
 			dp.setCode(codes.get(idx));
 			dp.setLocationCode(codes.get(idx));
 			dp.setReturnedContainer(true);
+			int idp = Integer.parseInt(codes.get(idx).split("-")[1]);
 			codes.remove(idx);
-			depotContainers[i+ nbDepotContainers] = dp;
+			depotContainers[i+ nbEE*2] = dp;
+			
+			intermediateTrucks.add(idp);
+			intermediateMoocs.add(idp);
+			intermediateContainers.add(idp);
+			returnDepotContainers.add(idp);
+			
 		}
 		input.setDepotContainers(depotContainers);
 	}
@@ -218,20 +253,18 @@ public class DataAnalysis {
 		trucks = new Truck[nbTrucks];
 		for(int i = 0; i < nbTrucks; i++){
 			Truck truck = new Truck();
-			int idx = r.nextInt(codes.size());
-			truck.setCode(codes.get(idx));
-			codes.remove(idx);
+			//int idx = r.nextInt(codes.size());
+			String truckCode = "T-" + i;
+			truck.setCode(truckCode);
+			//codes.remove(idx);
 			
-			idx = r.nextInt(depotTrucks.length);
-			truck.setDepotTruckCode(depotTrucks[idx].getCode());
-			truck.setDepotTruckLocationCode(depotTrucks[idx].getLocationCode());
+			truck.setDepotTruckCode(depotTrucks[i].getCode());
+			truck.setDepotTruckLocationCode(depotTrucks[i].getLocationCode());
 			
-			idx = r.nextInt(depotTrucks.length);
 			String[] returnDepotCodes = new String[1];
-			returnDepotCodes[0] = depotTrucks[idx].getCode();
+			returnDepotCodes[0] = depotTrucks[i + nbTrucks].getCode();
 			truck.setReturnDepotCodes(returnDepotCodes);
-			truck.setStartWorkingTime(
-					DateTimeUtils.unixTimeStamp2DateTime(beginTime));
+			truck.setStartWorkingTime(beginTime);
 			trucks[i] = truck;
 		}
 		input.setTrucks(trucks);
@@ -242,17 +275,16 @@ public class DataAnalysis {
 		moocs = new Mooc[nbMoocs];
 		for(int i = 0; i < nbMoocs; i++){
 			Mooc mooc = new Mooc();
-			int idx = r.nextInt(codes.size());
-			mooc.setCode(codes.get(idx));
-			codes.remove(idx);
+			//int idx = r.nextInt(codes.size());
+			String moocCode = "M-" + i;
+			mooc.setCode(moocCode);
+//			codes.remove(idx);
 			
-			idx = r.nextInt(depotMoocs.length);
-			mooc.setDepotMoocCode(depotMoocs[idx].getCode());
-			mooc.setDepotMoocLocationCode(depotMoocs[idx].getLocationCode());
+			mooc.setDepotMoocCode(depotMoocs[i].getCode());
+			mooc.setDepotMoocLocationCode(depotMoocs[i].getLocationCode());
 			
-			idx = r.nextInt(depotMoocs.length);
 			String[] returnDepotCodes = new String[1];
-			returnDepotCodes[0] = depotMoocs[idx].getCode();
+			returnDepotCodes[0] = depotMoocs[i + nbMoocs].getCode();
 			mooc.setReturnDepotCodes(returnDepotCodes);
 			moocs[i] = mooc;
 		}
@@ -265,16 +297,15 @@ public class DataAnalysis {
 		temp_containers = new ArrayList<Container>();
 		for(int i = 0; i < nbContainers; i++){
 			Container container = new Container();
-			int idx = r.nextInt(codes.size());
-			container.setCode(codes.get(idx));
-			codes.remove(idx);
+			//int idx = r.nextInt(codes.size());
+			String contCode = "C-" + i;
+			container.setCode(contCode);
+//			codes.remove(idx);
 			
-			idx = r.nextInt(depotContainers.length);
-			container.setDepotContainerCode(depotContainers[idx].getCode());
+			container.setDepotContainerCode(depotContainers[i].getCode());
 
-			idx = r.nextInt(depotContainers.length);
 			String[] returnDepotCodes = new String[1];
-			returnDepotCodes[0] = depotContainers[idx].getCode();
+			returnDepotCodes[0] = depotContainers[i + nbContainers].getCode();
 			container.setReturnDepotCodes(returnDepotCodes);
 			containers[i] = container;
 			temp_containers.add(container);
@@ -290,8 +321,13 @@ public class DataAnalysis {
 			int idx = r.nextInt(codes.size());
 			warehouse.setCode(codes.get(idx));
 			warehouse.setLocationCode(codes.get(idx));
+			int idp = Integer.parseInt(codes.get(idx).split("-")[1]);
 			codes.remove(idx);
 			warehouses[i] = warehouse;
+			
+			intermediateTrucks.add(idp);
+			intermediateMoocs.add(idp);
+			intermediateContainers.add(idp);
 		}
 		input.setWarehouses(warehouses);
 	}
@@ -304,8 +340,13 @@ public class DataAnalysis {
 			int idx = r.nextInt(codes.size());
 			port.setCode(codes.get(idx));
 			port.setLocationCode(codes.get(idx));
+			int idp = Integer.parseInt(codes.get(idx).split("-")[1]);
 			codes.remove(idx);
 			ports[i] = port;
+			
+			intermediateTrucks.add(idp);
+			intermediateMoocs.add(idp);
+			intermediateContainers.add(idp);
 		}
 		input.setPorts(ports);
 	}
@@ -320,19 +361,24 @@ public class DataAnalysis {
 			e.setDepotContainerCode(temp_containers.get(idx).getDepotContainerCode());
 			temp_containers.remove(idx);
 			
-			idx = r.nextInt(warehouses.length);
-			e.setWareHouseCode(warehouses[idx].getCode());
+			e.setWareHouseCode(warehouses[i].getCode());
 			
-			long ear = r.nextInt(duration) + minEarliestTime;
+			long ear = r.nextInt(duration) + DateTimeUtils.dateTime2Int(minEarliestTime);
 			e.setEarlyDateTimePickupAtDepot(DateTimeUtils.unixTimeStamp2DateTime(ear));
 			long late = ear + rangeTime;
 			e.setLateDateTimePickupAtDepot(DateTimeUtils.unixTimeStamp2DateTime(late));
+			early.put(e.getDepotContainerCode(), (int)(ear- DateTimeUtils.dateTime2Int(beginTime)));
+			serving.put(e.getDepotContainerCode(), 2);
+			latest.put(e.getDepotContainerCode(), (int)(late- DateTimeUtils.dateTime2Int(beginTime)));
+			
 			ear += getTravelTime(e.getDepotContainerCode(),
 					e.getWareHouseCode());
 			e.setEarlyDateTimeLoadAtWarehouse(DateTimeUtils.unixTimeStamp2DateTime(ear));
 			late = ear + rangeTime;
 			e.setLateDateTimeLoadAtWarehouse(DateTimeUtils.unixTimeStamp2DateTime(late));
-			
+			early.put(e.getWareHouseCode(), (int)(ear- DateTimeUtils.dateTime2Int(beginTime)));
+			serving.put(e.getWareHouseCode(), 2);
+			latest.put(e.getWareHouseCode(), (int)(late- DateTimeUtils.dateTime2Int(beginTime)));
 			exEmptyRequests[i] = e;
 		}
 		input.setExEmptyRequests(exEmptyRequests);
@@ -343,22 +389,27 @@ public class DataAnalysis {
 		exLadenRequests = new ExportLadenRequests[nbEL];
 		for(int i = 0; i < nbEL; i++){
 			ExportLadenRequests e = new ExportLadenRequests();
-			int idx = r.nextInt(temp_containers.size());
-			e.setContainerCode(temp_containers.get(idx).getCode());
-			temp_containers.remove(idx);
+//			int idx = r.nextInt(temp_containers.size());
+//			e.setContainerCode(temp_containers.get(idx).getCode());
+//			temp_containers.remove(idx);
 			
-			idx = r.nextInt(ports.length);
-			e.setPortCode(ports[idx].getCode());
-			idx = r.nextInt(warehouses.length);
-			e.setWareHouseCode(warehouses[idx].getCode());
+			e.setPortCode(ports[i].getCode());
+			e.setWareHouseCode(warehouses[nbEE + i].getCode());
 			
-			long ear = r.nextInt(duration) + minEarliestTime;
+			long ear = r.nextInt(duration) + DateTimeUtils.dateTime2Int(minEarliestTime);
 			e.setEarlyDateTimeAttachAtWarehouse(DateTimeUtils.unixTimeStamp2DateTime(ear));
+			early.put(e.getWareHouseCode(), (int)(ear- DateTimeUtils.dateTime2Int(beginTime)));
+			serving.put(e.getWareHouseCode(), 2);
+			latest.put(e.getWareHouseCode(), 100000);
+			
 			long late = ear + rangeTime 
 					+ (long)getTravelTime(e.getWareHouseCode(),
 					e.getPortCode());
 			e.setLateDateTimeUnloadAtPort(DateTimeUtils
 					.unixTimeStamp2DateTime(late));
+			early.put(e.getPortCode(), 0);
+			serving.put(e.getPortCode(), 2);
+			latest.put(e.getPortCode(), (int)(late- DateTimeUtils.dateTime2Int(beginTime)));
 			
 			exLadenRequests[i] = e;
 		}
@@ -370,21 +421,27 @@ public class DataAnalysis {
 		imEmptyRequests = new ImportEmptyRequests[nbIE];
 		for(int i = 0; i < nbIE; i++){
 			ImportEmptyRequests e = new ImportEmptyRequests();
-			int idx = r.nextInt(temp_containers.size());
-			e.setContainerCode(temp_containers.get(idx).getCode());
-			e.setDepotContainerCode(temp_containers.get(idx).getDepotContainerCode());
-			temp_containers.remove(idx);
+//			int idx = r.nextInt(temp_containers.size());
+//			e.setContainerCode(temp_containers.get(idx).getCode());
+			e.setDepotContainerCode(depotContainers[nbContainers* 2 + i].getCode());
+//			temp_containers.remove(idx);
 			
-			idx = r.nextInt(warehouses.length);
-			e.setWareHouseCode(warehouses[idx].getCode());
+			e.setWareHouseCode(warehouses[nbEE + nbEL].getCode());
 			
-			long ear = r.nextInt(duration) + minEarliestTime;
+			long ear = r.nextInt(duration) + DateTimeUtils.dateTime2Int(minEarliestTime);
 			e.setEarlyDateTimeAttachAtWarehouse(DateTimeUtils.unixTimeStamp2DateTime(ear));
+			early.put(e.getWareHouseCode(), (int)(ear- DateTimeUtils.dateTime2Int(beginTime)));
+			serving.put(e.getWareHouseCode(), 2);
+			latest.put(e.getWareHouseCode(), 100000);
+			
 			long late = ear + rangeTime 
 					+ (long)getTravelTime(e.getWareHouseCode(),
 					e.getDepotContainerCode());
 			e.setLateDateTimeReturnEmptyAtDepot(DateTimeUtils
 					.unixTimeStamp2DateTime(late));
+			early.put(e.getDepotContainerCode(), 0);
+			serving.put(e.getDepotContainerCode(), 2);
+			latest.put(e.getDepotContainerCode(), (int)(late- DateTimeUtils.dateTime2Int(beginTime)));
 			imEmptyRequests[i] = e;
 		}
 		input.setImEmptyRequests(imEmptyRequests);
@@ -395,20 +452,22 @@ public class DataAnalysis {
 		imLadenRequests = new ImportLadenRequests[nbIL];
 		for(int i = 0; i < nbIL; i++){
 			ImportLadenRequests e = new ImportLadenRequests();
-			int idx = r.nextInt(temp_containers.size());
-			e.setContainerCode(temp_containers.get(idx).getCode());
-			temp_containers.remove(idx);
+//			int idx = r.nextInt(temp_containers.size());
+//			e.setContainerCode(temp_containers.get(idx).getCode());
+//			temp_containers.remove(idx);
 			
-			idx = r.nextInt(warehouses.length);
-			e.setWareHouseCode(warehouses[idx].getCode());
+			e.setWareHouseCode(warehouses[nbEE+nbEL+nbIE].getCode());
 			
-			idx = r.nextInt(ports.length);
-			e.setPortCode(ports[idx].getCode());
+			e.setPortCode(ports[nbEL + i].getCode());
 			
-			long ear = r.nextInt(duration) + minEarliestTime;
+			long ear = r.nextInt(duration) + DateTimeUtils.dateTime2Int(minEarliestTime);
 			e.setEarlyDateTimePickupAtPort(DateTimeUtils.unixTimeStamp2DateTime(ear));
 			long late = ear + rangeTime;
 			e.setLateDateTimePickupAtPort(DateTimeUtils.unixTimeStamp2DateTime(late));
+			early.put(e.getPortCode(), (int)(ear- DateTimeUtils.dateTime2Int(beginTime)));
+			serving.put(e.getPortCode(), 2);
+			latest.put(e.getPortCode(), (int)(late- DateTimeUtils.dateTime2Int(beginTime)));
+			
 			
 			ear += getTravelTime(e.getPortCode(),
 					e.getWareHouseCode());
@@ -417,6 +476,10 @@ public class DataAnalysis {
 			late = ear + rangeTime;
 			e.setLateDateTimeUnloadAtWarehouse(DateTimeUtils
 					.unixTimeStamp2DateTime(late));
+			
+			early.put(e.getWareHouseCode(), (int)(ear- DateTimeUtils.dateTime2Int(beginTime)));
+			serving.put(e.getWareHouseCode(), 2);
+			latest.put(e.getWareHouseCode(), (int)(late- DateTimeUtils.dateTime2Int(beginTime)));
 			imLadenRequests[i] = e;
 		}
 		input.setImLadenRequests(imLadenRequests);
@@ -424,16 +487,17 @@ public class DataAnalysis {
 	
 	public void createConfigParams(){
 		params = new ConfigParam();
-		params.setCutMoocDuration(900);
-		params.setLinkEmptyContainerDuration(900);
-		params.setLinkLoadedContainerDuration(900);
-		params.setLinkMoocDuration(900);
-		params.setUnlinkEmptyContainerDuration(900);
-		params.setUnlinkLoadedContainerDuration(900);
+		params.setCutMoocDuration(1);
+		params.setLinkEmptyContainerDuration(2);
+		params.setLinkLoadedContainerDuration(2);
+		params.setLinkMoocDuration(1);
+		params.setUnlinkEmptyContainerDuration(2);
+		params.setUnlinkLoadedContainerDuration(2);
 		input.setParams(params);
 	}
 	
 	public double getTravelTime(String src, String dest){
+		System.out.println(src + " - " + dest);
 		return matrix[mCode2idx.get(src)][mCode2idx.get(dest)];
 	}
 	/***
@@ -465,15 +529,15 @@ public class DataAnalysis {
 			gson.toJson(input, fo);
 			fo.close();
 		}catch(Exception e){
-			
+			System.out.println(e);
 		}
 	}
-	public DataAnalysis(TruckContainerSolver solver){
+	public createDataFileForMIPandHeuristic(TruckContainerSolver solver){
 		super();
 		this.solver = solver;
 		this.input = solver.input;
 	}
-	public DataAnalysis(){
+	public createDataFileForMIPandHeuristic(){
 		solver = new TruckContainerSolver();
 	}
 	
@@ -1039,13 +1103,13 @@ public class DataAnalysis {
 	
 	public ArrayList<String> getDayList(){
 		ArrayList<String> days = new ArrayList<String>();
-//		days.add("1802");
-//		days.add("1902");
-//		days.add("2102");
-//		days.add("2202");
-//		days.add("2502");
-//		days.add("2602");
-//		days.add("2702");
+//			days.add("1802");
+//			days.add("1902");
+//			days.add("2102");
+//			days.add("2202");
+//			days.add("2502");
+//			days.add("2602");
+//			days.add("2702");
 		days.add("0103");
 		days.add("0403");
 		days.add("0503");
@@ -1215,9 +1279,128 @@ public class DataAnalysis {
 			System.out.println(e);
 		}
 	}
+	
+	public void print2TxtMipFile(String fileName){
+		try{
+			Random r = new Random();
+			PrintWriter f = new PrintWriter(new File(fileName));
+			f.println("#nb trucks");
+			f.println(nbTrucks);
+			f.println("#intermediate truck points");
+			String str = "";
+			for(int i = 0; i < intermediateTrucks.size(); i++)
+				str += intermediateTrucks.get(i) + " ";
+			f.println(str);
+			f.println("#truck (depot,  terminus)");
+			for(int i = 0; i < nbTrucks; i++){
+				int st = Integer.parseInt(trucks[i].getDepotTruckCode().split("-")[1]);
+				int en = Integer.parseInt(trucks[i].getReturnDepotCodes()[0].split("-")[1]);
+				f.println( st + " " + en);
+			}
+			
+			f.println("#nb trailers");
+			f.println(nbMoocs);
+			f.println("#intermediate trailer points");
+			str = "";
+			for(int i = 0; i < intermediateMoocs.size(); i++)
+				str += intermediateMoocs.get(i) + " ";
+			f.println(str);
+			f.println("#trailer (depot,  terminus)");
+			for(int i = 0; i < nbMoocs; i++){
+				int st = Integer.parseInt(moocs[i].getDepotMoocCode().split("-")[1]);
+				int en = Integer.parseInt(moocs[i].getReturnDepotCodes()[0].split("-")[1]);
+				f.println( st + " " + en);
+			}
+			
+			f.println("#nb containers(for export empty request): the emptyContainer must be pickup at each one");
+			f.println(nbContainers);
+			f.println("#intermediate Container points");
+			str = "";
+			for(int i = 0; i < intermediateContainers.size(); i++)
+				str += intermediateContainers.get(i) + " ";
+			f.println(str);
+			f.println("#Container (depot,  terminus)");
+			for(int i = 0; i < nbContainers; i++){
+				int st = Integer.parseInt(containers[i].getDepotContainerCode().split("-")[1]);
+				int en = Integer.parseInt(containers[i].getReturnDepotCodes()[0].split("-")[1]);
+				f.println( st + " " + en);
+			}
+			
+			f.println("#nb returned container depots (for import empty request): the emptyContainer must be delivery at each one");
+			f.println(nReturnedContainers);
+			f.println("#return-depot container");
+			str = "";
+			for(int i = 0; i < nReturnedContainers; i++)
+				str += returnDepotContainers.get(i) + " ";
+			f.println(str);
+			
+			f.println("#export empty: [warehouse isBreakRomooc]");
+			f.println(nbEE);
+			for(int i = 0; i < nbEE; i++){
+				int id = Integer.parseInt(exEmptyRequests[i].getWareHouseCode().split("-")[1]);
+				f.println(id + " " + r.nextInt(1));
+			}
+			
+			f.println("#import empty: [warehouse]");
+			f.println(nbIE);
+			for(int i = 0; i < nbIE; i++){
+				int id = Integer.parseInt(imEmptyRequests[i].getWareHouseCode().split("-")[1]);
+				f.println(id + " " + r.nextInt(1));
+			}
+			
+			f.println("#export laden: [warehouse port isBreakRomooc]");
+			f.println(nbEL);
+			for(int i = 0; i < nbEL; i++){
+				int id1 = Integer.parseInt(exLadenRequests[i].getWareHouseCode().split("-")[1]);
+				int id2 = Integer.parseInt(exLadenRequests[i].getPortCode().split("-")[1]);
+				f.println(id1 + " " + id2 + " " + r.nextInt(1));
+			}
+			
+			f.println("#import laden: [port warehouse isBreakRomooc]");
+			f.println(nbIL);
+			for(int i = 0; i < nbIL; i++){
+				int id1 = Integer.parseInt(imLadenRequests[i].getPortCode().split("-")[1]);
+				int id2 = Integer.parseInt(imLadenRequests[i].getWareHouseCode().split("-")[1]);
+				f.println(id1 + " " + id2 + " " + r.nextInt(1));
+			}
+			
+			f.println("#nb Logical points");
+			f.println(nbLogicalPoints);
+			
+			f.println("#time window: [pointId earliestArrivalTime latestArrivalTime servingTime]");
+			for(int i = 0; i < mCode.size(); i++){
+				int l = -1;
+				int e = -1;
+				int s = -1;
+				if(early.get(mCode.get(i)) == null){
+					e = 0;
+					l = 1000000;
+					s = 0;
+				}
+				else{
+					e = early.get(mCode.get(i));
+					l = latest.get(mCode.get(i));
+					s = serving.get(mCode.get(i));
+				}
+				f.println(i + " " + e + " " + l + " " + s);
+			}
+			
+			f.println("#travel distance(time) matrix:[from to travelTime]");
+			f.println(nbLogicalPoints * (nbLogicalPoints-1));
+			for(int i = 0; i < nbLogicalPoints; i++)
+				for(int j = 0; j < nbLogicalPoints; j++){
+					if(i == j)
+						continue;
+					f.println(i + " " + j + " " + matrix[i][j]);
+				}
+			f.close();
+		}catch(Exception e){
+			System.out.println(e);
+		}
+	}
 
 	public static void main(String[] args){
-		DataAnalysis da = new DataAnalysis();
+		createDataFileForMIPandHeuristic da = new createDataFileForMIPandHeuristic();
 		//chinh sua lai file du lieu
 		//da.updateData();
 		
@@ -1229,8 +1412,14 @@ public class DataAnalysis {
 		
 		//tao file du lieu lon de test
 		//sua cac params trong initParams function
+		String dir = "data/truck-container/";
+		String fileNameHeu = dir + "random_big_data-4reqs.txt";
+		String fileNameMIP = dir + "random_big_data-4reqs-MIP.txt";
+		da.createJsonFile(fileNameHeu);
 		
-		String fileName = "data/truck-container/random_big_data-150reqs.json";
-		da.createJsonFile(fileName);
+		da.print2TxtMipFile(fileNameMIP);
 	}
+	
+	
 }
+

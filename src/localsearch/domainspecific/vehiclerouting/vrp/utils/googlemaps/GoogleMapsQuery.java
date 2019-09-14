@@ -100,10 +100,112 @@ public class GoogleMapsQuery {
 	public LatLng getCoordinate(String address) {
 		URL url = null;
 		try {
+//			url = new URL(
+//					"https://maps.google.com/maps/api/geocode/xml?address="
+//							+ URLEncoder.encode(address, "UTF-8")
+//							+ "&sensor=false"
+//							+ "&key=AIzaSyBgR6vVhq1XGcBV1wRjrmRfOtw4q0GnJtk");
 			url = new URL(
-					"http://maps.google.com/maps/api/geocode/xml?address="
-							+ URLEncoder.encode(address, "UTF-8")
-							+ "&sensor=false");
+					"https://maps.googleapis.com/maps/api/geocode/xml?address="
+					+ URLEncoder.encode(address, "UTF-8")
+					+ "&components=country:vn"
+					+ "&key=AIzaSyBNG0TDvGbsQbmd36VOqNWcgQd9CjSo84o");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		HttpURLConnection urlConn = null;
+		try {
+			// URL connection channel.
+			urlConn = (HttpURLConnection) url.openConnection();
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+		// Let the run-time system (RTS) know that we want input.
+		urlConn.setDoInput(true);
+
+		// Let the RTS know that we want to do output.
+		urlConn.setDoOutput(true);
+		// No caching, we want the real thing.
+		urlConn.setUseCaches(false);
+		try {
+			urlConn.setRequestMethod("POST");
+		} catch (ProtocolException ex) {
+			ex.printStackTrace();
+		}
+		try {
+			urlConn.connect();
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+		DataOutputStream output = null;
+		DataInputStream input = null;
+		try {
+			output = new DataOutputStream(urlConn.getOutputStream());
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+		// Get response data.
+		String str = null;
+		try {
+			PrintWriter out = new PrintWriter(new FileWriter(
+					"http-post-log.txt"));
+			input = new DataInputStream(urlConn.getInputStream());
+			try {
+				DocumentBuilder builder = DocumentBuilderFactory.newInstance()
+						.newDocumentBuilder();
+				Document doc = builder.parse(input);
+				doc.getDocumentElement().normalize();
+
+				NodeList nl = doc.getElementsByTagName("geometry");
+				Node nod = nl.item(0);
+				Element e = (Element) nod;
+				if (e == null) {
+					out.close();
+					return null;
+				}
+
+				nl = e.getElementsByTagName("location");
+				nod = nl.item(nl.getLength() - 1);
+				
+				e = (Element) nod;
+				nl = e.getElementsByTagName("lat");
+				nod = nl.item(0);
+
+				String d_s = nod.getChildNodes().item(0).getNodeValue();
+				double lat = Double.valueOf(d_s);
+
+				nl = e.getElementsByTagName("lng");
+				nod = nl.item(0);
+				d_s = nod.getChildNodes().item(0).getNodeValue();
+				double lng = Double.valueOf(d_s);
+				out.close();
+				return new LatLng(lat, lng);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			input.close();
+			out.close();
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+		return null;
+	}
+	
+	public LatLng getCoordinateWithComponents(String address) {
+		URL url = null;
+		try {
+//			url = new URL(
+//					"https://maps.google.com/maps/api/geocode/xml?address="
+//							+ URLEncoder.encode(address, "UTF-8")
+//							+ "&sensor=false"
+//							+ "&key=AIzaSyBgR6vVhq1XGcBV1wRjrmRfOtw4q0GnJtk");
+			url = new URL(
+					"https://maps.googleapis.com/maps/api/geocode/xml?address="
+					+ URLEncoder.encode(address, "UTF-8")
+					+ "&components=country:vn%7Cpostal_code:100000"
+					+ "&bounds=20.946683,106.004683%7C21.205756,105.665946"
+					+ "&key=AIzaSyDztY35mN41w5nFpgtJiHgNis9ItrRUzmM");
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -185,13 +287,203 @@ public class GoogleMapsQuery {
 		return null;
 	}
 
+	public LatLng getCoordinateWithoutBound(String address) {
+		URL url = null;
+		try {
+//			url = new URL(
+//					"https://maps.google.com/maps/api/geocode/xml?address="
+//							+ URLEncoder.encode(address, "UTF-8")
+//							+ "&sensor=false"
+//							+ "&key=AIzaSyBgR6vVhq1XGcBV1wRjrmRfOtw4q0GnJtk");
+			url = new URL(
+					"https://maps.googleapis.com/maps/api/geocode/xml?address="
+					+ URLEncoder.encode(address, "UTF-8")
+					+ "&components=country:vn%7Cpostal_code:100000"
+					+ "&key=AIzaSyDztY35mN41w5nFpgtJiHgNis9ItrRUzmM");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		HttpURLConnection urlConn = null;
+		try {
+			// URL connection channel.
+			urlConn = (HttpURLConnection) url.openConnection();
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+		// Let the run-time system (RTS) know that we want input.
+		urlConn.setDoInput(true);
+
+		// Let the RTS know that we want to do output.
+		urlConn.setDoOutput(true);
+		// No caching, we want the real thing.
+		urlConn.setUseCaches(false);
+		try {
+			urlConn.setRequestMethod("POST");
+		} catch (ProtocolException ex) {
+			ex.printStackTrace();
+		}
+		try {
+			urlConn.connect();
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+		DataOutputStream output = null;
+		DataInputStream input = null;
+		try {
+			output = new DataOutputStream(urlConn.getOutputStream());
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+		// Get response data.
+		String str = null;
+		try {
+			PrintWriter out = new PrintWriter(new FileWriter(
+					"http-post-log.txt"));
+			input = new DataInputStream(urlConn.getInputStream());
+			try {
+				DocumentBuilder builder = DocumentBuilderFactory.newInstance()
+						.newDocumentBuilder();
+				Document doc = builder.parse(input);
+				doc.getDocumentElement().normalize();
+
+				NodeList nl = doc.getElementsByTagName("geometry");
+				Node nod = nl.item(0);
+				Element e = (Element) nod;
+				if (e == null) {
+					return null;
+				}
+
+				nl = e.getElementsByTagName("location");
+				nod = nl.item(nl.getLength() - 1);
+				
+				e = (Element) nod;
+				nl = e.getElementsByTagName("lat");
+				nod = nl.item(0);
+
+				String d_s = nod.getChildNodes().item(0).getNodeValue();
+				double lat = Double.valueOf(d_s);
+
+				nl = e.getElementsByTagName("lng");
+				nod = nl.item(0);
+				d_s = nod.getChildNodes().item(0).getNodeValue();
+				double lng = Double.valueOf(d_s);
+
+				return new LatLng(lat, lng);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			input.close();
+			out.close();
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+		return null;
+	}
+	
+	public LatLng getCoordinateWithRegion(String address) {
+		URL url = null;
+		try {
+//			url = new URL(
+//					"https://maps.google.com/maps/api/geocode/xml?address="
+//							+ URLEncoder.encode(address, "UTF-8")
+//							+ "&sensor=false"
+//							+ "&key=AIzaSyBgR6vVhq1XGcBV1wRjrmRfOtw4q0GnJtk");
+			url = new URL(
+					"https://maps.googleapis.com/maps/api/geocode/xml?address="
+					+ URLEncoder.encode(address, "UTF-8")
+					+ "&region=vn"
+					+ "&bounds=20.946683,106.004683%7C21.205756,105.665946"
+					+ "&key=AIzaSyDztY35mN41w5nFpgtJiHgNis9ItrRUzmM");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		HttpURLConnection urlConn = null;
+		try {
+			// URL connection channel.
+			urlConn = (HttpURLConnection) url.openConnection();
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+		// Let the run-time system (RTS) know that we want input.
+		urlConn.setDoInput(true);
+
+		// Let the RTS know that we want to do output.
+		urlConn.setDoOutput(true);
+		// No caching, we want the real thing.
+		urlConn.setUseCaches(false);
+		try {
+			urlConn.setRequestMethod("POST");
+		} catch (ProtocolException ex) {
+			ex.printStackTrace();
+		}
+		try {
+			urlConn.connect();
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+		DataOutputStream output = null;
+		DataInputStream input = null;
+		try {
+			output = new DataOutputStream(urlConn.getOutputStream());
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+		// Get response data.
+		String str = null;
+		try {
+			PrintWriter out = new PrintWriter(new FileWriter(
+					"http-post-log.txt"));
+			input = new DataInputStream(urlConn.getInputStream());
+			try {
+				DocumentBuilder builder = DocumentBuilderFactory.newInstance()
+						.newDocumentBuilder();
+				Document doc = builder.parse(input);
+				doc.getDocumentElement().normalize();
+
+				NodeList nl = doc.getElementsByTagName("geometry");
+				Node nod = nl.item(0);
+				Element e = (Element) nod;
+				if (e == null) {
+					out.close();
+					return null;
+				}
+
+				nl = e.getElementsByTagName("location");
+				nod = nl.item(nl.getLength() - 1);
+				
+				e = (Element) nod;
+				nl = e.getElementsByTagName("lat");
+				nod = nl.item(0);
+
+				String d_s = nod.getChildNodes().item(0).getNodeValue();
+				double lat = Double.valueOf(d_s);
+
+				nl = e.getElementsByTagName("lng");
+				nod = nl.item(0);
+				d_s = nod.getChildNodes().item(0).getNodeValue();
+				double lng = Double.valueOf(d_s);
+				out.close();
+				return new LatLng(lat, lng);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			input.close();
+			out.close();
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+		return null;
+	}
+	
 	public double getDistance(double lat1, double lng1, double lat2, double lng2) {
 		URL url = null;
 		try {
 			url = new URL(
-					"http://maps.google.com/maps/api/directions/xml?origin="
+					"https://maps.google.com/maps/api/directions/xml?origin="
 							+ lat1 + "," + lng1 + "&destination=" + lat2 + ","
-							+ lng2 + "&sensor=false&units=metric");
+							+ lng2 + "&sensor=false&units=metric&key=AIzaSyAglJqs1y64hfTSPX_MbBNxwSXKVRZVHko");
 		} catch (MalformedURLException ex) {
 			ex.printStackTrace();
 		}
@@ -289,12 +581,12 @@ public class GoogleMapsQuery {
 	}
 
 	public int getTravelTime(double lat1, double lng1, double lat2,
-			double lng2, String mode) {
+			double lng2, String mode, long departure_time) {
 		// try to probe maximum 20 times
 		int t = -1;
-		int maxTrials = 2;
+		int maxTrials = 3;
 		for (int i = 0; i < maxTrials; i++) {
-			t = getTravelTimeOnePost(lat1, lng1, lat2, lng2, mode);
+			t = getTravelTimeOnePost(lat1, lng1, lat2, lng2, mode, departure_time);
 			if (t > -1)
 				break;
 		}
@@ -303,14 +595,14 @@ public class GoogleMapsQuery {
 	}
 
 	private int getTravelTimeOnePost(double lat1, double lng1, double lat2,
-			double lng2, String mode) {
+			double lng2, String mode, long departure_time) {
 
 		URL url = null;
 		try {
 			url = new URL(
-					"http://maps.google.com/maps/api/directions/xml?origin="
+					"https://maps.google.com/maps/api/directions/xml?origin="
 							+ lat1 + "," + lng1 + "&destination=" + lat2 + ","
-							+ lng2 + "&sensor=false&units=metric");
+							+ lng2 + "&units=metric&departure_time=" + departure_time + "&key=AIzaSyDztY35mN41w5nFpgtJiHgNis9ItrRUzmM");
 		} catch (MalformedURLException ex) {
 			ex.printStackTrace();
 		}
@@ -405,9 +697,9 @@ public class GoogleMapsQuery {
 		int distances = 0;
 		try {
 			url = new URL(
-					"http://maps.google.com/maps/api/directions/xml?origin="
+					"https://maps.google.com/maps/api/directions/xml?origin="
 							+ lat1 + "," + lng1 + "&destination=" + lat2 + ","
-							+ lng2 + "&sensor=false&units=metric&mode=" + mode);
+							+ lng2 + "&sensor=false&units=metric&mode=" + mode +"&key=AIzaSyAglJqs1y64hfTSPX_MbBNxwSXKVRZVHko");
 		} catch (MalformedURLException ex) {
 			ex.printStackTrace();
 		}
@@ -575,7 +867,13 @@ public class GoogleMapsQuery {
 	
 	public static void main(String[] args){
 		GoogleMapsQuery G = new GoogleMapsQuery();
-		//G.getDirection(21, 105, 21.01, 105, "driving");
-		G.extractCoordinate("addr.txt");
+		//G.getTravelTime(21, 105, 21.01, 105, "driving");
+		LatLng ll = G.getCoordinateWithComponents("Tòa nhà sunrise 1");
+
+		ll = G.getCoordinateWithoutBound("Tòa nhà sunrise 1");
+		
+		ll = G.getCoordinateWithRegion("Tòa nhà sunrise 1");
+		
+		System.out.println(ll.toString());
 	}
 }

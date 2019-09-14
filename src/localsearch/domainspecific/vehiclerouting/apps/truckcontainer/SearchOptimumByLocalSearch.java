@@ -408,6 +408,15 @@ public class SearchOptimumByLocalSearch {
 	private void exploreForOneRequestMoveWithGreedyInsertion(){
 		Random ran = new Random();
 		Point pickup = null;
+		
+		while(pickup == null){
+			int r = ran.nextInt(tcs.XR.getNbRoutes()) + 1;
+			if(tcs.XR.index(tcs.XR.getTerminatingPointOfRoute(r)) <= 2)
+				continue;
+			
+			
+		}
+		
 		int it = 0;
 		int n = tcs.pickupPoints.size();
 		while(pickup == null){

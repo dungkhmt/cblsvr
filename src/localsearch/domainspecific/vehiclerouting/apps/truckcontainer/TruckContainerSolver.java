@@ -7,10 +7,12 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
+import java.util.Stack;
 import java.util.logging.Level;
 
 import com.google.gson.Gson;
@@ -92,7 +94,7 @@ public class TruckContainerSolver {
 	
 	public HashMap<Integer, Point> route2DeliveryMooc;
 	
-	public int nVehicle;
+	public static int nVehicle;
 	public static int nRequest;
 	
 	
@@ -544,10 +546,13 @@ public class TruckContainerSolver {
 		for(int i = 0; i < exEmptyRequests.length; i++){
 			groupId++;
 			group2marked.put(groupId, 0);
-			for(int j = 0; j < input.getDepotContainers().length; j++){
-				DepotContainer depotCont = input.getDepotContainers()[j];
+			for(int j = 0; j < input.getContainers().length; j++){
+				Container c = input.getContainers()[j];
+				if(c.isImportedContainer())
+					continue;
+				//DepotContainer depotCont = input.getDepotContainers()[i];
 				id++;
-				Point pickup = new Point(id, depotCont.getLocationCode());
+				Point pickup = new Point(id, c.getDepotContainerCode());
 				id++;
 				Warehouse wh = mCode2Warehouse.get(
 						exEmptyRequests[i].getWareHouseCode());
@@ -820,6 +825,7 @@ public class TruckContainerSolver {
 	}
 	
 	public void insertMoocForAllRoutes(){
+		removeAllMoocFromRoutes();
 		for(int r = 1; r <= XR.getNbRoutes(); r++){
 			Point st = XR.getStartingPointOfRoute(r);
 			Point stMooc = null;
@@ -1253,7 +1259,7 @@ public class TruckContainerSolver {
 	public void mapData(String dataFileName) {
 
 		// create artificial containers based on import request
-		Random ran = new Random();
+		//Random ran = new Random();
 		additionalContainers = new ArrayList<Container>();
 		int idxCode = -1;
 		if(input.getImRequests() != null){
@@ -1268,7 +1274,7 @@ public class TruckContainerSolver {
 					if(r.getDepotContainerCode() != null)
 						depotContainerCode = r.getDepotContainerCode()[0];
 					else{
-						int idx = ran.nextInt(input.getDepotContainers().length);
+						int idx = 0;//ran.nextInt(input.getDepotContainers().length);
 						depotContainerCode = input.getDepotContainers()[idx].getCode();
 					}
 					Container c = new Container(code, (int) r.getWeight(),
@@ -1288,7 +1294,7 @@ public class TruckContainerSolver {
 				if(R.getDepotContainerCode() != null)
 					depotContainerCode = R.getDepotContainerCode();
 				else{
-					int idx = ran.nextInt(input.getDepotContainers().length);
+					int idx = 0;//ran.nextInt(input.getDepotContainers().length);
 					depotContainerCode = input.getDepotContainers()[idx].getCode();
 				}
 				DepotContainer[] dpc = input.getDepotContainers();
@@ -1600,7 +1606,6 @@ public class TruckContainerSolver {
 	public int getNbUsedTrucks(){
 		int nb = 0;
 		for(int r = 1; r <= XR.getNbRoutes(); r++){
-			int a = XR.index(XR.getTerminatingPointOfRoute(r));
 			if(XR.index(XR.getTerminatingPointOfRoute(r)) > 3)
 				nb++;
 		}
@@ -1801,8 +1806,6 @@ public class TruckContainerSolver {
 	
 	//chen req roi chen mooc
 	public void greedyInitSolution2(){
-		double currtime = System.currentTimeMillis();
-		int n = 0;
 		for(int i = 0; i < pickup2Delivery.size(); i++){
 			System.out.println("req " + i + "/" + pickup2Delivery.size());
 			Point pickup = pickupPoints.get(i);
@@ -1815,7 +1818,7 @@ public class TruckContainerSolver {
 			Point pre_pick = null;
 			Point pre_delivery = null;
 			double best_objective = Double.MAX_VALUE;
-			
+			int best_idx = 10000;
 			for(int r = 1; r <= XR.getNbRoutes(); r++){
 				Point st = XR.getStartingPointOfRoute(r);
 
@@ -1832,10 +1835,12 @@ public class TruckContainerSolver {
 						insertMoocToRoutes(r);
 						if(S.violations() == 0){
 							double cost = objective.getValue();
-							if( cost < best_objective){
+							if( cost < best_objective 
+									|| (cost == best_objective && best_idx > r)){
 								best_objective = cost;
 								pre_pick = p;
 								pre_delivery = q;
+								best_idx = r;
 							}
 						}
 						mgr.performRemoveTwoPoints(pickup, delivery);
@@ -1850,10 +1855,9 @@ public class TruckContainerSolver {
 				int groupTruck = point2Group.get(st);
 				group2marked.put(groupTruck, 1);
 				group2marked.put(groupId, 1);
-				n++;
 			}
 		}
-		System.out.println("n = " + n);
+
 		for(int i = 0; i < pickup2Delivery.size(); i++){
 			Point pickup = pickupPoints.get(i);
 			if(XR.route(pickup) == Constants.NULL_POINT && !rejectPickupPoints.contains(pickup)){
@@ -1867,15 +1871,720 @@ public class TruckContainerSolver {
 		
 		insertMoocForAllRoutes();
 		
-		int nRp = getNbRejectedRequests();
-		int nB = getNbUsedTrucks();
-		System.out.println("nb rejected requests = " + nRp
-				+ ", nb trucks = " + nB
-				+ ", cost = " + objective.getValue()
-				+ ", time for inserting reqs = " + (System.currentTimeMillis() - currtime)/1000);
+//		int nRp = getNbRejectedRequests();
+//		int nB = getNbUsedTrucks();
+//		System.out.println("nb rejected requests = " + nRp
+//				+ ", nb trucks = " + nB
+//				+ ", cost = " + objective.getValue());
 		//checkRejectedRequestsInfo();
 	}
 	
+	//chen req roi chen mooc
+	public void greedyInitSolutionWithAcceptanceBPI(){
+		Random ran = new Random();
+		double T = 200;
+		double k = 0.995;
+		for(int i = 0; i < pickup2Delivery.size(); i++){
+			System.out.println("req " + i + "/" + pickup2Delivery.size());
+			Point pickup = pickupPoints.get(i);
+			int groupId = point2Group.get(pickup);
+			if(XR.route(pickup) != Constants.NULL_POINT
+				|| group2marked.get(groupId) == 1)
+				continue;
+			Point delivery = deliveryPoints.get(i);
+			//add the request to route
+			Point pre_pick = null;
+			Point pre_delivery = null;
+			double best_objective = Double.MAX_VALUE;
+			for(int r = 1; r <= XR.getNbRoutes(); r++){
+				Point st = XR.getStartingPointOfRoute(r);
+
+				int groupTruck = point2Group.get(st);
+				if(group2marked.get(groupTruck) == 1 && XR.index(XR.getTerminatingPointOfRoute(r)) <= 1)
+					continue;
+//					if(pickup.getID() == 985 && (r == 23 || r == 27))
+//						System.out.println("ds");
+				for(Point p = st; p != XR.getTerminatingPointOfRoute(r); p = XR.next(p)){
+					for(Point q = p; q != XR.getTerminatingPointOfRoute(r); q = XR.next(q)){
+//							if(pickup.getID() == 1271 && p.getID() == 121 && q.getID() == 1222)
+//								System.out.println("f");
+						mgr.performAddTwoPoints(pickup, p, delivery, q);
+						insertMoocToRoutes(r);
+						if(S.violations() == 0){
+							double cost = objective.getValue();
+							if( cost < best_objective ){
+								best_objective = cost;
+								pre_pick = p;
+								pre_delivery = q;
+							}
+							else{
+								double v = Math.exp(-(cost - best_objective)/T);
+								double e = ran.nextDouble();
+								if( e < v){
+									best_objective = cost;
+									pre_pick = p;
+									pre_delivery = q;
+								}
+							}
+						}
+						mgr.performRemoveTwoPoints(pickup, delivery);
+						removeMoocOnRoutes(r);
+					}
+				}
+			}
+			T = k * T;
+			if(pre_pick != null && pre_delivery != null){
+				mgr.performAddTwoPoints(pickup, pre_pick, delivery, pre_delivery);
+				//insertMoocToRoutes(XR.route(pre_pick));
+				Point st = XR.getStartingPointOfRoute(XR.route(pre_pick));
+				int groupTruck = point2Group.get(st);
+				group2marked.put(groupTruck, 1);
+				group2marked.put(groupId, 1);
+			}
+		}
+
+		for(int i = 0; i < pickup2Delivery.size(); i++){
+			Point pickup = pickupPoints.get(i);
+			if(XR.route(pickup) == Constants.NULL_POINT && !rejectPickupPoints.contains(pickup)){
+//					int groupId = point2Group.get(pickup);
+//					if(group2marked.get(groupId) == 0)
+//						testTimeWindow(pickup);
+				rejectPickupPoints.add(pickup);
+				rejectDeliveryPoints.add(pickup2Delivery.get(pickup));
+			}
+		}
+		
+		insertMoocForAllRoutes();
+		
+//			int nRp = getNbRejectedRequests();
+//			int nB = getNbUsedTrucks();
+//			System.out.println("nb rejected requests = " + nRp
+//					+ ", nb trucks = " + nB
+//					+ ", cost = " + objective.getValue());
+		//checkRejectedRequestsInfo();
+	}
+	/***
+	 * insert into scheduled points by stack
+	 */
+	public void firstPossibleInitFPI(){
+		for(int i = 0; i < pickup2Delivery.size(); i++){
+			System.out.println("req " + i + "/" + pickup2Delivery.size());
+			Point pickup = pickupPoints.get(i);
+			int groupId = point2Group.get(pickup);
+			if(XR.route(pickup) != Constants.NULL_POINT
+				|| group2marked.get(groupId) == 1)
+				continue;
+			Point delivery = deliveryPoints.get(i);
+			//add the request to route
+			boolean isAdded = false;
+			for(int r = 1; r <= XR.getNbRoutes(); r++){
+				if(isAdded)
+					break;
+				Point st = XR.getStartingPointOfRoute(r);
+
+				int groupTruck = point2Group.get(st);
+				if(group2marked.get(groupTruck) == 1 && XR.index(XR.getTerminatingPointOfRoute(r)) <= 1)
+					continue;
+				for(Point p = st; p != XR.getTerminatingPointOfRoute(r); p = XR.next(p)){
+					if(isAdded)
+						break;
+					for(Point q = p; q != XR.getTerminatingPointOfRoute(r); q = XR.next(q)){
+						mgr.performAddTwoPoints(pickup, p, delivery, q);
+						insertMoocToRoutes(r);
+						if(S.violations() == 0){
+							group2marked.put(groupTruck, 1);
+							group2marked.put(groupId, 1);
+							isAdded = true;
+							removeMoocOnRoutes(r);
+							break;
+						}
+						mgr.performRemoveTwoPoints(pickup, delivery);
+						removeMoocOnRoutes(r);
+					}
+				}
+			}
+		}
+		
+		for(int i = 0; i < pickup2Delivery.size(); i++){
+			Point pickup = pickupPoints.get(i);
+			if(XR.route(pickup) == Constants.NULL_POINT && !rejectPickupPoints.contains(pickup)){
+				rejectPickupPoints.add(pickup);
+				rejectDeliveryPoints.add(pickup2Delivery.get(pickup));
+			}
+		}
+		insertMoocForAllRoutes();
+		
+//		int nRp = getNbRejectedRequests();
+//		int nB = getNbUsedTrucks();
+//		System.out.println("nb rejected requests = " + nRp
+//				+ ", nb trucks = " + nB
+//				+ ", cost = " + objective.getValue());
+		//checkRejectedRequestsInfo();
+	}
+	
+	/***
+	 * first possible insert into scheduled vehicles by stack
+	 */
+	public void firstPossibleInitFPIUS(){
+		Stack<String> stack = new Stack<String>();
+		for(int r = XR.getNbRoutes(); r >= 1; r--){
+			String s = "" + r;
+			stack.push(s);
+		}
+		
+		for(int i = 0; i < pickup2Delivery.size(); i++){
+			System.out.println("req " + i + "/" + pickup2Delivery.size());
+			Point pickup = pickupPoints.get(i);
+			int groupId = point2Group.get(pickup);
+			if(XR.route(pickup) != Constants.NULL_POINT
+				|| group2marked.get(groupId) == 1)
+				continue;
+			Point delivery = deliveryPoints.get(i);
+			//add the request to route
+			boolean isAdded = false;
+			for(int k = stack.size() - 1; k >= 0; k--){
+				if(isAdded)
+					break;
+				int r = Integer.parseInt(stack.get(k));
+				Point st = XR.getStartingPointOfRoute(r);
+
+				int groupTruck = point2Group.get(st);
+				if(group2marked.get(groupTruck) == 1 && XR.index(XR.getTerminatingPointOfRoute(r)) <= 1)
+					continue;
+				for(Point p = st; p != XR.getTerminatingPointOfRoute(r); p = XR.next(p)){
+					if(isAdded)
+						break;
+					for(Point q = p; q != XR.getTerminatingPointOfRoute(r); q = XR.next(q)){
+						mgr.performAddTwoPoints(pickup, p, delivery, q);
+						insertMoocToRoutes(r);
+						if(S.violations() == 0){
+							group2marked.put(groupTruck, 1);
+							group2marked.put(groupId, 1);
+							stack.remove(stack.get(k));
+							String s = "" + r;
+							stack.push(s);
+							isAdded = true;
+							removeMoocOnRoutes(r);
+							break;
+						}
+						mgr.performRemoveTwoPoints(pickup, delivery);
+						removeMoocOnRoutes(r);
+					}
+				}
+			}
+		}
+		
+		for(int i = 0; i < pickup2Delivery.size(); i++){
+			Point pickup = pickupPoints.get(i);
+			if(XR.route(pickup) == Constants.NULL_POINT && !rejectPickupPoints.contains(pickup)){
+				rejectPickupPoints.add(pickup);
+				rejectDeliveryPoints.add(pickup2Delivery.get(pickup));
+			}
+		}
+		insertMoocForAllRoutes();
+	}
+	
+	public void insertOneReq2oneTruck(){
+		for(int i = 0; i < pickup2Delivery.size(); i++){
+			System.out.println("req " + i + "/" + pickup2Delivery.size());
+			Point pickup = pickupPoints.get(i);
+			int groupId = point2Group.get(pickup);
+			if(XR.route(pickup) != Constants.NULL_POINT
+				|| group2marked.get(groupId) == 1)
+				continue;
+			Point delivery = deliveryPoints.get(i);
+			//add the request to route
+			for(int r = 1; r <= XR.getNbRoutes(); r++){
+				if(XR.index(XR.getTerminatingPointOfRoute(r)) > 2)
+					continue;
+				Point st = XR.getStartingPointOfRoute(r);
+
+				int groupTruck = point2Group.get(st);
+				if(group2marked.get(groupTruck) == 1 && XR.index(XR.getTerminatingPointOfRoute(r)) <= 1)
+					continue;
+				mgr.performAddTwoPoints(pickup, st, delivery, st);
+				insertMoocToRoutes(r);
+				if(S.violations() == 0){
+					group2marked.put(groupTruck, 1);
+					group2marked.put(groupId, 1);
+					removeMoocOnRoutes(r);
+					break;
+				}
+			}
+		}
+		
+		for(int i = 0; i < pickup2Delivery.size(); i++){
+			Point pickup = pickupPoints.get(i);
+			if(XR.route(pickup) == Constants.NULL_POINT && !rejectPickupPoints.contains(pickup)){
+				rejectPickupPoints.add(pickup);
+				rejectDeliveryPoints.add(pickup2Delivery.get(pickup));
+			}
+		}
+		insertMoocForAllRoutes();
+	}
+	
+	public void allRemoval(){
+		System.out.println("all removal");
+		mgr.performRemoveAllClientPoints();
+		for(int i = 0; i < pickupPoints.size(); i++){
+			Point pickup = pickupPoints.get(i);
+			if(!rejectPickupPoints.contains(pickup)){
+				rejectPickupPoints.add(pickup);
+				rejectDeliveryPoints.add(pickup2Delivery.get(pickup));
+			}
+		}
+		
+		for(int k : group2marked.keySet())
+			group2marked.put(k, 0);
+	}
+	
+	
+	/***
+	 * first possible insert into scheduled vehicles by stack
+	 */
+	public void heuristicFPIUS(String outputfile){
+		int it = 0;
+		Random ran = new Random();
+		double T = 200;
+		double kap = 0.995;
+		
+		TruckContainerSolution best_solution = null;
+		double best_cost = Double.MAX_VALUE;
+		int best_usedTruck = this.nVehicle;
+		int best_nbReject = Integer.MAX_VALUE;
+		
+		TruckContainerSolution curr_solution = null;
+		double curr_cost = Double.MAX_VALUE;
+		int curr_usedTruck = this.nVehicle;
+		int curr_nbReject = Integer.MAX_VALUE;
+
+		double start_search_time = System.currentTimeMillis();
+		
+		while(it++ <= 1000 && (System.currentTimeMillis() - start_search_time)/1000 < 36000){
+			allRemoval();
+			
+			Stack<String> stack = new Stack<String>();
+			for(int r = XR.getNbRoutes(); r >= 1; r--){
+				String s = "" + r;
+				stack.push(s);
+			}
+			Collections.shuffle(rejectPickupPoints);
+			for(int i = 0; i < rejectPickupPoints.size(); i++){
+				System.out.println("req " + i + "/" + pickup2Delivery.size());
+				Point pickup = rejectPickupPoints.get(i);
+				int groupId = point2Group.get(pickup);
+				if(XR.route(pickup) != Constants.NULL_POINT
+					|| group2marked.get(groupId) == 1)
+					continue;
+				Point delivery = pickup2Delivery.get(pickup);
+				//add the request to route
+				boolean isAdded = false;
+				for(int k = stack.size() - 1; k >= 0; k--){
+					if(isAdded)
+						break;
+					int r = Integer.parseInt(stack.get(k));
+					Point st = XR.getStartingPointOfRoute(r);
+	
+					int groupTruck = point2Group.get(st);
+					if(group2marked.get(groupTruck) == 1 && XR.index(XR.getTerminatingPointOfRoute(r)) <= 1)
+						continue;
+					for(Point p = st; p != XR.getTerminatingPointOfRoute(r); p = XR.next(p)){
+						if(isAdded)
+							break;
+						for(Point q = p; q != XR.getTerminatingPointOfRoute(r); q = XR.next(q)){
+							mgr.performAddTwoPoints(pickup, p, delivery, q);
+							insertMoocToRoutes(r);
+							if(S.violations() == 0){
+								group2marked.put(groupTruck, 1);
+								group2marked.put(groupId, 1);
+								stack.remove(stack.get(k));
+								String s = "" + r;
+								stack.push(s);
+								isAdded = true;
+								removeMoocOnRoutes(r);
+								rejectPickupPoints.remove(pickup);
+								rejectDeliveryPoints.remove(delivery);
+								i--;
+								break;
+							}
+							mgr.performRemoveTwoPoints(pickup, delivery);
+							removeMoocOnRoutes(r);
+						}
+					}
+				}
+			}
+			
+			insertMoocForAllRoutes();
+			
+			
+			System.out.println("nb of iterator: " + it);
+			double new_cost = objective.getValue();
+			int new_nbTrucks = getNbUsedTrucks();
+			int new_rejected = getNbRejectedRequests();
+
+			if(best_solution == null){
+				best_cost = curr_cost = new_cost;
+				best_nbReject = curr_nbReject = new_rejected;
+				best_usedTruck = curr_usedTruck = new_nbTrucks;
+				best_solution = new TruckContainerSolution(XR, rejectPickupPoints,
+						rejectDeliveryPoints, new_cost, new_nbTrucks, new_rejected, point2Group, group2marked);
+				curr_solution = new TruckContainerSolution(XR, rejectPickupPoints,
+						rejectDeliveryPoints, new_cost, new_nbTrucks, new_rejected, point2Group, group2marked);
+			}
+			else{
+				if( new_rejected < curr_nbReject
+						|| (new_rejected == curr_nbReject && new_nbTrucks < curr_usedTruck)
+						|| (new_rejected == curr_nbReject && new_nbTrucks == curr_usedTruck && new_cost < curr_cost)){
+					
+					if(new_rejected < best_nbReject
+							|| (new_rejected == best_nbReject && new_nbTrucks < best_usedTruck)
+							|| (new_rejected == best_nbReject && new_nbTrucks == best_usedTruck && new_cost < best_cost)){
+						
+						best_cost = new_cost;
+						best_nbReject = new_rejected;
+						best_usedTruck = new_nbTrucks;
+						
+						best_solution = new TruckContainerSolution(XR, rejectPickupPoints, rejectDeliveryPoints,
+								new_cost, new_nbTrucks, new_rejected, point2Group, group2marked);
+						try{
+							FileOutputStream write = new FileOutputStream(outputfile, true);
+							PrintWriter fo = new PrintWriter(write);
+							fo.println(it + " " + 
+								+ System.currentTimeMillis()/1000 + " "
+								+ best_cost + " " + best_nbReject + " " + best_usedTruck);
+							fo.close();
+						}catch(Exception e){
+							System.out.println(e);
+						}
+					}
+				}
+				else{
+					double v = Math.exp(-(new_cost - best_cost)/T);
+					double e = ran.nextDouble();
+					if( e < v){
+						best_cost = new_cost;
+						best_cost = new_cost;
+						best_nbReject = new_rejected;
+						best_usedTruck = new_nbTrucks;
+						
+						best_solution = new TruckContainerSolution(XR, rejectPickupPoints, rejectDeliveryPoints,
+								new_cost, new_nbTrucks, new_rejected, point2Group, group2marked);
+						try{
+							FileOutputStream write = new FileOutputStream(outputfile, true);
+							PrintWriter fo = new PrintWriter(write);
+							fo.println(it + " " + 
+								+ System.currentTimeMillis()/1000 + " "
+								+ best_cost + " " + best_nbReject + " " + best_usedTruck);
+							fo.close();
+						}catch(Exception ex){
+							System.out.println(ex);
+						}
+					}
+				}
+			}
+			T = T * kap;
+		}
+		best_solution.copy2XR(XR);
+		group2marked = best_solution.get_group2marked();
+		
+		rejectPickupPoints = best_solution.get_rejectPickupPoints();
+		rejectDeliveryPoints = best_solution.get_rejectDeliveryPoints();
+		
+		try{
+			FileOutputStream write = new FileOutputStream(outputfile, true);
+			PrintWriter fo = new PrintWriter(write);
+			fo.println(it + " " + 
+				+ System.currentTimeMillis()/1000 + " "
+				+ best_cost + " " + best_nbReject + " " + best_usedTruck);
+			fo.close();
+		}catch(Exception ex){
+			System.out.println(ex);
+		}
+	}
+	
+	public void heuristicBPIUS(String outputfile){
+		int it = 0;
+		Random ran = new Random();
+		double T = 200;
+		double kap = 0.995;
+		
+		
+		TruckContainerSolution best_solution = null;
+		double best_cost = Double.MAX_VALUE;
+		int best_usedTruck = this.nVehicle;
+		int best_nbReject = Integer.MAX_VALUE;
+		
+		TruckContainerSolution curr_solution = null;
+		double curr_cost = Double.MAX_VALUE;
+		int curr_usedTruck = this.nVehicle;
+		int curr_nbReject = Integer.MAX_VALUE;
+
+		double start_search_time = System.currentTimeMillis();
+		
+		while(it++ <= 100000 && (System.currentTimeMillis() - start_search_time)/1000 < 36000){
+			allRemoval();
+			
+			Stack<String> stack = new Stack<String>();
+			for(int r = XR.getNbRoutes(); r >= 1; r--){
+				String s = "" + r;
+				stack.push(s);
+			}
+			Collections.shuffle(rejectPickupPoints);
+			for(int i = 0; i < rejectPickupPoints.size(); i++){
+				System.out.println("req " + i + "/" + pickup2Delivery.size());
+				Point pickup = rejectPickupPoints.get(i);
+				int groupId = point2Group.get(pickup);
+				if(XR.route(pickup) != Constants.NULL_POINT
+					|| group2marked.get(groupId) == 1)
+					continue;
+				Point delivery = pickup2Delivery.get(pickup);
+				
+				Point pre_pick = null;
+				Point pre_delivery = null;
+				double best_objective = Double.MAX_VALUE;
+				int best_idx = -1;
+				
+				//add the request to route
+				for(int k = stack.size() - 1; k >= 0; k--){
+					int r = Integer.parseInt(stack.get(k));
+					Point st = XR.getStartingPointOfRoute(r);
+
+					int groupTruck = point2Group.get(st);
+					if(group2marked.get(groupTruck) == 1 && XR.index(XR.getTerminatingPointOfRoute(r)) <= 1)
+						continue;
+//					if(pickup.getID() == 985 && (r == 23 || r == 27))
+//						System.out.println("ds");
+					for(Point p = st; p != XR.getTerminatingPointOfRoute(r); p = XR.next(p)){
+						for(Point q = p; q != XR.getTerminatingPointOfRoute(r); q = XR.next(q)){
+//							if(pickup.getID() == 1271 && p.getID() == 121 && q.getID() == 1222)
+//								System.out.println("f");
+							mgr.performAddTwoPoints(pickup, p, delivery, q);
+							insertMoocToRoutes(r);
+							if(S.violations() == 0){
+								double cost = objective.getValue();
+								if( cost < best_objective ){
+									best_objective = cost;
+									pre_pick = p;
+									pre_delivery = q;
+									best_idx = k;
+								}
+								else{
+									double v = Math.exp(-(cost - best_objective)/T);
+									double e = ran.nextDouble();
+									if( e < v){
+										best_objective = cost;
+										pre_pick = p;
+										pre_delivery = q;
+									}
+								}
+							}
+							mgr.performRemoveTwoPoints(pickup, delivery);
+							removeMoocOnRoutes(r);
+						}
+					}
+				}
+				T = kap * T;
+				if(pre_pick != null && pre_delivery != null){
+					mgr.performAddTwoPoints(pickup, pre_pick, delivery, pre_delivery);
+					//insertMoocToRoutes(XR.route(pre_pick));
+					Point st = XR.getStartingPointOfRoute(XR.route(pre_pick));
+					int groupTruck = point2Group.get(st);
+					group2marked.put(groupTruck, 1);
+					group2marked.put(groupId, 1);
+					String s = stack.get(best_idx);
+					stack.remove(best_idx);
+					stack.push(s);
+					rejectPickupPoints.remove(pickup);
+					rejectDeliveryPoints.remove(delivery);
+					i--;
+				}
+			}
+			
+			insertMoocForAllRoutes();
+			
+			
+			System.out.println("nb of iterator: " + it);
+			double new_cost = objective.getValue();
+			int new_nbTrucks = getNbUsedTrucks();
+			int new_rejected = getNbRejectedRequests();
+
+			if(best_solution == null){
+				best_cost = curr_cost = new_cost;
+				best_nbReject = curr_nbReject = new_rejected;
+				best_usedTruck = curr_usedTruck = new_nbTrucks;
+				best_solution = new TruckContainerSolution(XR, rejectPickupPoints,
+						rejectDeliveryPoints, new_cost, new_nbTrucks, new_rejected, point2Group, group2marked);
+				curr_solution = new TruckContainerSolution(XR, rejectPickupPoints,
+						rejectDeliveryPoints, new_cost, new_nbTrucks, new_rejected, point2Group, group2marked);
+			}
+			else{
+//				if( new_rejected < curr_nbReject
+//						|| (new_rejected == curr_nbReject && new_nbTrucks < curr_usedTruck)
+//						|| (new_rejected == curr_nbReject && new_nbTrucks == curr_usedTruck && new_cost < curr_cost)){
+				if(new_cost < curr_cost){
+					curr_solution = new TruckContainerSolution(XR, rejectPickupPoints,
+							rejectDeliveryPoints, new_cost, new_nbTrucks, new_rejected, point2Group, group2marked);
+					curr_cost = objective.getValue();
+					curr_nbReject = new_rejected;
+					curr_usedTruck = new_nbTrucks;
+//					if(new_rejected < best_nbReject
+//							|| (new_rejected == best_nbReject && new_nbTrucks < best_usedTruck)
+//							|| (new_rejected == best_nbReject && new_nbTrucks == best_usedTruck && new_cost < best_cost)){
+					if(new_cost < best_cost){
+						
+						best_cost = new_cost;
+						best_nbReject = new_rejected;
+						best_usedTruck = new_nbTrucks;
+						
+						best_solution = new TruckContainerSolution(XR, rejectPickupPoints, rejectDeliveryPoints,
+								new_cost, new_nbTrucks, new_rejected, point2Group, group2marked);
+						try{
+							FileOutputStream write = new FileOutputStream(outputfile, true);
+							PrintWriter fo = new PrintWriter(write);
+							fo.println(it + " " + 
+								+ System.currentTimeMillis()/1000 + " "
+								+ best_cost + " " + best_nbReject + " " + best_usedTruck);
+							fo.close();
+						}catch(Exception e){
+							System.out.println(e);
+						}
+					}
+				}
+				else{
+					double v = Math.exp(-(new_cost - best_cost)/T);
+					double e = ran.nextDouble();
+					if( e < v){
+						curr_cost = new_cost;
+						curr_nbReject = new_rejected;
+						curr_usedTruck = new_nbTrucks;
+						
+						curr_solution = new TruckContainerSolution(XR, rejectPickupPoints, rejectDeliveryPoints,
+								new_cost, new_nbTrucks, new_rejected, point2Group, group2marked);
+//						try{
+//							FileOutputStream write = new FileOutputStream(outputfile, true);
+//							PrintWriter fo = new PrintWriter(write);
+//							fo.println(it + " " + 
+//								+ System.currentTimeMillis()/1000 + " "
+//								+ best_cost + " " + best_nbReject + " " + best_usedTruck);
+//							fo.close();
+//						}catch(Exception ex){
+//							System.out.println(ex);
+//						}
+					}
+					else{
+						curr_solution.copy2XR(XR);
+					}
+				}
+			}
+			T = T * kap;
+		}
+		best_solution.copy2XR(XR);
+		group2marked = best_solution.get_group2marked();
+		
+		rejectPickupPoints = best_solution.get_rejectPickupPoints();
+		rejectDeliveryPoints = best_solution.get_rejectDeliveryPoints();
+		
+		try{
+			FileOutputStream write = new FileOutputStream(outputfile, true);
+			PrintWriter fo = new PrintWriter(write);
+			fo.println(it + " " + 
+				+ System.currentTimeMillis()/1000 + " "
+				+ best_cost + " " + best_nbReject + " " + best_usedTruck);
+			fo.close();
+		}catch(Exception ex){
+			System.out.println(ex);
+		}
+	}
+
+	/***
+	 * best possible insert into scheduled vehicles by stack
+	 */
+	public void bestPossibleInitBPIUS(){
+		Random ran = new Random();
+		double T = 200;
+		double kap = 0.995;
+		Stack<String> stack = new Stack<String>();
+		for(int r = XR.getNbRoutes(); r >= 1; r--){
+			String s = "" + r;
+			stack.push(s);
+		}
+		
+		for(int i = 0; i < pickup2Delivery.size(); i++){
+			System.out.println("req " + i + "/" + pickup2Delivery.size());
+			Point pickup = pickupPoints.get(i);
+			int groupId = point2Group.get(pickup);
+			if(XR.route(pickup) != Constants.NULL_POINT
+				|| group2marked.get(groupId) == 1)
+				continue;
+			Point delivery = deliveryPoints.get(i);
+			//add the request to route
+			Point pre_pick = null;
+			Point pre_delivery = null;
+			double best_objective = Double.MAX_VALUE;
+			int best_idx = -1;
+			
+			for(int k = stack.size() - 1; k >= 0; k--){
+				int r = Integer.parseInt(stack.get(k));
+				Point st = XR.getStartingPointOfRoute(r);
+
+				int groupTruck = point2Group.get(st);
+				if(group2marked.get(groupTruck) == 1 && XR.index(XR.getTerminatingPointOfRoute(r)) <= 1)
+					continue;
+//				if(pickup.getID() == 985 && (r == 23 || r == 27))
+//					System.out.println("ds");
+				for(Point p = st; p != XR.getTerminatingPointOfRoute(r); p = XR.next(p)){
+					for(Point q = p; q != XR.getTerminatingPointOfRoute(r); q = XR.next(q)){
+//						if(pickup.getID() == 1271 && p.getID() == 121 && q.getID() == 1222)
+//							System.out.println("f");
+						mgr.performAddTwoPoints(pickup, p, delivery, q);
+						insertMoocToRoutes(r);
+						if(S.violations() == 0){
+							double cost = objective.getValue();
+							if( cost < best_objective ){
+								best_objective = cost;
+								pre_pick = p;
+								pre_delivery = q;
+								best_idx = k;
+							}
+							else{
+								double v = Math.exp(-(cost - best_objective)/T);
+								double e = ran.nextDouble();
+								if( e < v){
+									best_objective = cost;
+									pre_pick = p;
+									pre_delivery = q;
+								}
+							}
+						}
+						mgr.performRemoveTwoPoints(pickup, delivery);
+						removeMoocOnRoutes(r);
+					}
+				}
+			}
+			T = kap * T;
+			if(pre_pick != null && pre_delivery != null){
+				mgr.performAddTwoPoints(pickup, pre_pick, delivery, pre_delivery);
+				//insertMoocToRoutes(XR.route(pre_pick));
+				Point st = XR.getStartingPointOfRoute(XR.route(pre_pick));
+				int groupTruck = point2Group.get(st);
+				group2marked.put(groupTruck, 1);
+				group2marked.put(groupId, 1);
+				String s = stack.get(best_idx);
+				stack.remove(best_idx);
+				stack.push(s);
+			}
+		}
+		
+		for(int i = 0; i < pickup2Delivery.size(); i++){
+			Point pickup = pickupPoints.get(i);
+			if(XR.route(pickup) == Constants.NULL_POINT && !rejectPickupPoints.contains(pickup)){
+				rejectPickupPoints.add(pickup);
+				rejectDeliveryPoints.add(pickup2Delivery.get(pickup));
+			}
+		}
+		insertMoocForAllRoutes();
+	}
+
 	public void removeAllMoocFromRoutes(){
 		for(int i = 0; i < startMoocPoints.size(); i++){
 			Point st = startMoocPoints.get(i);
@@ -2002,7 +2711,7 @@ public class TruckContainerSolver {
 		System.out.println("stop");
 	}
 	
-	public void printSolution(String outputfile){
+	public void printSolution(String outputfile, double t0){
 		String s = "";
 		ArrayList<ArrayList<Point>> _route = new ArrayList<ArrayList<Point>>();
 		
@@ -2024,12 +2733,13 @@ public class TruckContainerSolver {
 		System.out.println("Search done. At end search number of reject points = " + nbR
 				+ ", nb Trucks = " + nB
 				+ ",  cost = " + objective.getValue());
+		long t = System.currentTimeMillis();
 		try{
 			FileOutputStream write = new FileOutputStream(outputfile, true);
 			PrintWriter fo = new PrintWriter(write);
 			fo.println(s);
-			fo.println("end time = " + DateTimeUtils.unixTimeStamp2DateTime(System.currentTimeMillis()) 
-					+ ", total reqs = " + nRequest
+			fo.println("end time = " + DateTimeUtils.unixTimeStamp2DateTime(t) 
+					+ ", total runtime = " + (t - t0)/1000
 					+ ", #RejectedReqs = " + nbR
 					+ ", nb Trucks = " + nB
 					+ ", cost = " + objective.getValue());
@@ -2041,40 +2751,85 @@ public class TruckContainerSolver {
 		
 	}
 	
+	//run some init algorithm for comparison
+//	public static void main(String[] args){
+//		String dir = "data/truck-container/";
+//		int[] nbReqs = new int[]{8, 70, 100, 150, 200};
+//		String[] initType = new String[]{"greedyInit", "firstPossibleInit1", "firstPossibleInit2"};
+//		for(int i = 0; i < nbReqs.length; i++){
+//			for(int j = 0; j < initType.length; j++){
+//				String fileName = "random_big_data-"+ nbReqs[i] + "reqs-1.json";
+//				String outputfile = dir + "output/result-" + fileName + "-" + initType[j] + ".txt"; 
+//				String dataFileName = dir + fileName;
+//				
+//				TruckContainerSolver solver = new TruckContainerSolver();
+//				solver.readData(dataFileName);
+//				solver.init();
+//				solver.stateModel();
+//				
+//				double t = System.currentTimeMillis();
+//				try{
+//					FileOutputStream write = new FileOutputStream(outputfile);
+//					PrintWriter fo = new PrintWriter(write);
+//					fo.println("Starting time = " + DateTimeUtils.unixTimeStamp2DateTime(System.currentTimeMillis()) 
+//							+ ", total reqs = " + nRequest
+//							+ ", total truck = " + nVehicle);
+//					
+//					fo.close();
+//				}catch(Exception e){
+//					
+//				}
+//				switch(initType[j]){
+//					case "greedyInit": solver.greedyInitSolution2(); break;
+//					case "firstPossibleInit1": solver.firstPossibleInit1(); break;
+//					case "firstPossibleInit2": solver.firstPossibleInit2(); break;
+//				}			
+//		
+//				//solver.adaptiveSearchOperators(outputfile);
+//				solver.printSolution(outputfile, t);
+//			}
+//		}
+//	}
 	public static void main(String[] args){
 		String dir = "data/truck-container/";
-//		ArrayList<String> days = new ArrayList<String>();
-//		days.add("1802");
-//		days.add("1902");
-//		days.add("2102");
-//		days.add("2202");
-//		days.add("2502");
-//		days.add("2602");
-//		days.add("2702");
-//		days.add("0103");
-//		days.add("0403");
-//		days.add("0503");
-//		days.add("0703");
-//		days.add("1203");
-//		days.add("1303");
-//		days.add("1803");
-//		days.add("1903");
-//		days.add("2103");
-//		days.add("2803");
-//		days.add("2903");
-//		for(int i = 0; i < days.size(); i++){
-//			String fileName = "input_" + days.get(i) + ".json";
-			String fileName = "random_big_data-150reqs.json";
-			String outputfile = dir + "output/result-" + fileName + "-ALNS-up.txt"; 
-			String dataFileName = dir + fileName;
-			TruckContainerSolver solver = new TruckContainerSolver();
-			solver.readData(dataFileName);
-			solver.init();
-			solver.stateModel();
-			solver.greedyInitSolution2();
-	
-			solver.adaptiveSearchOperators(outputfile);
-			solver.printSolution(outputfile);
-//		}
+		int nbReq = 70;
+		String initType = "heuristicBPIUS";
+
+		//String fileName = "random_big_data-4reqs.txt";
+		//String fileName = "random_big_data-"+ nbReq + "reqs-1req1route.txt";
+		String fileName = "random_big_data-4reqs-compareMIP-2T-2M-2C-3RC.txt";
+		String outputfile = dir + "output/result-" + fileName + "-" + initType + ".txt";
+		String dataFileName = dir + fileName;
+		
+		TruckContainerSolver solver = new TruckContainerSolver();
+		solver.readData(dataFileName);
+		solver.init();
+		solver.stateModel();
+		
+		double t = System.currentTimeMillis();
+		try{
+			FileOutputStream write = new FileOutputStream(outputfile);
+			PrintWriter fo = new PrintWriter(write);
+			fo.println("Starting time = " + DateTimeUtils.unixTimeStamp2DateTime(System.currentTimeMillis()) 
+					+ ", total reqs = " + nRequest
+					+ ", total truck = " + nVehicle);
+			
+			fo.close();
+		}catch(Exception e){
+			
+		}
+		switch(initType){
+			//case "greedyInit" : solver.greedyInitSolution2(); break;
+			case "greedyInitWithAcceptanceBPI": solver.greedyInitSolutionWithAcceptanceBPI(); break;
+			case "firstPossibleInitFPI": solver.firstPossibleInitFPI(); break;
+			case "firstPossibleInitFPIUS": solver.firstPossibleInitFPIUS(); break;
+			case "bestPossibleInitBPIUS": solver.bestPossibleInitBPIUS(); break;
+			case "heuristicFPIUS": solver.heuristicFPIUS(outputfile);
+			case "heuristicBPIUS": solver.heuristicBPIUS(outputfile);
+			case "oneRequest2oneRoute": solver.insertOneReq2oneTruck(); break;
+		}			
+
+		//solver.adaptiveSearchOperators(outputfile);
+		solver.printSolution(outputfile, t);
 	}
 }
