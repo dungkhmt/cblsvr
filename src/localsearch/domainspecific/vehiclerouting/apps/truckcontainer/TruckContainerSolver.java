@@ -178,7 +178,7 @@ public class TruckContainerSolver {
 	public void adaptiveSearchOperators(String outputfile){	
 		int it = 0;
 		int timeLimit = 36000000;
-    	int nIter = 10000;
+    	int nIter = 100000;
     	int maxStable = 1000;
     	int iS = 0;
     	
@@ -2792,12 +2792,12 @@ public class TruckContainerSolver {
 //		}
 //	}
 	public static void main(String[] args){
-		String dir = "E:/Project/cblsvr/truck-container/cblsvr/data/truck-container/";
+		String dir = "data/truck-container/";
 		String initType = "bestPossibleInitBPIUS";
 
 		//String fileName = "random_big_data-4reqs.txt";
 		//String fileName = "random_big_data-"+ nbReq + "reqs-1req1route.txt";
-		String fileName = "random_big_data-4reqs.txt";
+		String fileName = "random_big_data-6reqs.txt";
 		String outputfile = dir + "output/result-" + fileName + "-" + initType + ".txt";
 		String dataFileName = dir + fileName;
 		
