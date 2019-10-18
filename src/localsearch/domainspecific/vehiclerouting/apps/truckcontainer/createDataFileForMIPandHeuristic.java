@@ -123,13 +123,13 @@ public class createDataFileForMIPandHeuristic {
 		
 		
 		nbEE = 1;
-		nbEL = 1;
+		nbEL = 2;
 		nbIE = 1;
-		nbIL = 1;
+		nbIL = 2;
 		
 		nbRequests = nbEE + nbEL + nbIE + nbIL;
-		nbTrucks = 1;
-		nbMoocs = 1;
+		nbTrucks = 2;
+		nbMoocs = 2;
 		nbContainers = 1;
 		nReturnedContainers = 1;
 		nbDepotTrucks = nbTrucks * 2;
@@ -424,7 +424,7 @@ public class createDataFileForMIPandHeuristic {
 			e.setEarlyDateTimeAttachAtWarehouse(DateTimeUtils.unixTimeStamp2DateTime(ear));
 			early.put(e.getWareHouseCode(), (int)(ear- DateTimeUtils.dateTime2Int(beginTime)));
 			serving.put(e.getWareHouseCode(), 2);
-			latest.put(e.getWareHouseCode(), 100000);
+			latest.put(e.getWareHouseCode(), 1000000);
 			
 			long late = ear + rangeTime 
 					+ (long)getTravelTime(e.getWareHouseCode(),
@@ -464,7 +464,7 @@ public class createDataFileForMIPandHeuristic {
 			e.setEarlyDateTimeAttachAtWarehouse(DateTimeUtils.unixTimeStamp2DateTime(ear));
 			early.put(e.getWareHouseCode(), (int)(ear- DateTimeUtils.dateTime2Int(beginTime)));
 			serving.put(e.getWareHouseCode(), 2);
-			latest.put(e.getWareHouseCode(), 100000);
+			latest.put(e.getWareHouseCode(), 1000000);
 			
 			long late = ear + rangeTime 
 					+ (long)getTravelTime(e.getWareHouseCode(),
@@ -1376,14 +1376,14 @@ public class createDataFileForMIPandHeuristic {
 			f.println(nbEE);
 			for(int i = 0; i < nbEE; i++){
 				int id = Integer.parseInt(exEmptyRequests[i].getWareHouseCode().split("-")[1]);
-				f.println(id + " " + r.nextInt(1));
+				f.println(id + " 0"); //+ r.nextInt(1));
 			}
 			
 			f.println("#import empty: [warehouse]");
 			f.println(nbIE);
 			for(int i = 0; i < nbIE; i++){
 				int id = Integer.parseInt(imEmptyRequests[i].getWareHouseCode().split("-")[1]);
-				f.println(id + " " + r.nextInt(1));
+				f.println(id);// + " " + r.nextInt(1));
 			}
 			
 			f.println("#export laden: [warehouse port isBreakRomooc]");
@@ -1391,7 +1391,7 @@ public class createDataFileForMIPandHeuristic {
 			for(int i = 0; i < nbEL; i++){
 				int id1 = Integer.parseInt(exLadenRequests[i].getWareHouseCode().split("-")[1]);
 				int id2 = Integer.parseInt(exLadenRequests[i].getPortCode().split("-")[1]);
-				f.println(id1 + " " + id2 + " " + r.nextInt(1));
+				f.println(id1 + " " + id2 + " 0");// + r.nextInt(1));
 			}
 			
 			f.println("#import laden: [port warehouse isBreakRomooc]");
@@ -1399,7 +1399,7 @@ public class createDataFileForMIPandHeuristic {
 			for(int i = 0; i < nbIL; i++){
 				int id1 = Integer.parseInt(imLadenRequests[i].getPortCode().split("-")[1]);
 				int id2 = Integer.parseInt(imLadenRequests[i].getWareHouseCode().split("-")[1]);
-				f.println(id1 + " " + id2 + " " + r.nextInt(1));
+				f.println(id1 + " " + id2 + " 0");// + r.nextInt(1));
 			}
 			
 			f.println("#nb Logical points");
@@ -1451,8 +1451,8 @@ public class createDataFileForMIPandHeuristic {
 		//tao file du lieu lon de test
 		//sua cac params trong initParams function
 		String dir = "data/truck-container/";
-		String fileNameHeu = dir + "random_big_data-4reqs.txt";
-		String fileNameMIP = dir + "random_big_data-4reqs-MIP.txt";
+		String fileNameHeu = dir + "random_big_data-6reqs.txt";
+		String fileNameMIP = dir + "random_big_data-6reqs-MIP.txt";
 		da.createJsonFile(fileNameHeu);
 		
 		da.print2TxtMipFile(fileNameMIP);

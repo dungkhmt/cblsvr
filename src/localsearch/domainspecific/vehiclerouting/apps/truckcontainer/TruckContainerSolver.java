@@ -1260,29 +1260,29 @@ public class TruckContainerSolver {
 		//Random ran = new Random();
 		additionalContainers = new ArrayList<Container>();
 		int idxCode = -1;
-		if(input.getImRequests() != null){
-			for (int i = 0; i < input.getImRequests().length; i++) {
-				ImportContainerTruckMoocRequest R = input.getImRequests()[i];
-				for (int j = 0; j < R.getContainerRequest().length; j++) {
-					ImportContainerRequest r = R.getContainerRequest()[j];
-
-					idxCode++;
-					String code = "A-" + idxCode;
-					String depotContainerCode = null;
-					if(r.getDepotContainerCode() != null)
-						depotContainerCode = r.getDepotContainerCode()[0];
-					else{
-						int idx = 0;//ran.nextInt(input.getDepotContainers().length);
-						depotContainerCode = input.getDepotContainers()[idx].getCode();
-					}
-					Container c = new Container(code, (int) r.getWeight(),
-							r.getContainerCategory(), depotContainerCode,
-							r.getDepotContainerCode());
-					additionalContainers.add(c);
-					r.setContainerCode(code);
-				}
-			}
-		}
+//		if(input.getImRequests() != null){
+//			for (int i = 0; i < input.getImRequests().length; i++) {
+//				ImportContainerTruckMoocRequest R = input.getImRequests()[i];
+//				for (int j = 0; j < R.getContainerRequest().length; j++) {
+//					ImportContainerRequest r = R.getContainerRequest()[j];
+//
+//					idxCode++;
+//					String code = "A-" + idxCode;
+//					String depotContainerCode = null;
+//					if(r.getDepotContainerCode() != null)
+//						depotContainerCode = r.getDepotContainerCode()[0];
+//					else{
+//						int idx = 0;//ran.nextInt(input.getDepotContainers().length);
+//						depotContainerCode = input.getDepotContainers()[idx].getCode();
+//					}
+//					Container c = new Container(code, (int) r.getWeight(),
+//							r.getContainerCategory(), depotContainerCode,
+//							r.getDepotContainerCode());
+//					additionalContainers.add(c);
+//					r.setContainerCode(code);
+//				}
+//			}
+//		}
 		if(input.getImEmptyRequests() != null){
 			for (int i = 0; i < input.getImEmptyRequests().length; i++) {
 				ImportEmptyRequests R = input.getImEmptyRequests()[i];
@@ -1295,12 +1295,12 @@ public class TruckContainerSolver {
 					int idx = 0;//ran.nextInt(input.getDepotContainers().length);
 					depotContainerCode = input.getDepotContainers()[idx].getCode();
 				}
-				DepotContainer[] dpc = input.getDepotContainers();
-				for(int k = 0; k < dpc.length; k++){
-					if(dpc[k].getCode().equals(depotContainerCode))
-						dpc[k].setReturnedContainer(true);
-				}
-				input.setDepotContainers(dpc);
+//				DepotContainer[] dpc = input.getDepotContainers();
+//				for(int k = 0; k < dpc.length; k++){
+//					if(dpc[k].getCode().equals(depotContainerCode))
+//						dpc[k].setReturnedContainer(true);
+//				}
+//				input.setDepotContainers(dpc);
 				
 				String[] returnDepot = new String[1];
 				returnDepot[0] = new String();
@@ -2711,20 +2711,23 @@ public class TruckContainerSolver {
 	
 	public void printSolution(String outputfile, double t0){
 		String s = "";
-		ArrayList<ArrayList<Point>> _route = new ArrayList<ArrayList<Point>>();
-		
+
 		int K = XR.getNbRoutes();
-		
+		int cost = 0;
 		for(int k=1; k<=K; k++){
 			s += "route[" + k + "] = ";
 			Point x = XR.getStartingPointOfRoute(k);
 			for(; x != XR.getTerminatingPointOfRoute(k); x = XR.next(x)){
-				s = s + x.getID() + " " + " -> ";
+				s = s + x.getLocationCode() + " " + " -> ";
+				System.out.println("p1 = " + x.getLocationCode()
+						+ ", p2 = " + XR.next(x).getLocationCode() 
+						+ ", cost = " + awm.getDistance(x, XR.next(x)));
 			}
 			x = XR.getTerminatingPointOfRoute(k);
-			s = s + x.getID() + "\n";
+			s = s + x.getLocationCode() + "\n";
 		}		
 		System.out.println(s);
+		
 		
 		int nbR = getNbRejectedRequests();
 		int nB = getNbUsedTrucks();
@@ -2789,12 +2792,12 @@ public class TruckContainerSolver {
 //		}
 //	}
 	public static void main(String[] args){
-		String dir = "data/truck-container/";
+		String dir = "E:/Project/cblsvr/truck-container/cblsvr/data/truck-container/";
 		String initType = "bestPossibleInitBPIUS";
 
 		//String fileName = "random_big_data-4reqs.txt";
 		//String fileName = "random_big_data-"+ nbReq + "reqs-1req1route.txt";
-		String fileName = "1EE-1EL-1IE-1IL-2T-2M-2C-AD.json";
+		String fileName = "random_big_data-4reqs.txt";
 		String outputfile = dir + "output/result-" + fileName + "-" + initType + ".txt";
 		String dataFileName = dir + fileName;
 		
