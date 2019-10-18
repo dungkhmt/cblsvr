@@ -106,6 +106,9 @@ public class createDataFileForMIPandHeuristic {
 	public HashMap<String, Integer> serving;
 	public ArrayList<String> mCode;
 	
+	public ArrayList<Integer> timeRoute;
+	public ArrayList<String> lastPoint;
+	
 	
 	public void initParams(){
 		intermediateTrucks = new ArrayList<Integer>();
@@ -115,6 +118,8 @@ public class createDataFileForMIPandHeuristic {
 		early = new HashMap<String, Integer>();
 		latest = new HashMap<String, Integer>();
 		serving = new HashMap<String, Integer>();
+		timeRoute = new ArrayList<Integer>();
+		lastPoint = new ArrayList<String>();
 		
 		
 		nbEE = 1;
@@ -123,13 +128,13 @@ public class createDataFileForMIPandHeuristic {
 		nbIL = 1;
 		
 		nbRequests = nbEE + nbEL + nbIE + nbIL;
-		nbTrucks = nbRequests;
-		nbMoocs = nbTrucks;
-		nbContainers = nbEE;
-		nReturnedContainers = nbIE;
+		nbTrucks = 1;
+		nbMoocs = 1;
+		nbContainers = 1;
+		nReturnedContainers = 1;
 		nbDepotTrucks = nbTrucks * 2;
 		nbDepotMoocs = nbMoocs * 2;
-		nbDepotContainers = nbContainers * 2 + nbIE;
+		nbDepotContainers = nbContainers * 2 + nReturnedContainers;
 		nbWarehouses = nbRequests;
 		nbPorts = (nbEL + nbIL);
 		
@@ -138,6 +143,8 @@ public class createDataFileForMIPandHeuristic {
 		maxLatestTime = "2019-07-18 18:15:00";
 
 		duration = (int)(DateTimeUtils.dateTime2Int(maxLatestTime) - DateTimeUtils.dateTime2Int(minEarliestTime));
+		rangeTime = duration/5;
+				
 		input = new ContainerTruckMoocInput();
 		
 		nbLogicalPoints = nbDepotTrucks + nbDepotMoocs + nbDepotContainers
@@ -217,7 +224,7 @@ public class createDataFileForMIPandHeuristic {
 	public void createDepotContainers(){
 		Random r = new Random();
 		depotContainers = new DepotContainer[nbDepotContainers];
-		for(int i = 0; i < nbEE*2; i++){
+		for(int i = 0; i < nbContainers*2; i++){
 			DepotContainer dp = new DepotContainer();
 			int idx = r.nextInt(codes.size());
 			dp.setCode(codes.get(idx));
@@ -229,7 +236,7 @@ public class createDataFileForMIPandHeuristic {
 			intermediateTrucks.add(idp);
 			intermediateMoocs.add(idp);
 		}
-		for(int i = 0; i < nbIE; i++){
+		for(int i = 0; i < nReturnedContainers; i++){
 			DepotContainer dp = new DepotContainer();
 			int idx = r.nextInt(codes.size());
 			dp.setCode(codes.get(idx));
@@ -237,7 +244,7 @@ public class createDataFileForMIPandHeuristic {
 			dp.setReturnedContainer(true);
 			int idp = Integer.parseInt(codes.get(idx).split("-")[1]);
 			codes.remove(idx);
-			depotContainers[i+ nbEE*2] = dp;
+			depotContainers[i+ nbContainers*2] = dp;
 			
 			intermediateTrucks.add(idp);
 			intermediateMoocs.add(idp);
@@ -287,6 +294,12 @@ public class createDataFileForMIPandHeuristic {
 			returnDepotCodes[0] = depotMoocs[i + nbMoocs].getCode();
 			mooc.setReturnDepotCodes(returnDepotCodes);
 			moocs[i] = mooc;
+			
+			int truck2mooc = (int)(DateTimeUtils.dateTime2Int(beginTime) + getTravelTime(trucks[i].getDepotTruckLocationCode(), 
+					moocs[i].getDepotMoocLocationCode())
+					+ params.getLinkMoocDuration());
+			timeRoute.add(truck2mooc);
+			lastPoint.add(moocs[i].getDepotMoocLocationCode());
 		}
 		input.setMoocs(moocs);
 	}
@@ -356,14 +369,20 @@ public class createDataFileForMIPandHeuristic {
 		exEmptyRequests = new ExportEmptyRequests[nbEE];
 		for(int i = 0; i < nbEE; i++){
 			ExportEmptyRequests e = new ExportEmptyRequests();
+			int rId = r.nextInt(timeRoute.size());
+			int stTime = timeRoute.get(rId);
+			
 			int idx = r.nextInt(temp_containers.size());
 			e.setContainerCode(temp_containers.get(idx).getCode());
 			e.setDepotContainerCode(temp_containers.get(idx).getDepotContainerCode());
 			temp_containers.remove(idx);
 			
+			stTime += getTravelTime(lastPoint.get(rId), e.getDepotContainerCode());
+			stTime += params.getLinkEmptyContainerDuration();
+			
 			e.setWareHouseCode(warehouses[i].getCode());
 			
-			long ear = r.nextInt(duration) + DateTimeUtils.dateTime2Int(minEarliestTime);
+			long ear = stTime - rangeTime/2;//r.nextInt(duration) + DateTimeUtils.dateTime2Int(minEarliestTime);
 			e.setEarlyDateTimePickupAtDepot(DateTimeUtils.unixTimeStamp2DateTime(ear));
 			long late = ear + rangeTime;
 			e.setLateDateTimePickupAtDepot(DateTimeUtils.unixTimeStamp2DateTime(late));
@@ -374,12 +393,15 @@ public class createDataFileForMIPandHeuristic {
 			ear += getTravelTime(e.getDepotContainerCode(),
 					e.getWareHouseCode());
 			e.setEarlyDateTimeLoadAtWarehouse(DateTimeUtils.unixTimeStamp2DateTime(ear));
-			late = ear + rangeTime;
+			late = ear + rangeTime + 2;
 			e.setLateDateTimeLoadAtWarehouse(DateTimeUtils.unixTimeStamp2DateTime(late));
 			early.put(e.getWareHouseCode(), (int)(ear- DateTimeUtils.dateTime2Int(beginTime)));
 			serving.put(e.getWareHouseCode(), 2);
 			latest.put(e.getWareHouseCode(), (int)(late- DateTimeUtils.dateTime2Int(beginTime)));
 			exEmptyRequests[i] = e;
+			
+			lastPoint.set(rId, e.getWareHouseCode());
+			timeRoute.set(rId, (int)ear + rangeTime/2);
 		}
 		input.setExEmptyRequests(exEmptyRequests);
 	}
@@ -389,14 +411,16 @@ public class createDataFileForMIPandHeuristic {
 		exLadenRequests = new ExportLadenRequests[nbEL];
 		for(int i = 0; i < nbEL; i++){
 			ExportLadenRequests e = new ExportLadenRequests();
-//			int idx = r.nextInt(temp_containers.size());
-//			e.setContainerCode(temp_containers.get(idx).getCode());
-//			temp_containers.remove(idx);
+			int rId = r.nextInt(timeRoute.size());
+			int stTime = timeRoute.get(rId);
 			
 			e.setPortCode(ports[i].getCode());
 			e.setWareHouseCode(warehouses[nbEE + i].getCode());
 			
-			long ear = r.nextInt(duration) + DateTimeUtils.dateTime2Int(minEarliestTime);
+			stTime += getTravelTime(lastPoint.get(rId), e.getPortCode());
+			stTime += params.getLinkLoadedContainerDuration();
+			
+			long ear = stTime - rangeTime/2;//r.nextInt(duration) + DateTimeUtils.dateTime2Int(minEarliestTime);
 			e.setEarlyDateTimeAttachAtWarehouse(DateTimeUtils.unixTimeStamp2DateTime(ear));
 			early.put(e.getWareHouseCode(), (int)(ear- DateTimeUtils.dateTime2Int(beginTime)));
 			serving.put(e.getWareHouseCode(), 2);
@@ -404,7 +428,7 @@ public class createDataFileForMIPandHeuristic {
 			
 			long late = ear + rangeTime 
 					+ (long)getTravelTime(e.getWareHouseCode(),
-					e.getPortCode());
+					e.getPortCode()) + 2;
 			e.setLateDateTimeUnloadAtPort(DateTimeUtils
 					.unixTimeStamp2DateTime(late));
 			early.put(e.getPortCode(), 0);
@@ -412,6 +436,9 @@ public class createDataFileForMIPandHeuristic {
 			latest.put(e.getPortCode(), (int)(late- DateTimeUtils.dateTime2Int(beginTime)));
 			
 			exLadenRequests[i] = e;
+			
+			lastPoint.set(rId, e.getWareHouseCode());
+			timeRoute.set(rId, (int)late);
 		}
 		input.setExLadenRequests(exLadenRequests);
 	}
@@ -421,14 +448,19 @@ public class createDataFileForMIPandHeuristic {
 		imEmptyRequests = new ImportEmptyRequests[nbIE];
 		for(int i = 0; i < nbIE; i++){
 			ImportEmptyRequests e = new ImportEmptyRequests();
-//			int idx = r.nextInt(temp_containers.size());
-//			e.setContainerCode(temp_containers.get(idx).getCode());
+
+			int rId = r.nextInt(timeRoute.size());
+			int stTime = timeRoute.get(rId);
+			
 			e.setDepotContainerCode(depotContainers[nbContainers* 2 + i].getCode());
 //			temp_containers.remove(idx);
 			
-			e.setWareHouseCode(warehouses[nbEE + nbEL].getCode());
+			e.setWareHouseCode(warehouses[nbEE + nbEL + i].getCode());
 			
-			long ear = r.nextInt(duration) + DateTimeUtils.dateTime2Int(minEarliestTime);
+			stTime += getTravelTime(lastPoint.get(rId), e.getWareHouseCode());
+			stTime += params.getLinkEmptyContainerDuration();
+			
+			long ear = stTime - rangeTime/2;//r.nextInt(duration) + DateTimeUtils.dateTime2Int(minEarliestTime);
 			e.setEarlyDateTimeAttachAtWarehouse(DateTimeUtils.unixTimeStamp2DateTime(ear));
 			early.put(e.getWareHouseCode(), (int)(ear- DateTimeUtils.dateTime2Int(beginTime)));
 			serving.put(e.getWareHouseCode(), 2);
@@ -436,13 +468,16 @@ public class createDataFileForMIPandHeuristic {
 			
 			long late = ear + rangeTime 
 					+ (long)getTravelTime(e.getWareHouseCode(),
-					e.getDepotContainerCode());
+					e.getDepotContainerCode()) + 2;
 			e.setLateDateTimeReturnEmptyAtDepot(DateTimeUtils
 					.unixTimeStamp2DateTime(late));
 			early.put(e.getDepotContainerCode(), 0);
 			serving.put(e.getDepotContainerCode(), 2);
 			latest.put(e.getDepotContainerCode(), (int)(late- DateTimeUtils.dateTime2Int(beginTime)));
 			imEmptyRequests[i] = e;
+			
+			lastPoint.set(rId, e.getDepotContainerCode());
+			timeRoute.set(rId, (int)late);
 		}
 		input.setImEmptyRequests(imEmptyRequests);
 	}
@@ -452,15 +487,17 @@ public class createDataFileForMIPandHeuristic {
 		imLadenRequests = new ImportLadenRequests[nbIL];
 		for(int i = 0; i < nbIL; i++){
 			ImportLadenRequests e = new ImportLadenRequests();
-//			int idx = r.nextInt(temp_containers.size());
-//			e.setContainerCode(temp_containers.get(idx).getCode());
-//			temp_containers.remove(idx);
+			int rId = r.nextInt(timeRoute.size());
+			int stTime = timeRoute.get(rId);
 			
-			e.setWareHouseCode(warehouses[nbEE+nbEL+nbIE].getCode());
+			e.setWareHouseCode(warehouses[nbEE+nbEL+nbIE + i].getCode());
 			
 			e.setPortCode(ports[nbEL + i].getCode());
 			
-			long ear = r.nextInt(duration) + DateTimeUtils.dateTime2Int(minEarliestTime);
+			stTime += getTravelTime(lastPoint.get(rId), e.getPortCode());
+			stTime += params.getLinkLoadedContainerDuration();
+			
+			long ear = stTime - rangeTime/2;//r.nextInt(duration) + DateTimeUtils.dateTime2Int(minEarliestTime);
 			e.setEarlyDateTimePickupAtPort(DateTimeUtils.unixTimeStamp2DateTime(ear));
 			long late = ear + rangeTime;
 			e.setLateDateTimePickupAtPort(DateTimeUtils.unixTimeStamp2DateTime(late));
@@ -468,12 +505,11 @@ public class createDataFileForMIPandHeuristic {
 			serving.put(e.getPortCode(), 2);
 			latest.put(e.getPortCode(), (int)(late- DateTimeUtils.dateTime2Int(beginTime)));
 			
-			
 			ear += getTravelTime(e.getPortCode(),
 					e.getWareHouseCode());
 			e.setEarlyDateTimeUnloadAtWarehouse(DateTimeUtils.unixTimeStamp2DateTime(ear));
 			
-			late = ear + rangeTime;
+			late = ear + rangeTime + 2;
 			e.setLateDateTimeUnloadAtWarehouse(DateTimeUtils
 					.unixTimeStamp2DateTime(late));
 			
@@ -481,6 +517,9 @@ public class createDataFileForMIPandHeuristic {
 			serving.put(e.getWareHouseCode(), 2);
 			latest.put(e.getWareHouseCode(), (int)(late- DateTimeUtils.dateTime2Int(beginTime)));
 			imLadenRequests[i] = e;
+			
+			lastPoint.set(rId, e.getPortCode());
+			timeRoute.set(rId, (int)late);
 		}
 		input.setImLadenRequests(imLadenRequests);
 	}
@@ -506,6 +545,7 @@ public class createDataFileForMIPandHeuristic {
 	public void createJsonFile(String fileName){
 		initParams();
 		createCodesAndTravelTimeMatrix();
+		createConfigParams();
 		
 		createDepotTrucks();
 		createTrucks();
@@ -520,8 +560,6 @@ public class createDataFileForMIPandHeuristic {
 		createExLadenRequests();
 		createImEmptyRequests();
 		createImLadenRequests();
-		
-		createConfigParams();
 		
 		try{
 			Gson gson = new Gson();

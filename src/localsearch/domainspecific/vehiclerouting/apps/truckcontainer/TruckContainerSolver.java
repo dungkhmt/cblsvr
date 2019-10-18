@@ -282,14 +282,12 @@ public class TruckContainerSolver {
 			int current_nb_reject_points = current_solution.get_rejectPickupPoints().size();
 
 			if( new_nb_reject_points < current_nb_reject_points
-					|| (new_nb_reject_points == current_nb_reject_points && new_nbTrucks < current_nbTrucks)
-					|| (new_nb_reject_points == current_nb_reject_points && new_nbTrucks == current_nbTrucks && new_cost < current_cost)){
+					|| (new_nb_reject_points == current_nb_reject_points && new_cost < current_cost)){
 				int best_nb_reject_points = best_solution.get_rejectPickupPoints().size();
 				int best_nbTrucks = best_solution.get_nbTrucks();
 				
 				if(new_nb_reject_points < best_nb_reject_points
-						|| (new_nb_reject_points == best_nb_reject_points && new_nbTrucks < best_nbTrucks)
-						|| (new_nb_reject_points == best_nb_reject_points && new_nbTrucks == best_nbTrucks && new_cost < best_cost)){
+						|| (new_nb_reject_points == best_nb_reject_points && new_cost < best_cost)){
 					
 					best_cost = new_cost;
 					best_solution = new TruckContainerSolution(XR, rejectPickupPoints, rejectDeliveryPoints,
@@ -2792,12 +2790,11 @@ public class TruckContainerSolver {
 //	}
 	public static void main(String[] args){
 		String dir = "data/truck-container/";
-		int nbReq = 70;
-		String initType = "heuristicBPIUS";
+		String initType = "bestPossibleInitBPIUS";
 
 		//String fileName = "random_big_data-4reqs.txt";
 		//String fileName = "random_big_data-"+ nbReq + "reqs-1req1route.txt";
-		String fileName = "random_big_data-4reqs-compareMIP-2T-2M-2C-3RC.txt";
+		String fileName = "1EE-1EL-1IE-1IL-2T-2M-2C-AD.json";
 		String outputfile = dir + "output/result-" + fileName + "-" + initType + ".txt";
 		String dataFileName = dir + fileName;
 		
@@ -2829,7 +2826,7 @@ public class TruckContainerSolver {
 			case "oneRequest2oneRoute": solver.insertOneReq2oneTruck(); break;
 		}			
 
-		//solver.adaptiveSearchOperators(outputfile);
+		solver.adaptiveSearchOperators(outputfile);
 		solver.printSolution(outputfile, t);
 	}
 }

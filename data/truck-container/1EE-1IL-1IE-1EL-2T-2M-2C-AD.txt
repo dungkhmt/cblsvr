@@ -34,7 +34,7 @@
 20 15 0
 #import laden
 1
-0 14 1
+0 14 0
 #nb Logical points
 21
 #time window
