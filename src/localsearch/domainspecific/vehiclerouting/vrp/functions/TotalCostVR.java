@@ -64,11 +64,17 @@ public class TotalCostVR implements IFunctionVR {
 		Point sp = XR.getStartingPointOfRoute(k);
 		Point tp = XR.getTerminatingPointOfRoute(k);
 		costRight[getIndex(sp)] = 0;
+		costLeft[getIndex(tp)] = 0;
+		if(XR.next(sp) == tp){
+			costRight[getIndex(tp)] = 0;
+			costLeft[getIndex(sp)] = 0;
+			return;
+		}
 		for (Point u = sp; u != tp; u = XR.next(u)) {
 			costRight[getIndex(XR.next(u))] = costRight[getIndex(u)]
 					+ awm.getWeight(u, XR.next(u));
 		}
-		costLeft[getIndex(tp)] = 0;
+		
 		for (Point u = tp; u != sp; u = XR.prev(u)) {
 			costLeft[getIndex(XR.prev(u))] = costLeft[getIndex(u)]
 					+ awm.getWeight(u, XR.prev(u));

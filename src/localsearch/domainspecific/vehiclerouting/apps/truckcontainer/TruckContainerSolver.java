@@ -178,7 +178,7 @@ public class TruckContainerSolver {
 	public void adaptiveSearchOperators(String outputfile){	
 		int it = 0;
 		int timeLimit = 36000000;
-    	int nIter = 100000;
+    	int nIter = 30000;
     	int maxStable = 1000;
     	int iS = 0;
     	
@@ -827,20 +827,34 @@ public class TruckContainerSolver {
 		for(int r = 1; r <= XR.getNbRoutes(); r++){
 			Point st = XR.getStartingPointOfRoute(r);
 			Point stMooc = null;
+			Point preP = null;
+			Point nextP = null;
 			Point enMooc = null;
 			for(Point p = XR.next(st); p != XR.getTerminatingPointOfRoute(r); p = XR.next(p)){
 				if(accMoocInvr.getSumWeights(XR.prev(p)) <= 0){
-					stMooc = getBestMoocForRequest(r, XR.prev(p), p);
+					stMooc = getBestStartMoocForRequest(r, XR.prev(p), p);
 					if(stMooc == null)
 						continue;
+					preP = XR.prev(p);
+					nextP = p;
 					mgr.performAddOnePoint(stMooc, XR.prev(p));
 					int groupMooc= point2Group.get(stMooc);
-					group2marked.put(groupMooc, 1);
-					enMooc = start2stopMoocPoint.get(stMooc);
+					group2marked.put(groupMooc, 1);					
 				}
 			}
-			if(accMoocInvr.getSumWeights(XR.getTerminatingPointOfRoute(r)) > 0 && enMooc != null){
-				mgr.performAddOnePoint(enMooc, XR.prev(XR.getTerminatingPointOfRoute(r)));
+			if(accMoocInvr.getSumWeights(XR.getTerminatingPointOfRoute(r)) > 0){
+				Point enPoint = XR.prev(XR.getTerminatingPointOfRoute(r));
+				Point newStMooc = getBestMoocForRequest(stMooc, preP, nextP, enPoint, XR.getTerminatingPointOfRoute(r));
+				if(newStMooc != stMooc){
+					mgr.performRemoveOnePoint(stMooc);
+					int groupMooc= point2Group.get(stMooc);
+					group2marked.put(groupMooc, 0);
+					mgr.performAddOnePoint(newStMooc, preP);
+					groupMooc= point2Group.get(newStMooc);
+					group2marked.put(groupMooc, 1);	
+				}
+				enMooc = start2stopMoocPoint.get(newStMooc);
+				mgr.performAddOnePoint(enMooc, enPoint);
 			}
 		}
 	}
@@ -851,7 +865,7 @@ public class TruckContainerSolver {
 		Point enMooc = null;
 		for(Point p = XR.next(st); p != XR.getTerminatingPointOfRoute(r); p = XR.next(p)){
 			if(accMoocInvr.getSumWeights(XR.prev(p)) <= 0){
-				stMooc = getBestMoocForRequest(r, XR.prev(p), p);
+				stMooc = getBestStartMoocForRequest(r, XR.prev(p), p);
 				if(stMooc == null)
 					continue;
 				mgr.performAddOnePoint(stMooc, XR.prev(p));
@@ -1538,7 +1552,7 @@ public class TruckContainerSolver {
 		return -1;
 	}
 	
-	public Point getBestMoocForRequest(int r, Point p, Point pickup){
+	public Point getBestStartMoocForRequest(int r, Point p, Point pickup){
 		Point bestMooc = null;
 		double min_d = Double.MAX_VALUE;
 		for(int i = 0; i < startMoocPoints.size(); i++){
@@ -1549,6 +1563,28 @@ public class TruckContainerSolver {
 				continue;
 			double d = getTravelTime(p.getLocationCode(), stMooc.getLocationCode())
 				+ getTravelTime(stMooc.getLocationCode(), pickup.getLocationCode());
+			if(d < min_d){
+				min_d = d;
+				bestMooc = stMooc;
+			}
+		}
+		return bestMooc;
+	}
+	
+	public Point getBestMoocForRequest(Point curStMooc, Point p, Point np, Point q, Point nq){
+		Point bestMooc = curStMooc;
+		double min_d = Double.MAX_VALUE;
+		for(int i = 0; i < startMoocPoints.size(); i++){
+			Point stMooc = startMoocPoints.get(i);
+			Point enMooc = start2stopMoocPoint.get(stMooc);
+			int groupMooc = point2Group.get(stMooc);
+			if((group2marked.get(groupMooc) == 1
+				|| XR.route(stMooc) != Constants.NULL_POINT) && stMooc != curStMooc)
+				continue;
+			double d = getTravelTime(p.getLocationCode(), stMooc.getLocationCode())
+				+ getTravelTime(stMooc.getLocationCode(), np.getLocationCode())
+				+ getTravelTime(q.getLocationCode(), enMooc.getLocationCode())
+				+ getTravelTime(enMooc.getLocationCode(), nq.getLocationCode());
 			if(d < min_d){
 				min_d = d;
 				bestMooc = stMooc;
@@ -1688,7 +1724,7 @@ public class TruckContainerSolver {
 						Point enMooc2 = null;
 						Point pre = null;
 						if(accMoocInvr.getSumWeights(p) == 0){
-							stMooc1 = getBestMoocForRequest(r, p, pickup);
+							stMooc1 = getBestStartMoocForRequest(r, p, pickup);
 							mgr.performAddOnePoint(stMooc1, p);
 							pp = stMooc1;
 							if(p == q)
@@ -1702,7 +1738,7 @@ public class TruckContainerSolver {
 									+ XR.next(q).getID() + ") = "
 									+ accContainerInvr.getWeights(XR.next(q)));
 							if(accContainerInvr.getWeights(XR.next(q)) > 0){
-								stMooc2 = getBestMoocForRequest(r, q, delivery);
+								stMooc2 = getBestStartMoocForRequest(r, q, delivery);
 								mgr.performAddOnePoint(stMooc2, q);
 								enMooc1 = start2stopMoocPoint.get(stMooc2);
 							}
@@ -2319,7 +2355,7 @@ public class TruckContainerSolver {
 
 		double start_search_time = System.currentTimeMillis();
 		
-		while(it++ <= 100000 && (System.currentTimeMillis() - start_search_time)/1000 < 36000){
+		while(it++ <= 10000 && (System.currentTimeMillis() - start_search_time)/1000 < 36000){
 			allRemoval();
 			
 			Stack<String> stack = new Stack<String>();
@@ -2329,7 +2365,7 @@ public class TruckContainerSolver {
 			}
 			Collections.shuffle(rejectPickupPoints);
 			for(int i = 0; i < rejectPickupPoints.size(); i++){
-				System.out.println("req " + i + "/" + pickup2Delivery.size());
+				//System.out.println("req " + i + "/" + pickup2Delivery.size());
 				Point pickup = rejectPickupPoints.get(i);
 				int groupId = point2Group.get(pickup);
 				if(XR.route(pickup) != Constants.NULL_POINT
@@ -2793,11 +2829,11 @@ public class TruckContainerSolver {
 //	}
 	public static void main(String[] args){
 		String dir = "data/truck-container/";
-		String initType = "bestPossibleInitBPIUS";
+		String initType = "heuristicBPIUS";
 
 		//String fileName = "random_big_data-4reqs.txt";
 		//String fileName = "random_big_data-"+ nbReq + "reqs-1req1route.txt";
-		String fileName = "random_big_data-6reqs.txt";
+		String fileName = "random_big_data-4reqs.txt";
 		String outputfile = dir + "output/result-" + fileName + "-" + initType + ".txt";
 		String dataFileName = dir + fileName;
 		

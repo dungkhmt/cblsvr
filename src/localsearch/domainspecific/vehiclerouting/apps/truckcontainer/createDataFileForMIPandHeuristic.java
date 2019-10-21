@@ -122,19 +122,19 @@ public class createDataFileForMIPandHeuristic {
 		lastPoint = new ArrayList<String>();
 		
 		
-		nbEE = 1;
-		nbEL = 2;
-		nbIE = 1;
-		nbIL = 2;
+		nbEE = 2;
+		nbEL = 3;
+		nbIE = 2;
+		nbIL = 3;
 		
 		nbRequests = nbEE + nbEL + nbIE + nbIL;
 		nbTrucks = 2;
 		nbMoocs = 2;
-		nbContainers = 1;
-		nReturnedContainers = 1;
+		nbContainers = 2;
+		nReturnedContainers = 2;
 		nbDepotTrucks = nbTrucks * 2;
 		nbDepotMoocs = nbMoocs * 2;
-		nbDepotContainers = nbContainers * 2 + nReturnedContainers;
+		nbDepotContainers = nbContainers + nReturnedContainers;
 		nbWarehouses = nbRequests;
 		nbPorts = (nbEL + nbIL);
 		
@@ -224,7 +224,7 @@ public class createDataFileForMIPandHeuristic {
 	public void createDepotContainers(){
 		Random r = new Random();
 		depotContainers = new DepotContainer[nbDepotContainers];
-		for(int i = 0; i < nbContainers*2; i++){
+		for(int i = 0; i < nbContainers; i++){
 			DepotContainer dp = new DepotContainer();
 			int idx = r.nextInt(codes.size());
 			dp.setCode(codes.get(idx));
@@ -244,7 +244,7 @@ public class createDataFileForMIPandHeuristic {
 			dp.setReturnedContainer(true);
 			int idp = Integer.parseInt(codes.get(idx).split("-")[1]);
 			codes.remove(idx);
-			depotContainers[i+ nbContainers*2] = dp;
+			depotContainers[i+ nbContainers] = dp;
 			
 			intermediateTrucks.add(idp);
 			intermediateMoocs.add(idp);
@@ -318,7 +318,7 @@ public class createDataFileForMIPandHeuristic {
 			container.setDepotContainerCode(depotContainers[i].getCode());
 
 			String[] returnDepotCodes = new String[1];
-			returnDepotCodes[0] = depotContainers[i + nbContainers].getCode();
+			returnDepotCodes[0] = depotContainers[i].getCode();
 			container.setReturnDepotCodes(returnDepotCodes);
 			containers[i] = container;
 			temp_containers.add(container);
@@ -452,7 +452,7 @@ public class createDataFileForMIPandHeuristic {
 			int rId = r.nextInt(timeRoute.size());
 			int stTime = timeRoute.get(rId);
 			
-			e.setDepotContainerCode(depotContainers[nbContainers* 2 + i].getCode());
+			e.setDepotContainerCode(depotContainers[nbContainers + i].getCode());
 //			temp_containers.remove(idx);
 			
 			e.setWareHouseCode(warehouses[nbEE + nbEL + i].getCode());
@@ -1357,11 +1357,11 @@ public class createDataFileForMIPandHeuristic {
 			for(int i = 0; i < intermediateContainers.size(); i++)
 				str += intermediateContainers.get(i) + " ";
 			f.println(str);
-			f.println("#Container (depot,  terminus)");
+			f.println("#Container (depot)");
 			for(int i = 0; i < nbContainers; i++){
 				int st = Integer.parseInt(containers[i].getDepotContainerCode().split("-")[1]);
-				int en = Integer.parseInt(containers[i].getReturnDepotCodes()[0].split("-")[1]);
-				f.println( st + " " + en);
+				//int en = Integer.parseInt(containers[i].getReturnDepotCodes()[0].split("-")[1]);
+				f.println(st);// + " " + en);
 			}
 			
 			f.println("#nb returned container depots (for import empty request): the emptyContainer must be delivery at each one");
@@ -1451,8 +1451,8 @@ public class createDataFileForMIPandHeuristic {
 		//tao file du lieu lon de test
 		//sua cac params trong initParams function
 		String dir = "data/truck-container/";
-		String fileNameHeu = dir + "random_big_data-6reqs.txt";
-		String fileNameMIP = dir + "random_big_data-6reqs-MIP.txt";
+		String fileNameHeu = dir + "random_big_data-10reqs.txt";
+		String fileNameMIP = dir + "random_big_data-10reqs-MIP.txt";
 		da.createJsonFile(fileNameHeu);
 		
 		da.print2TxtMipFile(fileNameMIP);

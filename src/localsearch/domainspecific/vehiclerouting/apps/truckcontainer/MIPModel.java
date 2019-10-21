@@ -85,7 +85,7 @@ public class MIPModel {
 	int[] depotTrailers;
 	int[] terminateTrailers;
 	int[] depotContainers;
-	int[] terminateContainers;
+	//int[] terminateContainers;
 	int[] returnedContainerDepots;
 	int[] warehouseEE;
 	int[] EEbreakRomooc;
@@ -134,6 +134,10 @@ public class MIPModel {
 	HashMap<Integer, Integer> eeContainerAt;
 	HashMap<Integer, Integer> ieContainerAt;
 	
+	GRBVar y0;
+	GRBVar y1;
+	
+	int a = 100;
 	int M = 100000;
 	
 	
@@ -223,18 +227,19 @@ public class MIPModel {
 				}
 				
 				depotContainers = new int[nbContainers];
-				terminateContainers = new int[nbContainers];
+				//terminateContainers = new int[nbContainers];
 				sc.nextLine();
 				for(int i = 0; i < nbContainers; i++){
-					String[] str = sc.nextLine().split(" ");
-					int p = Integer.parseInt(str[0]);
+					//String[] str = sc.nextLine().split(" ");
+					//int p = Integer.parseInt(str[0]);
+					int p = Integer.parseInt(sc.nextLine());
 					depotContainers[i] = p;
 					logicalPoints.add(p);
 					containerPoints.add(p);
-					p = Integer.parseInt(str[1]);
-					terminateContainers[i] = p;
-					logicalPoints.add(p);
-					containerPoints.add(p);
+//					p = Integer.parseInt(str[1]);
+//					terminateContainers[i] = p;
+//					logicalPoints.add(p);
+//					containerPoints.add(p);
 				}
 				
 				//read returned containers
@@ -440,7 +445,7 @@ public class MIPModel {
 		
 		for(int v : truckPoints){
 			try{
-				GRBVar var = model.addVar(0.0, nbTrailers, 0.0, GRB.INTEGER, "TL(" + v + ")");
+				GRBVar var = model.addVar(0.0, nbTrailers*a + nbTrailers * (nbTrailers + 1) / 2, 0.0, GRB.INTEGER, "TL(" + v + ")");
 				varTL.add(var);
 				point2varTL.put(v, var);
 			} catch (GRBException e) {
@@ -581,28 +586,28 @@ public class MIPModel {
 		
 		for(int i = 0; i < nbTrailers; i++){
 		   int d = depotTrailers[i];
-		   trailerAt.put(d, 2);
+		   trailerAt.put(d, a + i + 1);
 		   int t = terminateTrailers[i];
-		   trailerAt.put(t, -2);
+		   trailerAt.put(t, -a - i - 1);
 		}
 		for(int i = 0; i < nbExportEmpty; i++){
 			if(EEbreakRomooc[i] == 1){
 				int w = warehouseEE[i];
-				trailerAt.put(w, -2);
+				trailerAt.put(w, -nbTrailers);
 			}
 		}
 		
 		for(int i = 0; i < nbExportLaden; i++){
 			if(ELbreakRomooc[i] == 1){
 				int p = portEL[i];
-				trailerAt.put(p, -2);
+				trailerAt.put(p, -nbTrailers);
 			}
 		}
 		
 		for(int i = 0; i < nbImportLaden; i++){
 			if(ILbreakRomooc[i] == 1){
 				int w = warehouseIL[i];
-				trailerAt.put(w, -2);
+				trailerAt.put(w, -nbTrailers);
 			}
 		}
 		
@@ -646,6 +651,17 @@ public class MIPModel {
 //			System.out.println("nb container at " + key + " is " + containerAt.get(key));
 	}
 	
+	public void defineBinaryVariables(GRBModel model){
+		try{
+			y0 = model.addVar(0.0, 1, 0.0, GRB.BINARY, "y0");			
+			y1 = model.addVar(0.0, 1, 0.0, GRB.BINARY, "y1");
+			
+		} catch (GRBException e) {
+			System.out.println("Error code: " + e.getErrorCode() + ". " +
+		            e.getMessage());
+		}
+	}
+	
 	public void defineVariables(GRBModel model){
 		defineFlowVariableOfTrucks(model);
 		defineVariableLoadTrailer(model);
@@ -658,6 +674,7 @@ public class MIPModel {
 		defineWeightTrailer();
 		defineWeightExportEmptyContainer();
 		defineWeightImportEmptyContainer();
+		defineBinaryVariables(model);
 	}
 	
 	public void stateMode(){
@@ -1244,6 +1261,24 @@ public class MIPModel {
 		}
 	}
 	
+	public void defineArrivalLessThanDepartureTimeAtPointConstraint(GRBModel model){
+		try{	
+			for(int p : truckPoints){
+				GRBVar at = point2ArrivalTime.get(p);
+				GRBVar dt = point2DepartureTime.get(p);
+				
+				GRBLinExpr expr1 = new GRBLinExpr();
+				expr1.addTerm(1, at);
+				expr1.addTerm(-1, dt);
+				model.addConstr(expr1, GRB.LESS_EQUAL, 0, "ArrivalLessThanDepartureTime1(" + p + ")");
+				
+			}
+		} catch (GRBException e) {
+			System.out.println("Error code: " + e.getErrorCode() + ". " +
+		            e.getMessage());
+		}
+	}
+	
 	public void definePickupDeliveryOrderExportLadenConstraint(GRBModel model){
 		try{
 			for(int i = 0; i < nbExportLaden; i++){
@@ -1395,25 +1430,6 @@ public class MIPModel {
 		}
 	}
 	
-	public void defineLoadEEContainerAtTerminusConstraint(GRBModel model){		
-		try{
-			for(int i = 0; i < nbTrucks; i++){
-				int d = terminateTrucks.get(i);
-				GRBLinExpr expr1 = new GRBLinExpr();
-				GRBVar x = point2varEECL.get(d);
-				expr1.addTerm(1, x);
-				model.addConstr(expr1, GRB.EQUAL, 0, "LoadEEContainerAtTerminus1(" + i + ")");
-				
-//				GRBLinExpr expr2 = new GRBLinExpr();
-//				expr2.addTerm(-1, x);
-//				model.addConstr(expr2, GRB.LESS_EQUAL, 0, "LoadEEContainerAtTerminus2(" + i + ")");
-			}
-		} catch (GRBException e) {
-			System.out.println("Error code: " + e.getErrorCode() + ". " +
-		            e.getMessage());
-		}
-	}
-	
 	public void defineLoadIEContainerAtTerminusConstraint(GRBModel model){		
 		try{
 			for(int i = 0; i < nbTrucks; i++){
@@ -1433,13 +1449,156 @@ public class MIPModel {
 		}
 	}
 	
+	public void defineLoadEEContainerAtTerminusConstraint(GRBModel model){		
+			try{
+				for(int i = 0; i < nbTrucks; i++){
+					int d = terminateTrucks.get(i);
+					GRBLinExpr expr1 = new GRBLinExpr();
+					GRBVar x = point2varEECL.get(d);
+					expr1.addTerm(1, x);
+					model.addConstr(expr1, GRB.EQUAL, 0, "LoadEEContainerAtTerminus1(" + i + ")");
+					
+	//				GRBLinExpr expr2 = new GRBLinExpr();
+	//				expr2.addTerm(-1, x);
+	//				model.addConstr(expr2, GRB.LESS_EQUAL, 0, "LoadEEContainerAtTerminus2(" + i + ")");
+				}
+			} catch (GRBException e) {
+				System.out.println("Error code: " + e.getErrorCode() + ". " +
+			            e.getMessage());
+			}
+		}
+
+	public void defineTrailerInTerminusOutDepotConstraints(GRBModel model){
+		try{
+			for(int k = 0; k < nbTrucks; k++){
+				for(int i = 0; i < depotTrailers.length; i++){
+					int d = depotTrailers[i];
+					int t = terminateTrailers[i];
+					GRBLinExpr expr1 = new GRBLinExpr();
+					for(int v : outArcTruck.get(d)){
+						String s = k + "-" + d + "-" + v;
+						if(arc2X.get(s) == null)
+							continue;
+						GRBVar x = arc2X.get(s);
+						expr1.addTerm(-1, x);
+					}
+					
+					for(int v : inArcTruck.get(t)){
+						String s = k + "-" + v + "-" + t;
+						if(arc2X.get(s) == null)
+							continue;
+						GRBVar x = arc2X.get(s);
+						expr1.addTerm(1, x);
+					}
+					
+					model.addConstr(expr1, GRB.LESS_EQUAL, 0.0, "TrailerDepotTerminus(" + k + "," + i + ")");
+				}
+			}
+		} catch (GRBException e) {
+			System.out.println("Error code: " + e.getErrorCode() + ". " +
+		            e.getMessage());
+		}
+	}
+	
+	public void defineATandDTatDepotTerminusConstraints(GRBModel model){
+		try{
+			if(nbTrailers <= 1)
+				return;
+			for(int i = 0; i < depotTrailers.length; i++){
+				for(int j= 0; j < depotTrailers.length; j++){
+					if(i == j)
+						continue;
+					int d1 = depotTrailers[i];
+					int t1 = terminateTrailers[i];
+					int d2 = depotTrailers[j];
+					int t2 = terminateTrailers[j];
+					
+					GRBVar DTd1 = point2DepartureTime.get(d1);
+					GRBVar DTd2 = point2DepartureTime.get(d2);
+					GRBVar DTt1 = point2DepartureTime.get(t1);
+					GRBVar DTt2 = point2DepartureTime.get(t2);
+					
+					GRBLinExpr expr1 = new GRBLinExpr();
+					if(DTd1.get(GRB.DoubleAttr.X) < DTd2.get(GRB.DoubleAttr.X)){
+						expr1.addTerm(1, DTt1);
+						expr1.addTerm(-1, DTt2);
+					}
+					model.addConstr(expr1, GRB.LESS_EQUAL, 0.0, "DTatDepotTerminus(" + d1 + "," + d2 + ")");
+				}
+			}
+		} catch (GRBException e) {
+			System.out.println("Error code: " + e.getErrorCode() + ". " +
+		            e.getMessage());
+		}
+	}
+	
+	public void defineTrailerAtTContraints(GRBModel model){
+		try{
+			for(int i = 0; i < nbTrucks; i++){
+				int d = terminateTrucks.get(i);
+				GRBLinExpr expr1 = new GRBLinExpr();
+				GRBVar x = point2varTL.get(d);
+				expr1.addTerm(1, x);
+				model.addGenConstrIndicator(y0, 1, expr1, GRB.EQUAL, 0.0, "TrailerAtT1(" + i + ")");
+				model.addGenConstrIndicator(y1, 1, expr1, GRB.GREATER_EQUAL, a - nbTrailers + 1, "TrailerAtT2(" + i + ")");
+				model.addGenConstrIndicator(y1, 1, expr1, GRB.LESS_EQUAL, a, "TrailerAtT2(" + i + ")");
+				GRBLinExpr expr2 = new GRBLinExpr();
+				expr2.addTerm(1, y0);
+				expr2.addTerm(1, y1);
+				model.addConstr(expr2, GRB.EQUAL, 1, "BinaryEqual");
+//				GRBLinExpr expr2 = new GRBLinExpr();
+//				expr2.addTerm(-1, x);
+//				model.addConstr(expr2, GRB.LESS_EQUAL, 0, "LoadTrailerAtTerminus2(" + i + ")");
+			}
+		} catch (GRBException e) {
+			System.out.println("Error code: " + e.getErrorCode() + ". " +
+		            e.getMessage());
+		}
+	}
+	
+	public void defineTrailerAtTContraints2(GRBModel model){
+		try{
+			GRBLinExpr expr5 = new GRBLinExpr();
+			expr5.addTerm(1, y0);
+			expr5.addTerm(1, y1);
+			model.addConstr(expr5, GRB.EQUAL, 1, "BinaryEqual");
+			
+			for(int i = 0; i < nbTrucks; i++){
+				int d = terminateTrucks.get(i);
+				GRBLinExpr expr1 = new GRBLinExpr();
+				GRBVar x = point2varTL.get(d);
+				expr1.addTerm(1, x);
+				expr1.addTerm(-M, y0);
+				model.addConstr(expr1, GRB.GREATER_EQUAL, -M, "TrailerAtTerminus1(" + i + ")");
+				
+				GRBLinExpr expr2 = new GRBLinExpr();
+				expr2.addTerm(1, x);
+				expr2.addTerm(M, y0);
+				model.addConstr(expr2, GRB.LESS_EQUAL, M, "TrailerAtTerminus2(" + i + ")");
+				
+				GRBLinExpr expr3 = new GRBLinExpr();
+				expr3.addTerm(1, x);
+				expr3.addTerm(-M, y1);
+				model.addConstr(expr3, GRB.GREATER_EQUAL, a - nbTrailers + 1 - M, "TrailerAtTerminus3(" + i + ")");
+				
+				GRBLinExpr expr4 = new GRBLinExpr();
+				expr4.addTerm(1, x);
+				expr4.addTerm(M, y1);
+				model.addConstr(expr4, GRB.LESS_EQUAL, a + M, "TrailerAtTerminus4(" + i + ")");
+			}
+		} catch (GRBException e) {
+			System.out.println("Error code: " + e.getErrorCode() + ". " +
+		            e.getMessage());
+		}
+	}
+	
 	public void defineTrailerLoadConstraints(GRBModel model){
 		try{
 			for(int v : truckPoints){
 				GRBLinExpr expr1 = new GRBLinExpr();
 				GRBVar x = point2varTL.get(v);
 				expr1.addTerm(1, x);
-				model.addConstr(expr1, GRB.LESS_EQUAL, 2, "TrailerLoadConst1(" + v + ")");
+				model.addConstr(expr1, GRB.LESS_EQUAL, a + nbTrailers, "TrailerLoadConst1(" + v + ")");
 				
 				GRBLinExpr expr2 = new GRBLinExpr();
 				expr2.addTerm(-1, x);
@@ -1469,6 +1628,25 @@ public class MIPModel {
 		}
 	}
 	
+	public void defineStartOneTimeAtDepotConstraints(GRBModel model){
+		try{
+			for(int k = 0; k < nbTrucks; k++){
+				int d = depotTrucks.get(k);
+				GRBLinExpr expr1 = new GRBLinExpr();
+				for(int v : outArcTruck.get(d)){
+					String s = k + "-" + d + "-" + v;
+					if(arc2X.get(s) == null)
+						continue;
+					GRBVar x = arc2X.get(s);
+					expr1.addTerm(1, x);
+				}
+				model.addConstr(expr1, GRB.LESS_EQUAL, 1, "StartOneTimeAtDepot(" + k + ")");
+			}
+		} catch (GRBException e) {
+			System.out.println("Error code: " + e.getErrorCode() + ". " +
+		            e.getMessage());
+		}
+	}
 	
 	
 	public void defineConstraints(GRBModel model){
@@ -1483,6 +1661,12 @@ public class MIPModel {
 		
 		defineContainerCarriedByTrailer(model);
 		
+		//defineTrailerInTerminusOutDepotConstraints(model);
+		//defineATandDTatDepotTerminusConstraints(model);
+		//defineTrailerAtTContraints(model);
+		defineTrailerAtTContraints2(model);
+		defineStartOneTimeAtDepotConstraints(model);
+		
 		defineContainerLoadConstraints(model);
 		defineTrailerLoadConstraints(model);
 		
@@ -1491,7 +1675,7 @@ public class MIPModel {
 		defineLoadEEContainerAtDepotConstraint(model);
 		defineLoadIEContainerAtDepotConstraint(model);
 		
-		defineLoadTrailerAtTerminusConstraint(model);
+		//defineLoadTrailerAtTerminusConstraint(model);
 		defineLoadContainerAtTerminusConstraint(model);
 		defineLoadIEContainerAtTerminusConstraint(model);
 		defineLoadEEContainerAtTerminusConstraint(model);
@@ -1504,7 +1688,7 @@ public class MIPModel {
 		defineDepartureTimeAtPointConstraint(model);
 		defineWaitingTimeAtPointsConstraints(model);
 		
-		
+		//defineArrivalLessThanDepartureTimeAtPointConstraint(model);
 		
 		defineExportLadenPointSameRouteConstraint(model);
 		defineImportLadenPointSameRouteConstraint(model);
@@ -1560,6 +1744,7 @@ public class MIPModel {
 	
 	public void getResult(GRBModel model, String outputFile){
 		try{
+			double t = System.currentTimeMillis();
 			model.optimize();
 			
 			System.out.println("Optimize done!");
@@ -1568,25 +1753,38 @@ public class MIPModel {
 			
 			model.update();
 			
+			for(int i = 0; i < X.size(); i++){
+				System.out.println(X.get(i).get(GRB.StringAttr.VarName) + " "
+						+ X.get(i).get(GRB.DoubleAttr.X));
+			}
+			
 			PrintWriter fw = new PrintWriter(new File(outputFile));
 			
-			
+			String d = "";
 			for(int i = 0; i < nbTrucks; i++){
 				int s = depotTrucks.get(i);
 				String str = "route[" + i + "] = " + s + " -> ";
+				
 				while( s != terminateTrucks.get(i)){
 					String nextS = getNextPoint(s);
 					if(nextS == null)
 						break;
+					d += "p1 = " + s + ", p2 = " + nextS 
+							+ ", cost = " + distances[s][Integer.parseInt(nextS)] + "\n";					
 					str += nextS + " -> ";
 					s = Integer.parseInt(nextS);
 				}
 				System.out.println(str);
 				fw.println(str);
 			}
-
-			System.out.println("Obj: " + model.get(GRB.DoubleAttr.ObjVal));
-			fw.println("Obj: " + model.get(GRB.DoubleAttr.ObjVal));
+			
+			double runTime = (System.currentTimeMillis() - t)/1000;
+			System.out.println("Obj: " + model.get(GRB.DoubleAttr.ObjVal)
+					+ ", run time = " + runTime);
+			fw.println("Obj: " + model.get(GRB.DoubleAttr.ObjVal)
+					+ ", run time = " + runTime);
+			System.out.println(d);
+			fw.println(d);
 			fw.close();
 			
 		} catch (GRBException e) {
@@ -1600,8 +1798,8 @@ public class MIPModel {
 	
 	public static void main(String[] args){
 		String dir = "data/truck-container/";
-		String dataFile = dir + "random_big_data-6reqs-MIP.txt";
-		String outputFile = dir + "random_big_data-6reqs-MIP-result.txt";
+		String dataFile = dir + "random_big_data-8reqs-MIP.txt";
+		String outputFile = dir + "random_big_data-8reqs-MIP-result.txt";
 		MIPModel m = new MIPModel();
 
 		
