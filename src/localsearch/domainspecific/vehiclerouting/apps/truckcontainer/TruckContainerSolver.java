@@ -219,7 +219,7 @@ public class TruckContainerSolver {
 		double start_search_time = System.currentTimeMillis();
 		try{
 			
-			FileOutputStream write = new FileOutputStream(outputfile);
+			FileOutputStream write = new FileOutputStream(outputfile, true);
 			PrintWriter fo = new PrintWriter(write);
 			fo.println("time limit = " + timeLimit + ", nbIters = " + nIter + ", maxStable = " + maxStable);
 			fo.println("#Request = " + nRequest);
@@ -2833,7 +2833,7 @@ public class TruckContainerSolver {
 
 		//String fileName = "random_big_data-4reqs.txt";
 		//String fileName = "random_big_data-"+ nbReq + "reqs-1req1route.txt";
-		String fileName = "random_big_data-4reqs.txt";
+		String fileName = "random_big_data-70reqs-1.json";
 		String outputfile = dir + "output/result-" + fileName + "-" + initType + ".txt";
 		String dataFileName = dir + fileName;
 		
@@ -2860,8 +2860,8 @@ public class TruckContainerSolver {
 			case "firstPossibleInitFPI": solver.firstPossibleInitFPI(); break;
 			case "firstPossibleInitFPIUS": solver.firstPossibleInitFPIUS(); break;
 			case "bestPossibleInitBPIUS": solver.bestPossibleInitBPIUS(); break;
-			case "heuristicFPIUS": solver.heuristicFPIUS(outputfile);
-			case "heuristicBPIUS": solver.heuristicBPIUS(outputfile);
+			case "heuristicFPIUS": solver.heuristicFPIUS(outputfile); break;
+			case "heuristicBPIUS": solver.heuristicBPIUS(outputfile); break;
 			case "oneRequest2oneRoute": solver.insertOneReq2oneTruck(); break;
 		}			
 
