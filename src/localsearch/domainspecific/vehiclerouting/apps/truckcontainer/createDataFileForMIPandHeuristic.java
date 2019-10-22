@@ -122,13 +122,13 @@ public class createDataFileForMIPandHeuristic {
 		lastPoint = new ArrayList<String>();
 		
 		
-		nbEE = 50;
-		nbEL = 50;
-		nbIE = 50;
-		nbIL = 50;
+		nbEE = 5;
+		nbEL = 5;
+		nbIE = 5;
+		nbIL = 5;
 		
 		nbRequests = nbEE + nbEL + nbIE + nbIL;
-		nbTrucks = (int)(nbRequests* 0.1);
+		nbTrucks = (int)(nbRequests* 0.2);
 		nbMoocs = nbTrucks;
 		nbContainers = (int)(nbEE*1.2);
 		nReturnedContainers = (int)(nbIE*1.2);
@@ -1451,8 +1451,8 @@ public class createDataFileForMIPandHeuristic {
 		//tao file du lieu lon de test
 		//sua cac params trong initParams function
 		String dir = "data/truck-container/";
-		String fileNameHeu = dir + "random_big_data-200reqs.txt";
-		String fileNameMIP = dir + "random_big_data-200reqs-MIP.txt";
+		String fileNameHeu = dir + "random_big_data-20reqs.txt";
+		String fileNameMIP = dir + "random_big_data-20reqs-MIP.txt";
 		da.createJsonFile(fileNameHeu);
 		
 		da.print2TxtMipFile(fileNameMIP);

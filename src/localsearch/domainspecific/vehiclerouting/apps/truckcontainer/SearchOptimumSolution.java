@@ -348,7 +348,7 @@ public class SearchOptimumSolution {
 			if(tcs.XR.route(pickup) != Constants.NULL_POINT
 				|| tcs.group2marked.get(groupId) == 1)
 				continue;
-			System.out.println(c++);
+			//System.out.println(c++);
 			Point delivery = tcs.pickup2Delivery.get(pickup);
 			//add the request to route
 			Point pre_pick = null;

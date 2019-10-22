@@ -142,8 +142,8 @@ public class TruckContainerSolver {
 	HashMap<Point, Integer> nChosed;
 	HashMap<Point, Boolean> removeAllowed;
 	
-	private int nRemovalOperators = 13;
-	private int nInsertionOperators = 14;
+	private int nRemovalOperators = 8;
+	private int nInsertionOperators = 8;
 	
 	//parameters
 	public int lower_removal;
@@ -159,6 +159,9 @@ public class TruckContainerSolver {
 	public double temperature = 200;
 	public double cooling_rate = 0.9995;
 	public int nTabu = 5;
+	int timeLimit = 36000000;
+	int nIter = 30000;
+	int maxStable = 1000;
 	
 	int INF_TIME = Integer.MAX_VALUE;
 	public static double MAX_TRAVELTIME;
@@ -177,12 +180,10 @@ public class TruckContainerSolver {
 	
 	public void adaptiveSearchOperators(String outputfile){	
 		int it = 0;
-		int timeLimit = 36000000;
-    	int nIter = 30000;
-    	int maxStable = 1000;
+		
     	int iS = 0;
     	
-    	initParamsForALNS();
+    	
     	//insertion operators selection probabilities
 		double[] pti = new double[nInsertionOperators];
 		//removal operators selection probabilities
@@ -804,11 +805,6 @@ public class TruckContainerSolver {
 	}
 	
 	public void initParamsForALNS(){
-		nRemovalOperators = 8;
-		nInsertionOperators = 8;
-		lower_removal = (int) 1*(nRequest)/100;
-		upper_removal = (int) 15*(nRequest)/100;
-		
 		nChosed = new HashMap<Point, Integer>();
 		removeAllowed = new HashMap<Point, Boolean>();
 		for(int i=0; i<pickupPoints.size(); i++){
@@ -2828,44 +2824,84 @@ public class TruckContainerSolver {
 //		}
 //	}
 	public static void main(String[] args){
-		String dir = "data/truck-container/";
-		String initType = "heuristicBPIUS";
-
-		//String fileName = "random_big_data-4reqs.txt";
-		//String fileName = "random_big_data-"+ nbReq + "reqs-1req1route.txt";
-		String fileName = "random_big_data-70reqs-1.json";
-		String outputfile = dir + "output/result-" + fileName + "-" + initType + ".txt";
-		String dataFileName = dir + fileName;
-		
-		TruckContainerSolver solver = new TruckContainerSolver();
-		solver.readData(dataFileName);
-		solver.init();
-		solver.stateModel();
-		
-		double t = System.currentTimeMillis();
-		try{
-			FileOutputStream write = new FileOutputStream(outputfile);
-			PrintWriter fo = new PrintWriter(write);
-			fo.println("Starting time = " + DateTimeUtils.unixTimeStamp2DateTime(System.currentTimeMillis()) 
-					+ ", total reqs = " + nRequest
-					+ ", total truck = " + nVehicle);
-			
-			fo.close();
-		}catch(Exception e){
-			
+		double[] lower_removal_list = new double[]{0.01, 0.05};
+		double[] upper_removal_list = new double[]{0.15, 0.2};
+		int[] sigma1_list = new int[]{3, 5, 10};
+		int[] sigma2_list = new int[]{1, 0, -1};
+		int[] sigma3_list = new int[]{-3, -5, -10};
+		for(int i1 = 0; i1 < lower_removal_list.length; i1++){
+			for(int i2 = 0; i2 < lower_removal_list.length; i2++){
+				for(int i3 = 0; i3 < lower_removal_list.length; i3++){
+					for(int i4 = 0; i4 < lower_removal_list.length; i4++){
+						for(int i5 = 0; i5 < lower_removal_list.length; i5++){
+							String dir = "data/truck-container/";
+							String initType = "firstPossibleInitFPIUS";
+					
+							//String fileName = "random_big_data-4reqs.txt";
+							//String fileName = "random_big_data-"+ nbReq + "reqs-1req1route.txt";
+							String fileName = "random_big_data-20reqs.txt";
+							String outputfile = dir + "output/result-" + fileName + "-" + initType
+									+ "-i1-" + i1 + "-i2-" + i2 + "-i3-" + i3 + "-i4-" + i4 + "-i5-" + i5 + ".txt";
+							String dataFileName = dir + fileName;
+							
+							TruckContainerSolver solver = new TruckContainerSolver();
+							solver.readData(dataFileName);
+							solver.init();
+							solver.stateModel();
+							
+							double t = System.currentTimeMillis();
+							try{
+								FileOutputStream write = new FileOutputStream(outputfile);
+								PrintWriter fo = new PrintWriter(write);
+								fo.println("Starting time = " + DateTimeUtils.unixTimeStamp2DateTime(System.currentTimeMillis()) 
+										+ ", total reqs = " + nRequest
+										+ ", total truck = " + nVehicle);
+								
+								fo.close();
+							}catch(Exception e){
+								
+							}
+							switch(initType){
+								//case "greedyInit" : solver.greedyInitSolution2(); break;
+								case "greedyInitWithAcceptanceBPI": solver.greedyInitSolutionWithAcceptanceBPI(); break;
+								case "firstPossibleInitFPI": solver.firstPossibleInitFPI(); break;
+								case "firstPossibleInitFPIUS": solver.firstPossibleInitFPIUS(); break;
+								case "bestPossibleInitBPIUS": solver.bestPossibleInitBPIUS(); break;
+								case "heuristicFPIUS": solver.heuristicFPIUS(outputfile); break;
+								case "heuristicBPIUS": solver.heuristicBPIUS(outputfile); break;
+								case "oneRequest2oneRoute": solver.insertOneReq2oneTruck(); break;
+							}			
+					
+							solver.timeLimit = 1800000;
+							solver.nIter = 10000;
+							
+							solver.nRemovalOperators = 8;
+							solver.nInsertionOperators = 8;
+							
+							solver.lower_removal = (int) lower_removal_list[i1]*(nRequest)/100;
+							solver.upper_removal = (int) upper_removal_list[i2]*(nRequest)/100;
+							solver.sigma1 = sigma1_list[i3];
+							solver.sigma2 = sigma2_list[i4];
+							solver.sigma3 = sigma3_list[i5];
+							
+							solver.rp = 0.1;
+							solver.nw = 1;
+							solver.shaw1st = 0.5;
+							solver.shaw2nd = 0.2;
+							solver.	shaw3rd = 0.1;
+					
+							solver.temperature = 200;
+							solver.cooling_rate = 0.9995;
+							solver.nTabu = 5;
+					
+							solver.initParamsForALNS();
+							solver.adaptiveSearchOperators(outputfile);
+							solver.printSolution(outputfile, t);
+						}
+					}
+				}
+			}
 		}
-		switch(initType){
-			//case "greedyInit" : solver.greedyInitSolution2(); break;
-			case "greedyInitWithAcceptanceBPI": solver.greedyInitSolutionWithAcceptanceBPI(); break;
-			case "firstPossibleInitFPI": solver.firstPossibleInitFPI(); break;
-			case "firstPossibleInitFPIUS": solver.firstPossibleInitFPIUS(); break;
-			case "bestPossibleInitBPIUS": solver.bestPossibleInitBPIUS(); break;
-			case "heuristicFPIUS": solver.heuristicFPIUS(outputfile); break;
-			case "heuristicBPIUS": solver.heuristicBPIUS(outputfile); break;
-			case "oneRequest2oneRoute": solver.insertOneReq2oneTruck(); break;
-		}			
-
-		solver.adaptiveSearchOperators(outputfile);
-		solver.printSolution(outputfile, t);
+			
 	}
 }
