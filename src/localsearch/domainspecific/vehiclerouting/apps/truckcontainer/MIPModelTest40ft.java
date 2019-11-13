@@ -12,14 +12,14 @@ import java.util.Set;
 import localsearch.domainspecific.vehiclerouting.vrp.utils.ScannerInput;
 import gurobi.*;
 
-final class SubSetGenerator{
+final class SubSetGeneratorTest40ft{
 	private Set<Integer> S;
 	public ArrayList<Integer> map;
 	private int n;
 	private ArrayList<Integer> X;
 	public HashSet<HashSet<Integer>> subSet;
 	
-	public SubSetGenerator(Set<Integer> S){
+	public SubSetGeneratorTest40ft(Set<Integer> S){
 		this.S = S;
 		map = new ArrayList<Integer>();
 		X = new ArrayList<Integer>();
@@ -59,7 +59,7 @@ final class SubSetGenerator{
 	}
 }
 
-public class MIPModel {
+public class MIPModelTest40ft{
 	Set<Integer> logicalPoints;
 	
 	Set<Integer> intermediateTruckPoints;
@@ -110,11 +110,14 @@ public class MIPModel {
 	ArrayList<GRBVar> X;
 	HashMap<String, GRBVar> arc2X;
 	
-	ArrayList<GRBVar> varTL;
-	ArrayList<GRBVar> varCL;
+//	ArrayList<GRBVar> varTL;
+//	ArrayList<GRBVar> varCL;
 	
 	HashMap<Integer, GRBVar> point2varTL;
 	HashMap<Integer, GRBVar> point2varCL;
+	
+	HashMap<Integer, GRBVar> point2varPlus;
+	HashMap<Integer, GRBVar> point2varMinus;
 	
 	ArrayList<GRBVar> varEECL;
 	HashMap<Integer, GRBVar> point2varEECL;
@@ -133,6 +136,8 @@ public class MIPModel {
 	HashMap<Integer, Integer> containerAt;
 	HashMap<Integer, Integer> eeContainerAt;
 	HashMap<Integer, Integer> ieContainerAt;
+	HashMap<Integer, Integer> typeOfContainerAt;
+	HashMap<Integer, Integer> plusOrminusContainerAt;
 	
 	GRBVar y0;
 	GRBVar y1;
@@ -141,7 +146,7 @@ public class MIPModel {
 	int M = 100000;
 	
 	
-	public MIPModel(){
+	public MIPModelTest40ft(){
 	}
 	
 	public void readData(String fn){
@@ -212,6 +217,7 @@ public class MIPModel {
 				
 				containerPoints = new HashSet<Integer>();
 				intermediateContainerPoints = new HashSet<Integer>();
+				typeOfContainerAt = new HashMap<Integer, Integer>();
 				
 				sc.nextLine();
 				nbContainers = Integer.parseInt(sc.nextLine());
@@ -230,16 +236,19 @@ public class MIPModel {
 				//terminateContainers = new int[nbContainers];
 				sc.nextLine();
 				for(int i = 0; i < nbContainers; i++){
-					//String[] str = sc.nextLine().split(" ");
-					//int p = Integer.parseInt(str[0]);
-					int p = Integer.parseInt(sc.nextLine());
+					String[] str = sc.nextLine().split(" ");
+					int p = Integer.parseInt(str[0]);
+					//int p = Integer.parseInt(sc.nextLine());
 					depotContainers[i] = p;
 					logicalPoints.add(p);
 					containerPoints.add(p);
-//					p = Integer.parseInt(str[1]);
-//					terminateContainers[i] = p;
-//					logicalPoints.add(p);
-//					containerPoints.add(p);
+					int type = Integer.parseInt(str[1]);
+					typeOfContainerAt.put(p, type);
+					
+//						p = Integer.parseInt(str[1]);
+//						terminateContainers[i] = p;
+//						logicalPoints.add(p);
+//						containerPoints.add(p);
 				}
 				
 				//read returned containers
@@ -249,13 +258,15 @@ public class MIPModel {
 				sc.nextLine();
 				
 				returnedContainerDepots = new int[nbReturnedContainers];
-				intermediate = sc.nextLine().split(" ");
-				for(int i = 0; i < intermediate.length; i++){
-					int p = Integer.parseInt(intermediate[i]);
+				for(int i = 0; i < nbReturnedContainers; i++){
+					intermediate = sc.nextLine().split(" ");
+					int p = Integer.parseInt(intermediate[0]);
 					returnedContainerDepots[i] = p;
 					intermediateContainerPoints.add(p);
 					containerPoints.add(p);
 					logicalPoints.add(p);
+					int type = Integer.parseInt(intermediate[1]);
+					typeOfContainerAt.put(p, type);
 				}
 				
 				//read export empty
@@ -270,6 +281,8 @@ public class MIPModel {
 					warehouseEE[i] = p;
 					logicalPoints.add(p);
 					EEbreakRomooc[i] = Integer.parseInt(str[1]);
+					int type = Integer.parseInt(str[2]);
+					typeOfContainerAt.put(p, type);
 				}
 				
 				sc.nextLine();
@@ -277,9 +290,12 @@ public class MIPModel {
 				
 				warehouseIE = new int[nbImportEmpty];
 				for(int i = 0; i < nbImportEmpty; i++){
-					int p = Integer.parseInt(sc.nextLine());
+					String[] str = sc.nextLine().split(" ");
+					int p = Integer.parseInt(str[0]);
 					warehouseIE[i] = p;
 					logicalPoints.add(p);
+					int type = Integer.parseInt(str[1]);
+					typeOfContainerAt.put(p, type);
 				}
 				
 				sc.nextLine();
@@ -290,13 +306,18 @@ public class MIPModel {
 				ELbreakRomooc = new int[nbExportLaden];
 				for(int i = 0; i < nbExportLaden; i++){
 					String[] str = sc.nextLine().split(" ");
+					
+					int type = Integer.parseInt(str[3]);
+					
 					int p = Integer.parseInt(str[0]);
 					warehouseEL[i] = p;
 					logicalPoints.add(p);
+					typeOfContainerAt.put(p, type);
 					p = Integer.parseInt(str[1]);
 					portEL[i] = p;
 					logicalPoints.add(p);
 					ELbreakRomooc[i] = Integer.parseInt(str[2]);
+					typeOfContainerAt.put(p, type);
 				}
 				
 				sc.nextLine();
@@ -307,13 +328,16 @@ public class MIPModel {
 				ILbreakRomooc = new int[nbImportLaden];
 				for(int i = 0; i < nbImportLaden; i++){
 					String[] str = sc.nextLine().split(" ");
+					int type = Integer.parseInt(str[3]);
 					int p = Integer.parseInt(str[0]);
 					portIL[i] = p;
 					logicalPoints.add(p);
+					typeOfContainerAt.put(p, type);
 					p = Integer.parseInt(str[1]);
 					warehouseIL[i] = p;
 					logicalPoints.add(p);
 					ILbreakRomooc[i] = Integer.parseInt(str[2]);
+					typeOfContainerAt.put(p, type);
 				}
 				
 				sc.nextLine();
@@ -440,13 +464,11 @@ public class MIPModel {
 	}
 	
 	public void defineVariableLoadTrailer(GRBModel model){
-		varTL = new ArrayList<GRBVar>();
 		point2varTL = new HashMap<Integer, GRBVar>();
 		
 		for(int v : truckPoints){
 			try{
 				GRBVar var = model.addVar(0.0, nbTrailers*a + nbTrailers * (nbTrailers + 1) / 2, 0.0, GRB.INTEGER, "TL(" + v + ")");
-				varTL.add(var);
 				point2varTL.put(v, var);
 			} catch (GRBException e) {
 				System.out.println("Error code: " + e.getErrorCode() + ". " +
@@ -456,14 +478,12 @@ public class MIPModel {
 	}
 	
 	public void defineVariableLoadContainer(GRBModel model){
-		varCL = new ArrayList<GRBVar>();
 		point2varCL = new HashMap<Integer, GRBVar>();
 		
 		int maxContainerLoad = nbContainers + nbReturnedContainers;
 		for(int v : truckPoints){
 			try{
 				GRBVar var = model.addVar(0.0, maxContainerLoad, 0.0, GRB.INTEGER, "CL(" + v + ")");
-				varCL.add(var);
 				point2varCL.put(v, var);
 			} catch (GRBException e) {
 				System.out.println("Error code: " + e.getErrorCode() + ". " +
@@ -623,30 +643,48 @@ public class MIPModel {
 		for(int i = 0; i < nbContainers; i++){
 			int d = depotContainers[i];
 			containerAt.put(d, 1);
+			if(typeOfContainerAt.get(d) != null && typeOfContainerAt.get(d) == 2)
+				containerAt.put(d, 2);
 		}
 		for(int i = 0; i < nbExportEmpty; i++){
 			int w = warehouseEE[i];
 			containerAt.put(w, -1);
+			if(typeOfContainerAt.get(w) != null && typeOfContainerAt.get(w) == 2)
+				containerAt.put(w, -2);
 		}
 		for(int i = 0; i < nbImportEmpty; i++){
 			int w = warehouseIE[i];
 			containerAt.put(w, 1);
+			if(typeOfContainerAt.get(w) != null && typeOfContainerAt.get(w) == 2)
+				containerAt.put(w, 2);
 		}
-		for(int v : returnedContainerDepots)
+		for(int v : returnedContainerDepots){
 			containerAt.put(v, -1);
+			if(typeOfContainerAt.get(v) != null && typeOfContainerAt.get(v) == 2)
+				containerAt.put(v, -2);
+		}
 		for(int i = 0; i < nbExportLaden; i++){
 			int w = warehouseEL[i];
 			int p = portEL[i];
 			containerAt.put(w, 1);
+			if(typeOfContainerAt.get(w) != null && typeOfContainerAt.get(w) == 2)
+				containerAt.put(w, 2);
+			
 			containerAt.put(p, -1);
+			if(typeOfContainerAt.get(p) != null && typeOfContainerAt.get(p) == 2)
+				containerAt.put(p, -2);
 		}
 		for(int i = 0; i < nbImportLaden; i++){
 			int w = warehouseIL[i];
 			int p = portIL[i];
 			containerAt.put(w, -1);
+			if(typeOfContainerAt.get(w) != null && typeOfContainerAt.get(w) == 2)
+				containerAt.put(w, -2);
+			
 			containerAt.put(p, 1);
+			if(typeOfContainerAt.get(p) != null && typeOfContainerAt.get(p) == 2)
+				containerAt.put(p, 2);
 		}
-		
 //		for(int key : containerAt.keySet())
 //			System.out.println("nb container at " + key + " is " + containerAt.get(key));
 	}
@@ -1798,9 +1836,9 @@ public class MIPModel {
 	
 	public static void main(String[] args){
 		String dir = "data/truck-container/";
-		String dataFile = dir + "random_big_data-4reqs-MIP.txt";
-		String outputFile = dir + "random_big_data-4reqs-MIP-result.txt";
-		MIPModel m = new MIPModel();
+		String dataFile = dir + "random_big_data-4reqs-MIP-test40ft-2.txt";
+		String outputFile = dir + "random_big_data-4reqs-MIP-test40ft-result-2.txt";
+		MIPModelTest40ft m = new MIPModelTest40ft();
 
 		
 		try{

@@ -122,16 +122,16 @@ public class createDataFileForMIPandHeuristic {
 		lastPoint = new ArrayList<String>();
 		
 		
-		nbEE = 5;
-		nbEL = 5;
-		nbIE = 5;
-		nbIL = 5;
+		nbEE = 1;
+		nbEL = 1;
+		nbIE = 1;
+		nbIL = 1;
 		
 		nbRequests = nbEE + nbEL + nbIE + nbIL;
-		nbTrucks = (int)(nbRequests* 0.2);
+		nbTrucks = 2;// (int)(nbRequests* 0.2);
 		nbMoocs = nbTrucks;
-		nbContainers = (int)(nbEE*1.2);
-		nReturnedContainers = (int)(nbIE*1.2);
+		nbContainers = 2;//(int)(nbEE*1.2);
+		nReturnedContainers = 3;//(int)(nbIE*1.2);
 		nbDepotTrucks = nbTrucks * 2;
 		nbDepotMoocs = nbMoocs * 2;
 		nbDepotContainers = nbContainers + nReturnedContainers;
@@ -182,6 +182,8 @@ public class createDataFileForMIPandHeuristic {
 				e.setDistance(d);
 				e.setTravelTime(t);
 				matrix[i][j] = (int)t;
+//				if(i > j)
+//					matrix[i][j] = matrix[j][i];
 				distance[idx] = e;
 				idx++;
 			}
@@ -1451,8 +1453,8 @@ public class createDataFileForMIPandHeuristic {
 		//tao file du lieu lon de test
 		//sua cac params trong initParams function
 		String dir = "data/truck-container/";
-		String fileNameHeu = dir + "random_big_data-20reqs.txt";
-		String fileNameMIP = dir + "random_big_data-20reqs-MIP.txt";
+		String fileNameHeu = dir + "random_big_data-4reqs-test40ft-2.txt";
+		String fileNameMIP = dir + "random_big_data-4reqs-MIP-test40ft-2.txt";
 		da.createJsonFile(fileNameHeu);
 		
 		da.print2TxtMipFile(fileNameMIP);

@@ -36,9 +36,13 @@ import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.Impor
 import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.ImportLadenRequests;
 import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.Mooc;
 import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.Port;
+import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.RouteElement;
 import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.ShipCompany;
+import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.StatisticInformation;
 import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.Truck;
 import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.TruckContainerSolution;
+import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.TruckMoocContainerOutputJson;
+import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.TruckRoute;
 import localsearch.domainspecific.vehiclerouting.apps.truckcontainer.model.Warehouse;
 import localsearch.domainspecific.vehiclerouting.vrp.Constants;
 import localsearch.domainspecific.vehiclerouting.vrp.ConstraintSystemVR;
@@ -70,13 +74,12 @@ public class TruckContainerSolver {
 	ArrayList<Point> stopPoints;
 	ArrayList<Point> startMoocPoints;
 	ArrayList<Point> stopMoocPoints;
-	HashMap<Point, Integer> point2Type;
+	HashMap<Point, String> point2Type;
 	
 	public HashMap<Point, Integer> earliestAllowedArrivalTime;
 	public HashMap<Point, Integer> serviceDuration;
 	public HashMap<Point, Integer> lastestAllowedArrivalTime;
-	public HashMap<Point,Point> pickup2DeliveryOfGood;
-	public HashMap<Point,Point> pickup2DeliveryOfPeople;
+
 	public HashMap<Point, Point> pickup2Delivery;
 	public HashMap<Point,Point> delivery2Pickup;
 	
@@ -88,6 +91,10 @@ public class TruckContainerSolver {
 	
 	public HashMap<Point, Integer> point2Group;
 	public HashMap<Integer, Integer> group2marked;
+	public HashMap<Integer, ExportEmptyRequests> group2EE;
+	public HashMap<Integer, ExportLadenRequests> group2EL;
+	public HashMap<Integer, ImportEmptyRequests> group2IE;
+	public HashMap<Integer, ImportLadenRequests> group2IL;
 	
 	public HashMap<Point, Integer> point2moocWeight;
 	public HashMap<Point, Integer> point2containerWeight;
@@ -142,8 +149,8 @@ public class TruckContainerSolver {
 	HashMap<Point, Integer> nChosed;
 	HashMap<Point, Boolean> removeAllowed;
 	
-	private int nRemovalOperators = 8;
-	private int nInsertionOperators = 8;
+	public int nRemovalOperators = 8;
+	public int nInsertionOperators = 8;
 	
 	//parameters
 	public int lower_removal;
@@ -165,14 +172,14 @@ public class TruckContainerSolver {
 	
 	int INF_TIME = Integer.MAX_VALUE;
 	public static double MAX_TRAVELTIME;
-	public static final int START_TRUCK = 0;
-	public static final int END_TRUCK 	= 1;
-	public static final int START_MOOC 	= 2;
-	public static final int END_MOOC 	= 3;
-	public static final int START_CONT 	= 4;
-	public static final int END_CONT 	= 5;
-	public static final int PORT	 	= 6;
-	public static final int WAREHOUSE 	= 7;
+	public static final String START_TRUCK 	= "START_TRUCK";
+	public static final String END_TRUCK 	= "END_TRUCK";
+	public static final String START_MOOC 	= "START_MOOC";
+	public static final String END_MOOC 	= "END_MOOC";
+	public static final String START_CONT 	= "START_CONT";
+	public static final String END_CONT 	= "END_CONT";
+	public static final String PORT	 		= "PORT";
+	public static final String WAREHOUSE 	= "WAREHOUSE";
 	
 	public TruckContainerSolver(){
 		
@@ -432,7 +439,7 @@ public class TruckContainerSolver {
 		stopPoints = new ArrayList<Point>();
 		startMoocPoints = new ArrayList<Point>();
 		stopMoocPoints = new ArrayList<Point>();
-		point2Type = new HashMap<Point, Integer>();
+		point2Type = new HashMap<Point, String>();
 		
 		pickup2Delivery = new HashMap<Point, Point>();
 		delivery2Pickup = new HashMap<Point, Point>();
@@ -445,6 +452,11 @@ public class TruckContainerSolver {
 		
 		point2Group = new HashMap<Point, Integer>();
 		group2marked = new HashMap<Integer, Integer>();
+		
+		group2EE = new HashMap<Integer, ExportEmptyRequests>();
+		group2EL = new HashMap<Integer, ExportLadenRequests>();
+		group2IE = new HashMap<Integer, ImportEmptyRequests>();
+		group2IL = new HashMap<Integer, ImportLadenRequests>();
 		
 		point2moocWeight = new HashMap<Point, Integer>();
 		point2containerWeight = new HashMap<Point, Integer>();
@@ -545,6 +557,7 @@ public class TruckContainerSolver {
 		for(int i = 0; i < exEmptyRequests.length; i++){
 			groupId++;
 			group2marked.put(groupId, 0);
+			group2EE.put(groupId, exEmptyRequests[i]);
 			for(int j = 0; j < input.getContainers().length; j++){
 				Container c = input.getContainers()[j];
 				if(c.isImportedContainer())
@@ -611,6 +624,7 @@ public class TruckContainerSolver {
 		{
 			groupId++;
 			group2marked.put(groupId, 0);
+			group2EL.put(groupId, exLadenRequests[i]);
 			id++;
 			Warehouse wh = mCode2Warehouse.get(
 					exLadenRequests[i].getWareHouseCode());
@@ -668,6 +682,7 @@ public class TruckContainerSolver {
 		for(int i = 0; i < imEmptyRequests.length; i++){
 			groupId++;
 			group2marked.put(groupId, 0);
+			group2IE.put(groupId, imEmptyRequests[i]);
 			for(int j = 0; j < input.getDepotContainers().length; j++){
 				DepotContainer depotCont = input.getDepotContainers()[j];
 				if(depotCont.getReturnedContainer()){
@@ -726,6 +741,7 @@ public class TruckContainerSolver {
 		{
 			groupId++;
 			group2marked.put(groupId, 0);
+			group2IL.put(groupId, imLadenRequests[i]);
 			id++;
 			Port port = mCode2Port.get(
 					imLadenRequests[i].getPortCode());
@@ -898,7 +914,7 @@ public class TruckContainerSolver {
 		stopPoints = new ArrayList<Point>();
 		startMoocPoints = new ArrayList<Point>();
 		stopMoocPoints = new ArrayList<Point>();
-		point2Type = new HashMap<Point, Integer>();
+		point2Type = new HashMap<Point, String>();
 		
 		pickup2Delivery = new HashMap<Point, Point>();
 		delivery2Pickup = new HashMap<Point, Point>();
@@ -2751,9 +2767,9 @@ public class TruckContainerSolver {
 			Point x = XR.getStartingPointOfRoute(k);
 			for(; x != XR.getTerminatingPointOfRoute(k); x = XR.next(x)){
 				s = s + x.getLocationCode() + " " + " -> ";
-				System.out.println("p1 = " + x.getLocationCode()
-						+ ", p2 = " + XR.next(x).getLocationCode() 
-						+ ", cost = " + awm.getDistance(x, XR.next(x)));
+//				System.out.println("p1 = " + x.getLocationCode()
+//						+ ", p2 = " + XR.next(x).getLocationCode() 
+//						+ ", cost = " + awm.getDistance(x, XR.next(x)));
 			}
 			x = XR.getTerminatingPointOfRoute(k);
 			s = s + x.getLocationCode() + "\n";
@@ -2823,25 +2839,126 @@ public class TruckContainerSolver {
 //			}
 //		}
 //	}
+	public TruckMoocContainerOutputJson createFormatedSolution() {
+		ArrayList<TruckRoute> brArr = new ArrayList<TruckRoute>();
+
+		int nbTrucks = 0;
+		for (int r = 1; r <= XR.getNbRoutes(); r++) {
+			int nb = XR.index(XR.getTerminatingPointOfRoute(r)) + 1;
+			Truck truck = startPoint2Truck.get(XR.getStartingPointOfRoute(r));
+			
+			if(nb <= 2)
+				continue;
+			
+			double d = 0;
+			int nbPers = 0;
+			Point st = XR.getStartingPointOfRoute(r);
+			Point en = XR.getTerminatingPointOfRoute(r);
+			
+			int g = 0;
+			RouteElement[] nodes = new RouteElement[nb];
+
+			for(Point p = st; p != XR
+					.getTerminatingPointOfRoute(r); p = XR.next(p)) {			
+
+				nodes[g] = new RouteElement(p.getLocationCode(), point2Type.get(p),
+						(int)eat.getEarliestArrivalTime(p),
+						(int)(eat.getEarliestArrivalTime(p)) + serviceDuration.get(p), 
+						(int)awm.getWeight(p, XR.next(p)));
+				g++;
+			}
+			
+			
+
+			nodes[g] = new RouteElement(XR.getTerminatingPointOfRoute(r).getLocationCode(),
+					point2Type.get(XR.getTerminatingPointOfRoute(r)),
+					(int)eat.getEarliestArrivalTime(en),
+					(int)(eat.getEarliestArrivalTime(en) + serviceDuration.get(en)), 0);
+			
+			TruckRoute br = new TruckRoute(truck, nb, (int)objective.getValue(), nodes);
+			brArr.add(br);
+			nbTrucks++;
+		}
+		
+		TruckRoute[] truckRoutes = new TruckRoute[brArr.size()];
+		for(int i = 0; i < brArr.size(); i++)
+			truckRoutes[i] = brArr.get(i);
+		
+		HashSet<ExportEmptyRequests> unscheduledEE = new HashSet<ExportEmptyRequests>();
+		HashSet<ExportLadenRequests> unscheduledEL = new HashSet<ExportLadenRequests>();
+		HashSet<ImportEmptyRequests> unscheduledIE = new HashSet<ImportEmptyRequests>();
+		HashSet<ImportLadenRequests> unscheduledIL = new HashSet<ImportLadenRequests>();
+		int nbRejects = 0;
+		for(int i = 0; i < rejectPickupPoints.size(); i++){
+			int groupId = point2Group.get(rejectPickupPoints.get(i));
+			if(group2marked.get(groupId) == 0
+					&& group2EE.get(groupId) != null)
+				unscheduledEE.add(group2EE.get(groupId));
+			else if(group2marked.get(groupId) == 0
+					&& group2EL.get(groupId) != null)
+				unscheduledEL.add(group2EL.get(groupId));
+			else if(group2marked.get(groupId) == 0
+					&& group2IE.get(groupId) != null)
+				unscheduledIE.add(group2IE.get(groupId));
+			else if(group2marked.get(groupId) == 0
+					&& group2IL.get(groupId) != null)
+				unscheduledIL.add(group2IL.get(groupId));
+		}
+		ExportEmptyRequests[] ee = new ExportEmptyRequests[unscheduledEE.size()];
+		ExportLadenRequests[] el = new ExportLadenRequests[unscheduledEL.size()];
+		ImportEmptyRequests[] ie = new ImportEmptyRequests[unscheduledIE.size()];
+		ImportLadenRequests[] il = new ImportLadenRequests[unscheduledIL.size()];
+
+		int i = 0;
+		for(ExportEmptyRequests r : unscheduledEE){
+			ee[i] = r;
+			i++;
+		}
+		i = 0;
+		for(ImportEmptyRequests r : unscheduledIE){
+			ie[i] = r;
+			i++;
+		}
+		i = 0;
+		for(ExportLadenRequests r : unscheduledEL){
+			el[i] = r;
+			i++;
+		}
+		i=0;
+		for(ImportLadenRequests r : unscheduledIL){
+			il[i] = r;
+			i++;
+		}
+		int totalRejectReqs = unscheduledEE.size() + unscheduledEL.size()
+				+ unscheduledIE.size() + unscheduledIL.size();
+		
+		StatisticInformation statisticInformation = new StatisticInformation(
+				this.nRequest,totalRejectReqs, objective.getValue(), nbTrucks);
+		
+		return new TruckMoocContainerOutputJson(truckRoutes, 
+				ee, el, ie, il, statisticInformation);
+	}
+	
+	
 	public static void main(String[] args){
 		double[] lower_removal_list = new double[]{0.01, 0.05};
 		double[] upper_removal_list = new double[]{0.15, 0.2};
 		int[] sigma1_list = new int[]{3, 5, 10};
 		int[] sigma2_list = new int[]{1, 0, -1};
 		int[] sigma3_list = new int[]{-3, -5, -10};
-		for(int i1 = 0; i1 < lower_removal_list.length; i1++){
-			for(int i2 = 0; i2 < lower_removal_list.length; i2++){
-				for(int i3 = 0; i3 < lower_removal_list.length; i3++){
-					for(int i4 = 0; i4 < lower_removal_list.length; i4++){
-						for(int i5 = 0; i5 < lower_removal_list.length; i5++){
+		for(int i1 = 1; i1 < 2; i1++){
+			for(int i2 = 1; i2 < 2; i2++){
+				for(int i3 = 0; i3 < 1; i3++){
+					for(int i4 = 0; i4 < 1; i4++){
+						for(int i5 = 0; i5 < 1; i5++){
 							String dir = "data/truck-container/";
 							String initType = "firstPossibleInitFPIUS";
 					
 							//String fileName = "random_big_data-4reqs.txt";
 							//String fileName = "random_big_data-"+ nbReq + "reqs-1req1route.txt";
-							String fileName = "random_big_data-20reqs.txt";
+							String fileName = "random_big_data-20reqs-1.json";
 							String outputfile = dir + "output/result-" + fileName + "-" + initType
-									+ "-i1-" + i1 + "-i2-" + i2 + "-i3-" + i3 + "-i4-" + i4 + "-i5-" + i5 + ".txt";
+									+ "-i1-" + i1 + "-i2-" + i2 + "-i3-" + i3 + "-i4-" + i4 + "-i5-" + i5 + "-test.txt";
 							String dataFileName = dir + fileName;
 							
 							TruckContainerSolver solver = new TruckContainerSolver();
@@ -2872,8 +2989,8 @@ public class TruckContainerSolver {
 								case "oneRequest2oneRoute": solver.insertOneReq2oneTruck(); break;
 							}			
 					
-							solver.timeLimit = 1800000;
-							solver.nIter = 10000;
+							solver.timeLimit = 180000;
+							solver.nIter = 1000;
 							
 							solver.nRemovalOperators = 8;
 							solver.nInsertionOperators = 8;
@@ -2897,6 +3014,7 @@ public class TruckContainerSolver {
 							solver.initParamsForALNS();
 							solver.adaptiveSearchOperators(outputfile);
 							solver.printSolution(outputfile, t);
+							solver.createFormatedSolution();
 						}
 					}
 				}

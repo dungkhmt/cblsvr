@@ -146,6 +146,7 @@ public class InputAnalyzer {
 				}
 			}
 		}
+		System.out.println(input.getExLadenRequests().length);
 		if(input.getExLadenRequests() != null){
 			for(int i = 0; i < input.getExLadenRequests().length; i++){
 				ExportLadenRequests r = input.getExLadenRequests()[i];

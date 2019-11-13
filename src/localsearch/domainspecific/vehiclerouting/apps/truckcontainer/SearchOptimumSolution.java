@@ -56,8 +56,8 @@ public class SearchOptimumSolution {
 			next_x = tcs.XR.next(x);
 			tcs.mgr.performRemoveOnePoint(x);
 			tcs.group2marked.put(tcs.point2Group.get(x), 0);
-			if(tcs.point2Type.get(x) != tcs.START_MOOC
-				&& tcs.point2Type.get(x) != tcs.END_MOOC){	
+			if(!tcs.point2Type.get(x).equals(tcs.START_MOOC)
+				&& !tcs.point2Type.get(x).equals(tcs.END_MOOC)){	
 				if(tcs.pickup2Delivery.keySet().contains(x))
 					tcs.rejectPickupPoints.add(x);
 				else 

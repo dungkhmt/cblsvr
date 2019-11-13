@@ -95,10 +95,10 @@ public class DataAnalysis {
 	private ConfigParam params;
 	
 	public void initParams(){
-		nbEE = 35;
-		nbEL = 35;
-		nbIE = 40;
-		nbIL = 40;
+		nbEE = 50;
+		nbEL = 50;
+		nbIE = 50;
+		nbIL = 50;
 		
 		nbRequests = nbEE + nbEL + nbIE + nbIL;
 		nbTrucks = nbRequests/5;
@@ -1230,7 +1230,7 @@ public class DataAnalysis {
 		//tao file du lieu lon de test
 		//sua cac params trong initParams function
 		
-		String fileName = "data/truck-container/random_big_data-150reqs.json";
+		String fileName = "data/truck-container/random_big_data-200reqs-1.json";
 		da.createJsonFile(fileName);
 	}
 }
