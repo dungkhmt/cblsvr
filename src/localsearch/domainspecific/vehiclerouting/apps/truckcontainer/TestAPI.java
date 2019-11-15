@@ -19,11 +19,19 @@ public class TestAPI {
 	}
 	
 	public static void main(String[] args){
-
+		
 //		String jsonInFileName = "E:/Project/cblsvr/truck-container/cblsvr/data/truck-container/" + "newreqs.json";
 //		String outputfile = "E:/Project/cblsvr/truck-container/cblsvr/data/truck-container/" + "-result.json";
-		String jsonInFileName = args[0] + ".json";
-		String outputfile = args[0] + "-result.json";
+		String jsonInFileName = "input.json";//args[0] + ".json";
+		String outputfile = "result.json";//args[0] + "-result.json";
+		for(int i = 0; i < args.length; i++){
+			if(args[i].equals("--input"))
+				jsonInFileName = args[i+1];
+			else if(args[i].equals("--output"))
+				outputfile = args[i+1];
+		}
+		System.out.println("input file = " + jsonInFileName + ", output file = " + outputfile);
+		
 		ContainerTruckMoocInput input = null;
 		try{
 			Gson g = new Gson();
@@ -46,7 +54,7 @@ public class TestAPI {
 				
 				fo.close();
 			}catch(Exception e){
-				
+				e.printStackTrace();
 			}
 			String initType = "firstPossibleInitFPI";
 			
