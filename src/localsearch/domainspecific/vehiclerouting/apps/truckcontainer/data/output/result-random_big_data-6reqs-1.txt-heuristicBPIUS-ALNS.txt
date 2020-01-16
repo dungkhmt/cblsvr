@@ -1,0 +1,9 @@
+time limit = 36000000, nbIters = 30000, maxStable = 1000
+#Request = 6
+iter=====insertion=====removal=====time=====cost=====nbReject=====nbTrucks
+0 -1 -1  1571588397 216.0 0 1
+30001 -1 -1 1571588449 216.0 0 1
+route[1] = P-1  -> P-10
+route[2] = P-8  -> P-9  -> P-16  -> P-19  -> P-7  -> P-12  -> P-6  -> P-4  -> P-5  -> P-11  -> P-18  -> P-14  -> P-2  -> P-0  -> P-17  -> P-13
+
+end time = 51771-08-28 10:01:15, total runtime = 182.002, #RejectedReqs = 0, nb Trucks = 1, cost = 216.0

@@ -1,0 +1,14 @@
+Starting time = 51900-08-13 17:20:46, total reqs = 20, total truck = 4
+time limit = 36000000, nbIters = 100000, maxStable = 1000
+#Request = 20
+iter=====insertion=====removal=====time=====cost=====nbReject=====nbTrucks
+0 -1 -1  1575658002 86430.0 0 1
+1001 2 -1 1575658037 76764.0 0 1
+2002 2 -1 1575658066 70316.0 0 1
+100001 -1 -1 1575661847 70316.0 0 1
+route[1] = P-11  -> P-35  -> P-24  -> P-0  -> P-2  -> P-5  -> P-24  -> P-17  -> P-5  -> P-6  -> P-2  -> P-5  -> P-2  -> P-32  -> P-17  -> P-5  -> P-5  -> P-0  -> P-31  -> P-24  -> P-24  -> P-17  -> P-6  -> P-5  -> P-5  -> P-6  -> P-2  -> P-32  -> P-2  -> P-5  -> P-5  -> P-0  -> P-5  -> P-31  -> P-5  -> P-0  -> P-6  -> P-5  -> P-17  -> P-32  -> P-24  -> P-0  -> P-18  -> P-14
+route[2] = P-14  -> P-14
+route[3] = P-3  -> P-11
+route[4] = P-11  -> P-14
+
+end time = 51900-09-27 05:37:49, total runtime = 3845.824, #RejectedReqs = 0, nb Trucks = 1, cost = 70316.0
