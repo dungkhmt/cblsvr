@@ -1,6 +1,0 @@
-Starting time = 51815-06-09 00:47:50, total reqs = 20, total truck = 4
-time limit = 180000, nbIters = 1000, maxStable = 1000
-#Request = 20
-iter=====insertion=====removal=====time=====cost=====nbReject=====nbTrucks
-0 -1 -1  1572969953 86430.0 0 1
-12 6 4 1572969955 79651.0 0 1
