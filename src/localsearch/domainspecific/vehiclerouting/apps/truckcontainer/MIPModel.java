@@ -1798,8 +1798,8 @@ public class MIPModel {
 	
 	public static void main(String[] args){
 		String dir = "data/truck-container/";
-		String dataFile = dir + "random_big_data-4reqs-MIP.txt";
-		String outputFile = dir + "random_big_data-4reqs-MIP-result.txt";
+		String dataFile = dir + "random_big_data-6reqs-MIP.txt";
+		String outputFile = dir + "random_big_data-6reqs-MIP-result.txt";
 		MIPModel m = new MIPModel();
 
 		

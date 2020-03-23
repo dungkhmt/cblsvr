@@ -5,6 +5,7 @@ public class ImportEmptyRequests {
 	private boolean isBreakRomooc;
 	private String containerCategory;
 	private String containerCode;
+	private String containerType;
 	private String containerNo;
 	private String orderCode;
 	private String customerCode;
@@ -22,7 +23,7 @@ public class ImportEmptyRequests {
 	
 
 	public ImportEmptyRequests(int id, boolean isBreakRomooc, String containerCategory,
-			String containerCode, String containerNo, String orderCode, String customerCode,
+			String containerCode, String containerType, String containerNo, String orderCode, String customerCode,
 			String customerName, String requestDate, String earlyDateTimeAttachAtWarehouse,
 			String lateDateTimeReturnEmptyAtDepot, String moocCode,
 			double weight, String wareHouseCode, String depotContainerCode,
@@ -33,6 +34,7 @@ public class ImportEmptyRequests {
 		this.isBreakRomooc = isBreakRomooc;
 		this.containerCategory = containerCategory;
 		this.containerCode = containerCode;
+		this.containerType = containerType;
 		this.containerNo = containerNo;
 		this.orderCode = orderCode;
 		this.customerCode = customerCode;
@@ -86,6 +88,14 @@ public class ImportEmptyRequests {
 
 	public void setContainerCode(String containerCode) {
 		this.containerCode = containerCode;
+	}
+
+	public String getContainerType() {
+		return containerType;
+	}
+
+	public void setContainerType(String containerType) {
+		this.containerType = containerType;
 	}
 
 	public String getContainerNo() {

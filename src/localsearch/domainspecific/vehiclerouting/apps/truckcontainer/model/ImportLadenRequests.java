@@ -5,6 +5,7 @@ public class ImportLadenRequests {
 	private boolean isBreakRomooc;
 	private String containerCategory;
 	private String containerCode;
+	private String containerType;
 	private String containerNo;
 	private String orderCode;
 	private String customerCode;
@@ -25,7 +26,7 @@ public class ImportLadenRequests {
 	
 
 	public ImportLadenRequests(int id, boolean isBreakRomooc, String containerCategory,
-			String containerCode, String containerNo, String orderCode, String customerCode,
+			String containerCode, String containerType, String containerNo, String orderCode, String customerCode,
 			String customerName, String requestDate, String earlyDateTimePickupAtPort,
 			String lateDateTimePickupAtPort,
 			String earlyDateTimeUnloadAtWarehouse,
@@ -38,6 +39,7 @@ public class ImportLadenRequests {
 		this.isBreakRomooc = isBreakRomooc;
 		this.containerCategory = containerCategory;
 		this.containerCode = containerCode;
+		this.containerType = containerType;
 		this.containerNo = containerNo;
 		this.orderCode = orderCode;
 		this.customerCode = customerCode;
@@ -94,6 +96,14 @@ public class ImportLadenRequests {
 
 	public void setContainerCode(String containerCode) {
 		this.containerCode = containerCode;
+	}
+
+	public String getContainerType() {
+		return containerType;
+	}
+
+	public void setContainerType(String containerType) {
+		this.containerType = containerType;
 	}
 
 	public String getContainerNo() {

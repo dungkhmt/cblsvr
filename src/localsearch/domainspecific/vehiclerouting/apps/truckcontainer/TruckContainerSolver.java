@@ -1,10 +1,12 @@
 package localsearch.domainspecific.vehiclerouting.apps.truckcontainer;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -79,7 +81,8 @@ public class TruckContainerSolver {
 	public HashMap<Point, Integer> earliestAllowedArrivalTime;
 	public HashMap<Point, Integer> serviceDuration;
 	public HashMap<Point, Integer> lastestAllowedArrivalTime;
-
+	public HashMap<Point,Point> pickup2DeliveryOfGood;
+	public HashMap<Point,Point> pickup2DeliveryOfPeople;
 	public HashMap<Point, Point> pickup2Delivery;
 	public HashMap<Point,Point> delivery2Pickup;
 	
@@ -149,8 +152,8 @@ public class TruckContainerSolver {
 	HashMap<Point, Integer> nChosed;
 	HashMap<Point, Boolean> removeAllowed;
 	
-	public int nRemovalOperators = 8;
-	public int nInsertionOperators = 8;
+	private int nRemovalOperators = 8;
+	private int nInsertionOperators = 8;
 	
 	//parameters
 	public int lower_removal;
@@ -174,12 +177,18 @@ public class TruckContainerSolver {
 	public static double MAX_TRAVELTIME;
 	public static final String START_TRUCK 	= "START_TRUCK";
 	public static final String END_TRUCK 	= "END_TRUCK";
-	public static final String START_MOOC 	= "START_MOOC";
-	public static final String END_MOOC 	= "END_MOOC";
-	public static final String START_CONT 	= "START_CONT";
-	public static final String END_CONT 	= "END_CONT";
-	public static final String PORT	 		= "PORT";
-	public static final String WAREHOUSE 	= "WAREHOUSE";
+	public static final String START_MOOC 	= "PICKUP_MOOC";
+	public static final String END_MOOC 	= "DELIVERY_MOOC";
+	public static final String START_CONT 	= "PICKUP_EMPTYCONT";
+	public static final String END_CONT 	= "DELIVERY_EMPTYCONT";
+	public static final String PORT_PICKUP_EMPTYCONT	= "PORT_PICKUP_EMPTYCONT";
+	public static final String PORT_PICKUP_FULLCONT		= "PORT_PICKUP_FULLCONT";
+	public static final String PORT_DELIVERY_EMPTYCONT	= "PORT_DELIVERY_EMPTYCONT";
+	public static final String PORT_DELIVERY_FULLCONT	= "PORT_DELIVERY_FULLCONT";
+	public static final String WH_PICKUP_EMPTYCONT 	= "WH_PICKUP_EMPTYCONT";
+	public static final String WH_PICKUP_FULLCONT 	= "WH_PICKUP_FULLCONT";
+	public static final String WH_DELIVERY_EMPTYCONT = "WH_DELIVERY_EMPTYCONT";
+	public static final String WH_DELIVERY_FULLCONT 	= "WH_DELIVERY_FULLCONT";
 	
 	public TruckContainerSolver(){
 		
@@ -253,7 +262,7 @@ public class TruckContainerSolver {
 			}
 			else{
 				i_selected_removal = get_operator(ptd);
-				//int i_selected_removal = 1;
+				//i_selected_removal = idxRemoval;
 				wd[i_selected_removal]++;
 				switch(i_selected_removal){
 					case 0: opt.routeRemoval(); break;
@@ -269,7 +278,7 @@ public class TruckContainerSolver {
 			
 			
 			int i_selected_insertion = get_operator(pti);
-			//int i_selected_insertion = 3;
+			//int i_selected_insertion =idxRemoval ;
 			wi[i_selected_insertion]++;
 			switch(i_selected_insertion){
 				case 0: opt.greedyInsertion(); break;
@@ -562,7 +571,10 @@ public class TruckContainerSolver {
 				Container c = input.getContainers()[j];
 				if(c.isImportedContainer())
 					continue;
-				//DepotContainer depotCont = input.getDepotContainers()[i];
+				
+				DepotContainer depotCont = mCode2DepotContainer.get(c.getDepotContainerCode());
+//				if(!exEmptyRequests[i].getContainerType().equals(depotCont.getContainerType()))
+//					continue;
 				id++;
 				Point pickup = new Point(id, c.getDepotContainerCode());
 				id++;
@@ -587,9 +599,14 @@ public class TruckContainerSolver {
 				
 				point2containerWeight.put(pickup, 1);
 				point2containerWeight.put(delivery, -1);
+				if(exEmptyRequests[i].getContainerType() != null
+						&& exEmptyRequests[i].getContainerType().equals("40")){
+					point2containerWeight.put(pickup, 2);
+					point2containerWeight.put(delivery, -2);
+				}
 				
 				point2Type.put(pickup, START_CONT);
-				point2Type.put(delivery, WAREHOUSE);
+				point2Type.put(delivery, WH_DELIVERY_EMPTYCONT);
 				
 				point2Group.put(pickup, groupId);
 				point2Group.put(delivery, groupId);
@@ -643,8 +660,8 @@ public class TruckContainerSolver {
 			pickup2Delivery.put(pickup, delivery);
 			delivery2Pickup.put(delivery, pickup);
 			
-			point2Type.put(pickup, WAREHOUSE);
-			point2Type.put(delivery, PORT);
+			point2Type.put(pickup, WH_PICKUP_FULLCONT);
+			point2Type.put(delivery, PORT_DELIVERY_FULLCONT);
 			
 			point2Group.put(pickup, groupId);
 			point2Group.put(delivery, groupId);
@@ -657,6 +674,11 @@ public class TruckContainerSolver {
 			
 			point2containerWeight.put(pickup, 1);
 			point2containerWeight.put(delivery, -1);
+			if(exLadenRequests[i].getContainerType() != null
+					&& exLadenRequests[i].getContainerType().equals("40")){
+				point2containerWeight.put(pickup, 2);
+				point2containerWeight.put(delivery, -2);
+			}
 			
 			int early = 0;
 			int latest = INF_TIME;
@@ -685,55 +707,58 @@ public class TruckContainerSolver {
 			group2IE.put(groupId, imEmptyRequests[i]);
 			for(int j = 0; j < input.getDepotContainers().length; j++){
 				DepotContainer depotCont = input.getDepotContainers()[j];
-				if(depotCont.getReturnedContainer()){
-					id++;
-					Warehouse wh = mCode2Warehouse.get(
-							imEmptyRequests[i].getWareHouseCode());
-					Point pickup = new Point(id, wh.getLocationCode());
-					id++;
-					
-					Point delivery = new Point(id, depotCont.getLocationCode());
-		
-					points.add(pickup);
-					points.add(delivery);
-					
-					pickupPoints.add(pickup);
-					deliveryPoints.add(delivery);
-					
-					pickup2Delivery.put(pickup, delivery);
-					delivery2Pickup.put(delivery, pickup);
-					
-					point2moocWeight.put(pickup, 0);
-					point2moocWeight.put(delivery, 0);
-					
-					point2containerWeight.put(pickup, 1);
-					point2containerWeight.put(delivery, -1);
-					
-					point2Type.put(pickup, WAREHOUSE);
-					point2Type.put(delivery, END_CONT);
-					
-					point2Group.put(pickup, groupId);
-					point2Group.put(delivery, groupId);
-					
-					int early = 0;
-					int latest = INF_TIME;
-					if(imEmptyRequests[i].getEarlyDateTimeAttachAtWarehouse() != null)
-						early = (int)(DateTimeUtils.dateTime2Int(
-								imEmptyRequests[i].getEarlyDateTimeAttachAtWarehouse()));
-					earliestAllowedArrivalTime.put(pickup, early);
-					serviceDuration.put(pickup, input.getParams().getLinkEmptyContainerDuration());
-					lastestAllowedArrivalTime.put(pickup, latest);
-					
-					early = 0;
-					latest = INF_TIME;
-		
-					if(imEmptyRequests[i].getLateDateTimeReturnEmptyAtDepot() != null)
-						latest = (int)(DateTimeUtils.dateTime2Int(
-								imEmptyRequests[i].getLateDateTimeReturnEmptyAtDepot()));
-					earliestAllowedArrivalTime.put(delivery, early);
-					serviceDuration.put(delivery, (int)(input.getParams().getUnlinkEmptyContainerDuration()));
-					lastestAllowedArrivalTime.put(delivery, latest);
+				id++;
+				Warehouse wh = mCode2Warehouse.get(
+						imEmptyRequests[i].getWareHouseCode());
+				Point pickup = new Point(id, wh.getLocationCode());
+				id++;
+				
+				Point delivery = new Point(id, depotCont.getLocationCode());
+	
+				points.add(pickup);
+				points.add(delivery);
+				
+				pickupPoints.add(pickup);
+				deliveryPoints.add(delivery);
+				
+				pickup2Delivery.put(pickup, delivery);
+				delivery2Pickup.put(delivery, pickup);
+				
+				point2moocWeight.put(pickup, 0);
+				point2moocWeight.put(delivery, 0);
+				
+				point2containerWeight.put(pickup, 1);
+				point2containerWeight.put(delivery, -1);
+				if(imEmptyRequests[i].getContainerType() != null
+						&& imEmptyRequests[i].getContainerType().equals("40")){
+					point2containerWeight.put(pickup, 2);
+					point2containerWeight.put(delivery, -2);
 				}
+				
+				point2Type.put(pickup, WH_PICKUP_EMPTYCONT);
+				point2Type.put(delivery, END_CONT);
+				
+				point2Group.put(pickup, groupId);
+				point2Group.put(delivery, groupId);
+				
+				int early = 0;
+				int latest = INF_TIME;
+				if(imEmptyRequests[i].getEarlyDateTimeAttachAtWarehouse() != null)
+					early = (int)(DateTimeUtils.dateTime2Int(
+							imEmptyRequests[i].getEarlyDateTimeAttachAtWarehouse()));
+				earliestAllowedArrivalTime.put(pickup, early);
+				serviceDuration.put(pickup, input.getParams().getLinkEmptyContainerDuration());
+				lastestAllowedArrivalTime.put(pickup, latest);
+				
+				early = 0;
+				latest = INF_TIME;
+	
+				if(imEmptyRequests[i].getLateDateTimeReturnEmptyAtDepot() != null)
+					latest = (int)(DateTimeUtils.dateTime2Int(
+							imEmptyRequests[i].getLateDateTimeReturnEmptyAtDepot()));
+				earliestAllowedArrivalTime.put(delivery, early);
+				serviceDuration.put(delivery, (int)(input.getParams().getUnlinkEmptyContainerDuration()));
+				lastestAllowedArrivalTime.put(delivery, latest);
 			}
 		}
 		
@@ -769,9 +794,14 @@ public class TruckContainerSolver {
 			
 			point2containerWeight.put(pickup, 1);
 			point2containerWeight.put(delivery, -1);
+			if(imLadenRequests[i].getContainerType() != null
+				&& imLadenRequests[i].getContainerType().equals("40")){
+				point2containerWeight.put(pickup, 2);
+				point2containerWeight.put(delivery, -2);
+			}
 			
-			point2Type.put(pickup, PORT);
-			point2Type.put(delivery, WAREHOUSE);
+			point2Type.put(pickup, PORT_PICKUP_FULLCONT);
+			point2Type.put(delivery, WH_DELIVERY_FULLCONT);
 			
 			point2Group.put(pickup, groupId);
 			point2Group.put(delivery, groupId);
@@ -891,379 +921,379 @@ public class TruckContainerSolver {
 		}
 	}
 	
-	public void init_compare(){
-		this.exEmptyRequests = input.getExEmptyRequests();
-		this.exLadenRequests = input.getExLadenRequests();
-		this.imEmptyRequests = input.getImEmptyRequests();
-		this.imLadenRequests = input.getImLadenRequests();
-		this.nRequest = exEmptyRequests.length
-			+ exLadenRequests.length
-			+ imEmptyRequests.length
-			+ imLadenRequests.length;
-		this.nVehicle = input.getTrucks().length;
-		points = new ArrayList<Point>();
-		earliestAllowedArrivalTime = new HashMap<Point, Integer>();
-		serviceDuration = new HashMap<Point, Integer>();
-		lastestAllowedArrivalTime = new HashMap<Point, Integer>();
-		
-		pickupPoints = new ArrayList<Point>();
-		deliveryPoints = new ArrayList<Point>();
-		rejectPickupPoints = new ArrayList<Point>();
-		rejectDeliveryPoints = new ArrayList<Point>();
-		startPoints = new ArrayList<Point>();
-		stopPoints = new ArrayList<Point>();
-		startMoocPoints = new ArrayList<Point>();
-		stopMoocPoints = new ArrayList<Point>();
-		point2Type = new HashMap<Point, String>();
-		
-		pickup2Delivery = new HashMap<Point, Point>();
-		delivery2Pickup = new HashMap<Point, Point>();
-		
-		startPoint2Truck = new HashMap<Point, Truck>();
-		startPoint2Mooc = new HashMap<Point, Mooc>();
-		
-		point2Group = new HashMap<Point, Integer>();
-		group2marked = new HashMap<Integer, Integer>();
-		
-		point2moocWeight = new HashMap<Point, Integer>();
-		point2containerWeight = new HashMap<Point, Integer>();
-		
-		int id = 0;
-		int groupId = 0;
-		for(int i = 0; i < nVehicle; i++){
-			Truck truck = input.getTrucks()[i];
-			groupId++;
-			group2marked.put(groupId, 0);
-			for(int j = 0; j < truck.getReturnDepotCodes().length; j++){
-				id++;
-				Point sp = new Point(Integer.parseInt(truck.getDepotTruckCode()), truck.
-						getDepotTruckLocationCode());
-				
-				points.add(sp);
-				startPoints.add(sp);
-				point2Type.put(sp, START_TRUCK);
-				startPoint2Truck.put(sp, truck);
-				
-				point2Group.put(sp, groupId);
-				
-				earliestAllowedArrivalTime.put(sp,(int)(DateTimeUtils.dateTime2Int(
-						truck.getStartWorkingTime())));
-				serviceDuration.put(sp, 0);
-				lastestAllowedArrivalTime.put(sp,INF_TIME);
-				
-				id++;
-				DepotTruck depotTruck = mCode2DepotTruck.get(truck.getReturnDepotCodes()[j]);
-				Point tp = new Point(Integer.parseInt(depotTruck.getCode()), depotTruck.getLocationCode());
-				points.add(tp);
-				stopPoints.add(tp);
-				point2Type.put(tp, END_TRUCK);
-				
-				point2Group.put(tp, groupId);
-				
-				earliestAllowedArrivalTime.put(tp,(int)(DateTimeUtils.dateTime2Int(
-						input.getTrucks()[i].getStartWorkingTime())));
-				serviceDuration.put(tp, 0);
-				lastestAllowedArrivalTime.put(tp, INF_TIME);
-				
-				//pickup2Delivery.put(sp, tp);
-				//delivery2Pickup.put(tp, sp);
-				
-				point2moocWeight.put(sp, 0);
-				point2moocWeight.put(tp, 0);
-				
-				point2containerWeight.put(sp, 0);
-				point2containerWeight.put(tp, 0);
-			}
-		}		
-	
-		for(int i = 0; i < input.getMoocs().length; i++){
-			Mooc mooc = input.getMoocs()[i];
-			groupId++;
-			group2marked.put(groupId, 0);
-			for(int j = 0; j < mooc.getReturnDepotCodes().length; j++){
-				id++;
-				Point sp = new Point(Integer.parseInt(mooc.getDepotMoocCode()), mooc
-						.getDepotMoocLocationCode());
-				points.add(sp);
-				startMoocPoints.add(sp);
-				point2Type.put(sp, START_MOOC);
-				startPoint2Mooc.put(sp, mooc);
-				
-				point2Group.put(sp, groupId);
-				
-				earliestAllowedArrivalTime.put(sp, 0);
-				serviceDuration.put(sp, input.getParams().getLinkMoocDuration());
-				lastestAllowedArrivalTime.put(sp,INF_TIME);
-				
-				id++;
-				String moocCode = mooc.getReturnDepotCodes()[j];
-				DepotMooc depotMooc = mCode2DepotMooc.get(moocCode);
-				Point tp = new Point(Integer.parseInt(depotMooc.getCode()), depotMooc.getLocationCode());
-				points.add(tp);
-				stopMoocPoints.add(tp);
-				point2Type.put(tp, END_MOOC);
-				point2Group.put(tp, groupId);
-				
-				earliestAllowedArrivalTime.put(tp, 0);
-				serviceDuration.put(tp, 0);
-				lastestAllowedArrivalTime.put(tp, INF_TIME);
-				
-				//pickup2Delivery.put(sp, tp);
-				//delivery2Pickup.put(tp, sp);
-				
-				point2moocWeight.put(sp, 1);
-				point2moocWeight.put(tp, -1);
-				
-				point2containerWeight.put(sp, 0);
-				point2containerWeight.put(tp, 0);
-			}
-		}
-		
-		for(int i = 0; i < exEmptyRequests.length; i++){
-			groupId++;
-			group2marked.put(groupId, 0);
-			for(int j = 0; j < input.getDepotContainers().length; j++){
-				id++;
-				DepotContainer depotCont = input.getDepotContainers()[j];
-				Point pickup = new Point(Integer.parseInt(depotCont.getCode()), depotCont.getLocationCode());
-				id++;
-				Warehouse wh = mCode2Warehouse.get(
-						exEmptyRequests[i].getWareHouseCode());
-				Point delivery = new Point(Integer.parseInt(wh.getCode()), wh.getLocationCode());
-	
-				points.add(pickup);
-				points.add(delivery);
-				
-				pickupPoints.add(pickup);
-				deliveryPoints.add(delivery);
-	
-				pickup2Delivery.put(pickup, delivery);
-				delivery2Pickup.put(delivery, pickup);
-				
-				point2moocWeight.put(pickup, 0);
-				point2moocWeight.put(delivery, 0);
-				
-				point2containerWeight.put(pickup, 1);
-				point2containerWeight.put(delivery, -1);
-				
-				point2Type.put(pickup, START_CONT);
-				point2Type.put(delivery, WAREHOUSE);
-				
-				point2Group.put(pickup, groupId);
-				point2Group.put(delivery, groupId);
-				
-				int early = 0;
-				int latest = INF_TIME;
-				if(exEmptyRequests[i].getEarlyDateTimePickupAtDepot() != null)
-					early = (int)(DateTimeUtils.dateTime2Int(
-							exEmptyRequests[i].getEarlyDateTimePickupAtDepot()));
-				if(exEmptyRequests[i].getLateDateTimePickupAtDepot() != null)
-					latest = (int)(DateTimeUtils.dateTime2Int(
-							exEmptyRequests[i].getLateDateTimePickupAtDepot()));
-				earliestAllowedArrivalTime.put(pickup, early);
-				serviceDuration.put(pickup, input.getParams().getLinkEmptyContainerDuration());
-				lastestAllowedArrivalTime.put(pickup, latest);
-				
-				early = 0;
-				latest = INF_TIME;
-				if(exEmptyRequests[i].getEarlyDateTimeLoadAtWarehouse() != null)
-					early = (int)(DateTimeUtils.dateTime2Int(
-							exEmptyRequests[i].getEarlyDateTimeLoadAtWarehouse()));
-				if(exEmptyRequests[i].getLateDateTimeLoadAtWarehouse() != null)
-					latest = (int)(DateTimeUtils.dateTime2Int(
-							exEmptyRequests[i].getLateDateTimeLoadAtWarehouse()));
-				earliestAllowedArrivalTime.put(delivery, early);
-				serviceDuration.put(delivery, (int)(input.getParams().getUnlinkEmptyContainerDuration()));
-				lastestAllowedArrivalTime.put(delivery, latest);
-			}
-		}
-		
-		for(int i = 0; i < exLadenRequests.length; i++)
-		{
-			groupId++;
-			group2marked.put(groupId, 0);
-			id++;
-			Warehouse wh = mCode2Warehouse.get(
-					exLadenRequests[i].getWareHouseCode());
-			Point pickup = new Point(Integer.parseInt(wh.getCode()), wh.getLocationCode());
-			id++;
-			Port port = mCode2Port.get(
-					exLadenRequests[i].getPortCode());
-			Point delivery = new Point(Integer.parseInt(port.getCode()), port.getLocationCode());
-
-			points.add(pickup);
-			points.add(delivery);
-			
-			pickupPoints.add(pickup);
-			deliveryPoints.add(delivery);
-			
-			pickup2Delivery.put(pickup, delivery);
-			delivery2Pickup.put(delivery, pickup);
-			
-			point2Type.put(pickup, WAREHOUSE);
-			point2Type.put(delivery, PORT);
-			
-			point2Group.put(pickup, groupId);
-			point2Group.put(delivery, groupId);
-			
-			point2moocWeight.put(pickup, 0);
-			point2moocWeight.put(delivery, 0);
-			
-			point2containerWeight.put(pickup, 1);
-			point2containerWeight.put(delivery, -1);
-			
-			int early = 0;
-			int latest = INF_TIME;
-			if(exLadenRequests[i].getEarlyDateTimeAttachAtWarehouse() != null)
-				early = (int)(DateTimeUtils.dateTime2Int(
-						exLadenRequests[i].getEarlyDateTimeAttachAtWarehouse()));
-			
-			earliestAllowedArrivalTime.put(pickup,  early);
-			serviceDuration.put(pickup, input.getParams().getLinkLoadedContainerDuration());
-			lastestAllowedArrivalTime.put(pickup, latest);
-			
-			early = 0;
-			latest = INF_TIME;
-			if(exLadenRequests[i].getLateDateTimeUnloadAtPort() != null)
-				latest = (int)(DateTimeUtils.dateTime2Int(
-						exLadenRequests[i].getLateDateTimeUnloadAtPort()));
-			earliestAllowedArrivalTime.put(delivery, early);
-			serviceDuration.put(delivery, (int)(input.getParams().getUnlinkLoadedContainerDuration()));
-			lastestAllowedArrivalTime.put(delivery, latest);
-			
-		}
-
-		for(int i = 0; i < imEmptyRequests.length; i++){
-			groupId++;
-			group2marked.put(groupId, 0);
-			for(int j = 0; j < input.getDepotContainers().length; j++){
-				id++;
-				Warehouse wh = mCode2Warehouse.get(
-						imEmptyRequests[i].getWareHouseCode());
-				Point pickup = new Point(Integer.parseInt(wh.getCode()), wh.getLocationCode());
-				id++;
-				DepotContainer depotCont = input.getDepotContainers()[j];
-				Point delivery = new Point(Integer.parseInt(depotCont.getCode()), depotCont.getLocationCode());
-	
-				points.add(pickup);
-				points.add(delivery);
-				
-				pickupPoints.add(pickup);
-				deliveryPoints.add(delivery);
-				
-				pickup2Delivery.put(pickup, delivery);
-				delivery2Pickup.put(delivery, pickup);
-				
-				point2moocWeight.put(pickup, 0);
-				point2moocWeight.put(delivery, 0);
-				
-				point2containerWeight.put(pickup, 1);
-				point2containerWeight.put(delivery, -1);
-				
-				point2Type.put(pickup, WAREHOUSE);
-				point2Type.put(delivery, END_CONT);
-				
-				point2Group.put(pickup, groupId);
-				point2Group.put(delivery, groupId);
-				
-				int early = 0;
-				int latest = INF_TIME;
-				if(imEmptyRequests[i].getEarlyDateTimeAttachAtWarehouse() != null)
-					early = (int)(DateTimeUtils.dateTime2Int(
-							imEmptyRequests[i].getEarlyDateTimeAttachAtWarehouse()));
-				earliestAllowedArrivalTime.put(pickup, early);
-				serviceDuration.put(pickup, input.getParams().getLinkEmptyContainerDuration());
-				lastestAllowedArrivalTime.put(pickup, latest);
-				
-				early = 0;
-				latest = INF_TIME;
-	
-				if(imEmptyRequests[i].getLateDateTimeReturnEmptyAtDepot() != null)
-					latest = (int)(DateTimeUtils.dateTime2Int(
-							imEmptyRequests[i].getLateDateTimeReturnEmptyAtDepot()));
-				earliestAllowedArrivalTime.put(delivery, early);
-				serviceDuration.put(delivery, (int)(input.getParams().getUnlinkEmptyContainerDuration()));
-				lastestAllowedArrivalTime.put(delivery, latest);
-			}
-		}
-		
-		for(int i = 0; i < imLadenRequests.length; i++)
-		{
-			groupId++;
-			group2marked.put(groupId, 0);
-			id++;
-			Port port = mCode2Port.get(
-					imLadenRequests[i].getPortCode());
-			Point pickup = new Point(Integer.parseInt(port.getCode()), port.getLocationCode());
-			
-			id++;
-			Warehouse wh = mCode2Warehouse.get(
-					imLadenRequests[i].getWareHouseCode());
-			Point delivery = new Point(Integer.parseInt(wh.getCode()), wh.getLocationCode());
-
-			points.add(pickup);
-			points.add(delivery);
-			
-			pickupPoints.add(pickup);
-			deliveryPoints.add(delivery);
-			
-			pickup2Delivery.put(pickup, delivery);
-			delivery2Pickup.put(delivery, pickup);
-			
-			point2moocWeight.put(pickup, 0);
-			point2moocWeight.put(delivery, 0);
-			
-			point2containerWeight.put(pickup, 1);
-			point2containerWeight.put(delivery, -1);
-			
-			point2Type.put(pickup, PORT);
-			point2Type.put(delivery, WAREHOUSE);
-			
-			point2Group.put(pickup, groupId);
-			point2Group.put(delivery, groupId);
-			
-			int early = 0;
-			int latest = INF_TIME;
-			if(imLadenRequests[i].getEarlyDateTimePickupAtPort() != null)
-				early = (int)(DateTimeUtils.dateTime2Int(
-						imLadenRequests[i].getEarlyDateTimePickupAtPort()));
-			if(imLadenRequests[i].getLateDateTimePickupAtPort() != null)
-				latest = (int)(DateTimeUtils.dateTime2Int(
-						imLadenRequests[i].getLateDateTimePickupAtPort()));
-			earliestAllowedArrivalTime.put(pickup, early);
-			serviceDuration.put(pickup, input.getParams().getLinkLoadedContainerDuration());
-			lastestAllowedArrivalTime.put(pickup, latest);
-			
-			early = 0;
-			latest = INF_TIME;
-			if(imLadenRequests[i].getEarlyDateTimeUnloadAtWarehouse() != null)
-				early = (int)(DateTimeUtils.dateTime2Int(
-						imLadenRequests[i].getEarlyDateTimeUnloadAtWarehouse()));
-			if(imLadenRequests[i].getLateDateTimeUnloadAtWarehouse() != null)
-				latest = (int)(DateTimeUtils.dateTime2Int(
-						imLadenRequests[i].getLateDateTimeUnloadAtWarehouse()));
-			earliestAllowedArrivalTime.put(delivery, early);
-			serviceDuration.put(delivery, (int)(input.getParams().getUnlinkLoadedContainerDuration()));
-			lastestAllowedArrivalTime.put(delivery, latest);
-			
-		}
-		
-		nwMooc = new NodeWeightsManager(points);
-		nwContainer = new NodeWeightsManager(points);
-		awm = new ArcWeightsManager(points);
-		double max_time = Double.MIN_VALUE;
-		for (int i = 0; i < points.size(); i++) {
-			for (int j = 0; j < points.size(); j++) {
-				double tmp_cost = getTravelTime(points.get(i).getLocationCode(),
-						points.get(j).getLocationCode());
-				awm.setWeight(points.get(i), points.get(j), tmp_cost);
-				max_time = tmp_cost > max_time ? tmp_cost : max_time;
-			}
-			nwMooc.setWeight(points.get(i), point2moocWeight.get(points.get(i)));
-			nwContainer.setWeight(points.get(i), point2containerWeight.get(points.get(i)));
-		}
-		MAX_TRAVELTIME = max_time;
-	}
+//	public void init_compare(){
+//		this.exEmptyRequests = input.getExEmptyRequests();
+//		this.exLadenRequests = input.getExLadenRequests();
+//		this.imEmptyRequests = input.getImEmptyRequests();
+//		this.imLadenRequests = input.getImLadenRequests();
+//		this.nRequest = exEmptyRequests.length
+//			+ exLadenRequests.length
+//			+ imEmptyRequests.length
+//			+ imLadenRequests.length;
+//		this.nVehicle = input.getTrucks().length;
+//		points = new ArrayList<Point>();
+//		earliestAllowedArrivalTime = new HashMap<Point, Integer>();
+//		serviceDuration = new HashMap<Point, Integer>();
+//		lastestAllowedArrivalTime = new HashMap<Point, Integer>();
+//		
+//		pickupPoints = new ArrayList<Point>();
+//		deliveryPoints = new ArrayList<Point>();
+//		rejectPickupPoints = new ArrayList<Point>();
+//		rejectDeliveryPoints = new ArrayList<Point>();
+//		startPoints = new ArrayList<Point>();
+//		stopPoints = new ArrayList<Point>();
+//		startMoocPoints = new ArrayList<Point>();
+//		stopMoocPoints = new ArrayList<Point>();
+//		point2Type = new HashMap<Point, String>();
+//		
+//		pickup2Delivery = new HashMap<Point, Point>();
+//		delivery2Pickup = new HashMap<Point, Point>();
+//		
+//		startPoint2Truck = new HashMap<Point, Truck>();
+//		startPoint2Mooc = new HashMap<Point, Mooc>();
+//		
+//		point2Group = new HashMap<Point, Integer>();
+//		group2marked = new HashMap<Integer, Integer>();
+//		
+//		point2moocWeight = new HashMap<Point, Integer>();
+//		point2containerWeight = new HashMap<Point, Integer>();
+//		
+//		int id = 0;
+//		int groupId = 0;
+//		for(int i = 0; i < nVehicle; i++){
+//			Truck truck = input.getTrucks()[i];
+//			groupId++;
+//			group2marked.put(groupId, 0);
+//			for(int j = 0; j < truck.getReturnDepotCodes().length; j++){
+//				id++;
+//				Point sp = new Point(Integer.parseInt(truck.getDepotTruckCode()), truck.
+//						getDepotTruckLocationCode());
+//				
+//				points.add(sp);
+//				startPoints.add(sp);
+//				point2Type.put(sp, START_TRUCK);
+//				startPoint2Truck.put(sp, truck);
+//				
+//				point2Group.put(sp, groupId);
+//				
+//				earliestAllowedArrivalTime.put(sp,(int)(DateTimeUtils.dateTime2Int(
+//						truck.getStartWorkingTime())));
+//				serviceDuration.put(sp, 0);
+//				lastestAllowedArrivalTime.put(sp,INF_TIME);
+//				
+//				id++;
+//				DepotTruck depotTruck = mCode2DepotTruck.get(truck.getReturnDepotCodes()[j]);
+//				Point tp = new Point(Integer.parseInt(depotTruck.getCode()), depotTruck.getLocationCode());
+//				points.add(tp);
+//				stopPoints.add(tp);
+//				point2Type.put(tp, END_TRUCK);
+//				
+//				point2Group.put(tp, groupId);
+//				
+//				earliestAllowedArrivalTime.put(tp,(int)(DateTimeUtils.dateTime2Int(
+//						input.getTrucks()[i].getStartWorkingTime())));
+//				serviceDuration.put(tp, 0);
+//				lastestAllowedArrivalTime.put(tp, INF_TIME);
+//				
+//				//pickup2Delivery.put(sp, tp);
+//				//delivery2Pickup.put(tp, sp);
+//				
+//				point2moocWeight.put(sp, 0);
+//				point2moocWeight.put(tp, 0);
+//				
+//				point2containerWeight.put(sp, 0);
+//				point2containerWeight.put(tp, 0);
+//			}
+//		}		
+//	
+//		for(int i = 0; i < input.getMoocs().length; i++){
+//			Mooc mooc = input.getMoocs()[i];
+//			groupId++;
+//			group2marked.put(groupId, 0);
+//			for(int j = 0; j < mooc.getReturnDepotCodes().length; j++){
+//				id++;
+//				Point sp = new Point(Integer.parseInt(mooc.getDepotMoocCode()), mooc
+//						.getDepotMoocLocationCode());
+//				points.add(sp);
+//				startMoocPoints.add(sp);
+//				point2Type.put(sp, START_MOOC);
+//				startPoint2Mooc.put(sp, mooc);
+//				
+//				point2Group.put(sp, groupId);
+//				
+//				earliestAllowedArrivalTime.put(sp, 0);
+//				serviceDuration.put(sp, input.getParams().getLinkMoocDuration());
+//				lastestAllowedArrivalTime.put(sp,INF_TIME);
+//				
+//				id++;
+//				String moocCode = mooc.getReturnDepotCodes()[j];
+//				DepotMooc depotMooc = mCode2DepotMooc.get(moocCode);
+//				Point tp = new Point(Integer.parseInt(depotMooc.getCode()), depotMooc.getLocationCode());
+//				points.add(tp);
+//				stopMoocPoints.add(tp);
+//				point2Type.put(tp, END_MOOC);
+//				point2Group.put(tp, groupId);
+//				
+//				earliestAllowedArrivalTime.put(tp, 0);
+//				serviceDuration.put(tp, 0);
+//				lastestAllowedArrivalTime.put(tp, INF_TIME);
+//				
+//				//pickup2Delivery.put(sp, tp);
+//				//delivery2Pickup.put(tp, sp);
+//				
+//				point2moocWeight.put(sp, 1);
+//				point2moocWeight.put(tp, -1);
+//				
+//				point2containerWeight.put(sp, 0);
+//				point2containerWeight.put(tp, 0);
+//			}
+//		}
+//		
+//		for(int i = 0; i < exEmptyRequests.length; i++){
+//			groupId++;
+//			group2marked.put(groupId, 0);
+//			for(int j = 0; j < input.getDepotContainers().length; j++){
+//				id++;
+//				DepotContainer depotCont = input.getDepotContainers()[j];
+//				Point pickup = new Point(Integer.parseInt(depotCont.getCode()), depotCont.getLocationCode());
+//				id++;
+//				Warehouse wh = mCode2Warehouse.get(
+//						exEmptyRequests[i].getWareHouseCode());
+//				Point delivery = new Point(Integer.parseInt(wh.getCode()), wh.getLocationCode());
+//	
+//				points.add(pickup);
+//				points.add(delivery);
+//				
+//				pickupPoints.add(pickup);
+//				deliveryPoints.add(delivery);
+//	
+//				pickup2Delivery.put(pickup, delivery);
+//				delivery2Pickup.put(delivery, pickup);
+//				
+//				point2moocWeight.put(pickup, 0);
+//				point2moocWeight.put(delivery, 0);
+//				
+//				point2containerWeight.put(pickup, 1);
+//				point2containerWeight.put(delivery, -1);
+//				
+//				point2Type.put(pickup, START_CONT);
+//				point2Type.put(delivery, WAREHOUSE);
+//				
+//				point2Group.put(pickup, groupId);
+//				point2Group.put(delivery, groupId);
+//				
+//				int early = 0;
+//				int latest = INF_TIME;
+//				if(exEmptyRequests[i].getEarlyDateTimePickupAtDepot() != null)
+//					early = (int)(DateTimeUtils.dateTime2Int(
+//							exEmptyRequests[i].getEarlyDateTimePickupAtDepot()));
+//				if(exEmptyRequests[i].getLateDateTimePickupAtDepot() != null)
+//					latest = (int)(DateTimeUtils.dateTime2Int(
+//							exEmptyRequests[i].getLateDateTimePickupAtDepot()));
+//				earliestAllowedArrivalTime.put(pickup, early);
+//				serviceDuration.put(pickup, input.getParams().getLinkEmptyContainerDuration());
+//				lastestAllowedArrivalTime.put(pickup, latest);
+//				
+//				early = 0;
+//				latest = INF_TIME;
+//				if(exEmptyRequests[i].getEarlyDateTimeLoadAtWarehouse() != null)
+//					early = (int)(DateTimeUtils.dateTime2Int(
+//							exEmptyRequests[i].getEarlyDateTimeLoadAtWarehouse()));
+//				if(exEmptyRequests[i].getLateDateTimeLoadAtWarehouse() != null)
+//					latest = (int)(DateTimeUtils.dateTime2Int(
+//							exEmptyRequests[i].getLateDateTimeLoadAtWarehouse()));
+//				earliestAllowedArrivalTime.put(delivery, early);
+//				serviceDuration.put(delivery, (int)(input.getParams().getUnlinkEmptyContainerDuration()));
+//				lastestAllowedArrivalTime.put(delivery, latest);
+//			}
+//		}
+//		
+//		for(int i = 0; i < exLadenRequests.length; i++)
+//		{
+//			groupId++;
+//			group2marked.put(groupId, 0);
+//			id++;
+//			Warehouse wh = mCode2Warehouse.get(
+//					exLadenRequests[i].getWareHouseCode());
+//			Point pickup = new Point(Integer.parseInt(wh.getCode()), wh.getLocationCode());
+//			id++;
+//			Port port = mCode2Port.get(
+//					exLadenRequests[i].getPortCode());
+//			Point delivery = new Point(Integer.parseInt(port.getCode()), port.getLocationCode());
+//
+//			points.add(pickup);
+//			points.add(delivery);
+//			
+//			pickupPoints.add(pickup);
+//			deliveryPoints.add(delivery);
+//			
+//			pickup2Delivery.put(pickup, delivery);
+//			delivery2Pickup.put(delivery, pickup);
+//			
+//			point2Type.put(pickup, WAREHOUSE);
+//			point2Type.put(delivery, PORT);
+//			
+//			point2Group.put(pickup, groupId);
+//			point2Group.put(delivery, groupId);
+//			
+//			point2moocWeight.put(pickup, 0);
+//			point2moocWeight.put(delivery, 0);
+//			
+//			point2containerWeight.put(pickup, 1);
+//			point2containerWeight.put(delivery, -1);
+//			
+//			int early = 0;
+//			int latest = INF_TIME;
+//			if(exLadenRequests[i].getEarlyDateTimeAttachAtWarehouse() != null)
+//				early = (int)(DateTimeUtils.dateTime2Int(
+//						exLadenRequests[i].getEarlyDateTimeAttachAtWarehouse()));
+//			
+//			earliestAllowedArrivalTime.put(pickup,  early);
+//			serviceDuration.put(pickup, input.getParams().getLinkLoadedContainerDuration());
+//			lastestAllowedArrivalTime.put(pickup, latest);
+//			
+//			early = 0;
+//			latest = INF_TIME;
+//			if(exLadenRequests[i].getLateDateTimeUnloadAtPort() != null)
+//				latest = (int)(DateTimeUtils.dateTime2Int(
+//						exLadenRequests[i].getLateDateTimeUnloadAtPort()));
+//			earliestAllowedArrivalTime.put(delivery, early);
+//			serviceDuration.put(delivery, (int)(input.getParams().getUnlinkLoadedContainerDuration()));
+//			lastestAllowedArrivalTime.put(delivery, latest);
+//			
+//		}
+//
+//		for(int i = 0; i < imEmptyRequests.length; i++){
+//			groupId++;
+//			group2marked.put(groupId, 0);
+//			for(int j = 0; j < input.getDepotContainers().length; j++){
+//				id++;
+//				Warehouse wh = mCode2Warehouse.get(
+//						imEmptyRequests[i].getWareHouseCode());
+//				Point pickup = new Point(Integer.parseInt(wh.getCode()), wh.getLocationCode());
+//				id++;
+//				DepotContainer depotCont = input.getDepotContainers()[j];
+//				Point delivery = new Point(Integer.parseInt(depotCont.getCode()), depotCont.getLocationCode());
+//	
+//				points.add(pickup);
+//				points.add(delivery);
+//				
+//				pickupPoints.add(pickup);
+//				deliveryPoints.add(delivery);
+//				
+//				pickup2Delivery.put(pickup, delivery);
+//				delivery2Pickup.put(delivery, pickup);
+//				
+//				point2moocWeight.put(pickup, 0);
+//				point2moocWeight.put(delivery, 0);
+//				
+//				point2containerWeight.put(pickup, 1);
+//				point2containerWeight.put(delivery, -1);
+//				
+//				point2Type.put(pickup, WAREHOUSE);
+//				point2Type.put(delivery, END_CONT);
+//				
+//				point2Group.put(pickup, groupId);
+//				point2Group.put(delivery, groupId);
+//				
+//				int early = 0;
+//				int latest = INF_TIME;
+//				if(imEmptyRequests[i].getEarlyDateTimeAttachAtWarehouse() != null)
+//					early = (int)(DateTimeUtils.dateTime2Int(
+//							imEmptyRequests[i].getEarlyDateTimeAttachAtWarehouse()));
+//				earliestAllowedArrivalTime.put(pickup, early);
+//				serviceDuration.put(pickup, input.getParams().getLinkEmptyContainerDuration());
+//				lastestAllowedArrivalTime.put(pickup, latest);
+//				
+//				early = 0;
+//				latest = INF_TIME;
+//	
+//				if(imEmptyRequests[i].getLateDateTimeReturnEmptyAtDepot() != null)
+//					latest = (int)(DateTimeUtils.dateTime2Int(
+//							imEmptyRequests[i].getLateDateTimeReturnEmptyAtDepot()));
+//				earliestAllowedArrivalTime.put(delivery, early);
+//				serviceDuration.put(delivery, (int)(input.getParams().getUnlinkEmptyContainerDuration()));
+//				lastestAllowedArrivalTime.put(delivery, latest);
+//			}
+//		}
+//		
+//		for(int i = 0; i < imLadenRequests.length; i++)
+//		{
+//			groupId++;
+//			group2marked.put(groupId, 0);
+//			id++;
+//			Port port = mCode2Port.get(
+//					imLadenRequests[i].getPortCode());
+//			Point pickup = new Point(Integer.parseInt(port.getCode()), port.getLocationCode());
+//			
+//			id++;
+//			Warehouse wh = mCode2Warehouse.get(
+//					imLadenRequests[i].getWareHouseCode());
+//			Point delivery = new Point(Integer.parseInt(wh.getCode()), wh.getLocationCode());
+//
+//			points.add(pickup);
+//			points.add(delivery);
+//			
+//			pickupPoints.add(pickup);
+//			deliveryPoints.add(delivery);
+//			
+//			pickup2Delivery.put(pickup, delivery);
+//			delivery2Pickup.put(delivery, pickup);
+//			
+//			point2moocWeight.put(pickup, 0);
+//			point2moocWeight.put(delivery, 0);
+//			
+//			point2containerWeight.put(pickup, 1);
+//			point2containerWeight.put(delivery, -1);
+//			
+//			point2Type.put(pickup, PORT);
+//			point2Type.put(delivery, WAREHOUSE);
+//			
+//			point2Group.put(pickup, groupId);
+//			point2Group.put(delivery, groupId);
+//			
+//			int early = 0;
+//			int latest = INF_TIME;
+//			if(imLadenRequests[i].getEarlyDateTimePickupAtPort() != null)
+//				early = (int)(DateTimeUtils.dateTime2Int(
+//						imLadenRequests[i].getEarlyDateTimePickupAtPort()));
+//			if(imLadenRequests[i].getLateDateTimePickupAtPort() != null)
+//				latest = (int)(DateTimeUtils.dateTime2Int(
+//						imLadenRequests[i].getLateDateTimePickupAtPort()));
+//			earliestAllowedArrivalTime.put(pickup, early);
+//			serviceDuration.put(pickup, input.getParams().getLinkLoadedContainerDuration());
+//			lastestAllowedArrivalTime.put(pickup, latest);
+//			
+//			early = 0;
+//			latest = INF_TIME;
+//			if(imLadenRequests[i].getEarlyDateTimeUnloadAtWarehouse() != null)
+//				early = (int)(DateTimeUtils.dateTime2Int(
+//						imLadenRequests[i].getEarlyDateTimeUnloadAtWarehouse()));
+//			if(imLadenRequests[i].getLateDateTimeUnloadAtWarehouse() != null)
+//				latest = (int)(DateTimeUtils.dateTime2Int(
+//						imLadenRequests[i].getLateDateTimeUnloadAtWarehouse()));
+//			earliestAllowedArrivalTime.put(delivery, early);
+//			serviceDuration.put(delivery, (int)(input.getParams().getUnlinkLoadedContainerDuration()));
+//			lastestAllowedArrivalTime.put(delivery, latest);
+//			
+//		}
+//		
+//		nwMooc = new NodeWeightsManager(points);
+//		nwContainer = new NodeWeightsManager(points);
+//		awm = new ArcWeightsManager(points);
+//		double max_time = Double.MIN_VALUE;
+//		for (int i = 0; i < points.size(); i++) {
+//			for (int j = 0; j < points.size(); j++) {
+//				double tmp_cost = getTravelTime(points.get(i).getLocationCode(),
+//						points.get(j).getLocationCode());
+//				awm.setWeight(points.get(i), points.get(j), tmp_cost);
+//				max_time = tmp_cost > max_time ? tmp_cost : max_time;
+//			}
+//			nwMooc.setWeight(points.get(i), point2moocWeight.get(points.get(i)));
+//			nwContainer.setWeight(points.get(i), point2containerWeight.get(points.get(i)));
+//		}
+//		MAX_TRAVELTIME = max_time;
+//	}
 	
 	public void readData(String fileName){
 		try{
@@ -2367,7 +2397,7 @@ public class TruckContainerSolver {
 
 		double start_search_time = System.currentTimeMillis();
 		
-		while(it++ <= 10000 && (System.currentTimeMillis() - start_search_time)/1000 < 36000){
+		while(it++ <= nIter && (System.currentTimeMillis() - start_search_time) < timeLimit){
 			allRemoval();
 			
 			Stack<String> stack = new Stack<String>();
@@ -2757,7 +2787,7 @@ public class TruckContainerSolver {
 		System.out.println("stop");
 	}
 	
-	public void printSolution(String outputfile, double t0){
+	public void printSolution(String outputfile){
 		String s = "";
 
 		int K = XR.getNbRoutes();
@@ -2766,13 +2796,13 @@ public class TruckContainerSolver {
 			s += "route[" + k + "] = ";
 			Point x = XR.getStartingPointOfRoute(k);
 			for(; x != XR.getTerminatingPointOfRoute(k); x = XR.next(x)){
-				s = s + x.getLocationCode() + " " + " -> ";
+				s = s + x.getLocationCode() + " (" + point2Type.get(x) + ") -> ";
 //				System.out.println("p1 = " + x.getLocationCode()
 //						+ ", p2 = " + XR.next(x).getLocationCode() 
 //						+ ", cost = " + awm.getDistance(x, XR.next(x)));
 			}
 			x = XR.getTerminatingPointOfRoute(k);
-			s = s + x.getLocationCode() + "\n";
+			s = s + x.getLocationCode()  + " (" + point2Type.get(x) + ")" + "\n";
 		}		
 		System.out.println(s);
 		
@@ -2787,8 +2817,7 @@ public class TruckContainerSolver {
 			FileOutputStream write = new FileOutputStream(outputfile, true);
 			PrintWriter fo = new PrintWriter(write);
 			fo.println(s);
-			fo.println("end time = " + DateTimeUtils.unixTimeStamp2DateTime(t) 
-					+ ", total runtime = " + (t - t0)/1000
+			fo.println("end time = " + DateTimeUtils.unixTimeStamp2DateTime(t/1000)
 					+ ", #RejectedReqs = " + nbR
 					+ ", nb Trucks = " + nB
 					+ ", cost = " + objective.getValue());
@@ -2800,45 +2829,6 @@ public class TruckContainerSolver {
 		
 	}
 	
-	//run some init algorithm for comparison
-//	public static void main(String[] args){
-//		String dir = "data/truck-container/";
-//		int[] nbReqs = new int[]{8, 70, 100, 150, 200};
-//		String[] initType = new String[]{"greedyInit", "firstPossibleInit1", "firstPossibleInit2"};
-//		for(int i = 0; i < nbReqs.length; i++){
-//			for(int j = 0; j < initType.length; j++){
-//				String fileName = "random_big_data-"+ nbReqs[i] + "reqs-1.json";
-//				String outputfile = dir + "output/result-" + fileName + "-" + initType[j] + ".txt"; 
-//				String dataFileName = dir + fileName;
-//				
-//				TruckContainerSolver solver = new TruckContainerSolver();
-//				solver.readData(dataFileName);
-//				solver.init();
-//				solver.stateModel();
-//				
-//				double t = System.currentTimeMillis();
-//				try{
-//					FileOutputStream write = new FileOutputStream(outputfile);
-//					PrintWriter fo = new PrintWriter(write);
-//					fo.println("Starting time = " + DateTimeUtils.unixTimeStamp2DateTime(System.currentTimeMillis()) 
-//							+ ", total reqs = " + nRequest
-//							+ ", total truck = " + nVehicle);
-//					
-//					fo.close();
-//				}catch(Exception e){
-//					
-//				}
-//				switch(initType[j]){
-//					case "greedyInit": solver.greedyInitSolution2(); break;
-//					case "firstPossibleInit1": solver.firstPossibleInit1(); break;
-//					case "firstPossibleInit2": solver.firstPossibleInit2(); break;
-//				}			
-//		
-//				//solver.adaptiveSearchOperators(outputfile);
-//				solver.printSolution(outputfile, t);
-//			}
-//		}
-//	}
 	public TruckMoocContainerOutputJson createFormatedSolution() {
 		ArrayList<TruckRoute> brArr = new ArrayList<TruckRoute>();
 
@@ -2862,8 +2852,8 @@ public class TruckContainerSolver {
 					.getTerminatingPointOfRoute(r); p = XR.next(p)) {			
 
 				nodes[g] = new RouteElement(p.getLocationCode(), point2Type.get(p),
-						(int)eat.getEarliestArrivalTime(p),
-						(int)(eat.getEarliestArrivalTime(p)) + serviceDuration.get(p), 
+						DateTimeUtils.unixTimeStamp2DateTime((long)(eat.getEarliestArrivalTime(p))),
+						DateTimeUtils.unixTimeStamp2DateTime((long)(eat.getEarliestArrivalTime(p) + serviceDuration.get(p))), 
 						(int)awm.getWeight(p, XR.next(p)));
 				g++;
 			}
@@ -2872,8 +2862,8 @@ public class TruckContainerSolver {
 
 			nodes[g] = new RouteElement(XR.getTerminatingPointOfRoute(r).getLocationCode(),
 					point2Type.get(XR.getTerminatingPointOfRoute(r)),
-					(int)eat.getEarliestArrivalTime(en),
-					(int)(eat.getEarliestArrivalTime(en) + serviceDuration.get(en)), 0);
+					DateTimeUtils.unixTimeStamp2DateTime((long)eat.getEarliestArrivalTime(en)),
+					DateTimeUtils.unixTimeStamp2DateTime((long)(eat.getEarliestArrivalTime(en) + serviceDuration.get(en))), 0);
 			
 			TruckRoute br = new TruckRoute(truck, nb, (int)objective.getValue(), nodes);
 			brArr.add(br);
@@ -2939,64 +2929,103 @@ public class TruckContainerSolver {
 				ee, el, ie, il, statisticInformation);
 	}
 	
+	//run some init algorithm for comparison
+//	public static void main(String[] args){
+//		String dir = "data/truck-container/";
+//		int[] nbReqs = new int[]{8, 70, 100, 150, 200};
+//		String[] initType = new String[]{"greedyInit", "firstPossibleInit1", "firstPossibleInit2"};
+//		for(int i = 0; i < nbReqs.length; i++){
+//			for(int j = 0; j < initType.length; j++){
+//				String fileName = "random_big_data-"+ nbReqs[i] + "reqs-1.json";
+//				String outputfile = dir + "output/result-" + fileName + "-" + initType[j] + ".txt"; 
+//				String dataFileName = dir + fileName;
+//				
+//				TruckContainerSolver solver = new TruckContainerSolver();
+//				solver.readData(dataFileName);
+//				solver.init();
+//				solver.stateModel();
+//				
+//				double t = System.currentTimeMillis();
+//				try{
+//					FileOutputStream write = new FileOutputStream(outputfile);
+//					PrintWriter fo = new PrintWriter(write);
+//					fo.println("Starting time = " + DateTimeUtils.unixTimeStamp2DateTime(System.currentTimeMillis()) 
+//							+ ", total reqs = " + nRequest
+//							+ ", total truck = " + nVehicle);
+//					
+//					fo.close();
+//				}catch(Exception e){
+//					
+//				}
+//				switch(initType[j]){
+//					case "greedyInit": solver.greedyInitSolution2(); break;
+//					case "firstPossibleInit1": solver.firstPossibleInit1(); break;
+//					case "firstPossibleInit2": solver.firstPossibleInit2(); break;
+//				}			
+//		
+//				//solver.adaptiveSearchOperators(outputfile);
+//				solver.printSolution(outputfile, t);
+//			}
+//		}
+//	}
 	
+	
+	//efficient of operators
 	public static void main(String[] args){
-		double[] lower_removal_list = new double[]{0.01, 0.05};
-		double[] upper_removal_list = new double[]{0.15, 0.2};
+		int[] nbReq = new int[]{4, 8, 70, 100, 150, 200};
+		double[] lower_removal_list = new double[]{0.05, 0.1};
+		double[] upper_removal_list = new double[]{0.2, 0.25};
 		int[] sigma1_list = new int[]{3, 5, 10};
 		int[] sigma2_list = new int[]{1, 0, -1};
 		int[] sigma3_list = new int[]{-3, -5, -10};
-		for(int i1 = 1; i1 < 2; i1++){
-			for(int i2 = 1; i2 < 2; i2++){
-				for(int i3 = 0; i3 < 1; i3++){
-					for(int i4 = 0; i4 < 1; i4++){
-						for(int i5 = 0; i5 < 1; i5++){
+		for(int i1 = 0; i1 < lower_removal_list.length; i1++){
+			for(int i2 = 0; i2 < upper_removal_list.length; i2++){
+				for(int i3 = 0; i3 < sigma1_list.length; i3++){
+					for(int i4 = 0; i4 < sigma2_list.length; i4++){
+						for(int i5 = 0; i5 < sigma3_list.length; i5++){
 							String dir = "data/truck-container/";
-							String initType = "firstPossibleInitFPIUS";
-					
-							//String fileName = "random_big_data-4reqs.txt";
-							//String fileName = "random_big_data-"+ nbReq + "reqs-1req1route.txt";
-							String fileName = "random_big_data-20reqs-1.json";
-							String outputfile = dir + "output/result-" + fileName + "-" + initType
-									+ "-i1-" + i1 + "-i2-" + i2 + "-i3-" + i3 + "-i4-" + i4 + "-i5-" + i5 + "-test.txt";
-							String dataFileName = dir + fileName;
+							
+							String fileName = "random-20reqs-RealLoc-0";
+							String dataFileName = dir + "input/" + fileName + ".txt";
+							
+							String outputALNSfileTxt = dir + "output/newTuning/ALNS-" + i1 + "-" + i2 + "-" + i3 + "-" + i4 + "-" + i5 + ".txt";
+							String outputALNSfileJson = dir + "output/newTuning/ALNS-" + i1 + "-" + i2 + "-" + i3 + "-" + i4 + "-" + i5 + ".json";
+							
+							try
+							{
+								File temp = new File(outputALNSfileTxt);
+								if(temp.exists())
+									continue;
+							} catch (Exception e){
+								e.printStackTrace();
+							}
 							
 							TruckContainerSolver solver = new TruckContainerSolver();
 							solver.readData(dataFileName);
 							solver.init();
 							solver.stateModel();
-							
-							double t = System.currentTimeMillis();
+				
 							try{
-								FileOutputStream write = new FileOutputStream(outputfile);
+								FileOutputStream write = new FileOutputStream(outputALNSfileTxt);
 								PrintWriter fo = new PrintWriter(write);
-								fo.println("Starting time = " + DateTimeUtils.unixTimeStamp2DateTime(System.currentTimeMillis()) 
+								fo.println("Starting time = " + DateTimeUtils.unixTimeStamp2DateTime(System.currentTimeMillis()/1000) 
 										+ ", total reqs = " + nRequest
 										+ ", total truck = " + nVehicle);
 								
 								fo.close();
 							}catch(Exception e){
-								
+								System.out.println(e);
 							}
-							switch(initType){
-								//case "greedyInit" : solver.greedyInitSolution2(); break;
-								case "greedyInitWithAcceptanceBPI": solver.greedyInitSolutionWithAcceptanceBPI(); break;
-								case "firstPossibleInitFPI": solver.firstPossibleInitFPI(); break;
-								case "firstPossibleInitFPIUS": solver.firstPossibleInitFPIUS(); break;
-								case "bestPossibleInitBPIUS": solver.bestPossibleInitBPIUS(); break;
-								case "heuristicFPIUS": solver.heuristicFPIUS(outputfile); break;
-								case "heuristicBPIUS": solver.heuristicBPIUS(outputfile); break;
-								case "oneRequest2oneRoute": solver.insertOneReq2oneTruck(); break;
-							}			
-					
-							solver.timeLimit = 180000;
-							solver.nIter = 1000;
+							solver.firstPossibleInitFPIUS();
+							
+							solver.timeLimit = 3600000;
+							solver.nIter = 10000;
 							
 							solver.nRemovalOperators = 8;
 							solver.nInsertionOperators = 8;
 							
-							solver.lower_removal = (int) lower_removal_list[i1]*(nRequest)/100;
-							solver.upper_removal = (int) upper_removal_list[i2]*(nRequest)/100;
+							solver.lower_removal = (int) lower_removal_list[i1]*nRequest;
+							solver.upper_removal = (int) upper_removal_list[i2]*nRequest;
 							solver.sigma1 = sigma1_list[i3];
 							solver.sigma2 = sigma2_list[i4];
 							solver.sigma3 = sigma3_list[i5];
@@ -3012,9 +3041,20 @@ public class TruckContainerSolver {
 							solver.nTabu = 5;
 					
 							solver.initParamsForALNS();
-							solver.adaptiveSearchOperators(outputfile);
-							solver.printSolution(outputfile, t);
-							solver.createFormatedSolution();
+							solver.adaptiveSearchOperators(outputALNSfileTxt);
+							solver.printSolution(outputALNSfileTxt);
+							
+							Gson g = new Gson();
+							TruckMoocContainerOutputJson solution = solver.createFormatedSolution();
+							try{
+								String out = g.toJson(solution);
+								BufferedWriter writer = new BufferedWriter(new FileWriter(outputALNSfileJson));
+							    writer.write(out);
+							     
+							    writer.close();
+							}catch(Exception e){
+								System.out.println(e);
+							}
 						}
 					}
 				}
@@ -3022,4 +3062,113 @@ public class TruckContainerSolver {
 		}
 			
 	}
+//	public static void main(String[] args){
+//		int[] nbReq = new int[]{8, 70, 100, 150, 200};
+//		for(int k = 4; k < 10; k++){
+//			for(int i = 0; i < 5; i++){
+//				for(int j = 0; j < nbReq.length; j++){
+//					String dir = "data/truck-container/";
+//			
+//					String fileName = "random-" + nbReq[j] + "reqs-RealLoc-" + i;
+//					String dataFileName = dir + "input/" + fileName + ".txt";
+//					
+//					String outputALNSfileTxt = dir + "output/newOutput/It-" + k +"-ALNS-" + fileName + ".txt";
+//					String outputALNSfileJson = dir + "output/newOutput/It-" + k +"-ALNS-" + fileName + ".json";
+//					
+//					TruckContainerSolver solver = new TruckContainerSolver();
+//					solver.readData(dataFileName);
+//					solver.init();
+//					solver.stateModel();
+//		
+//					try{
+//						FileOutputStream write = new FileOutputStream(outputALNSfileTxt);
+//						PrintWriter fo = new PrintWriter(write);
+//						fo.println("Starting time = " + DateTimeUtils.unixTimeStamp2DateTime(System.currentTimeMillis()/1000) 
+//								+ ", total reqs = " + nRequest
+//								+ ", total truck = " + nVehicle);
+//						
+//						fo.close();
+//					}catch(Exception e){
+//						System.out.println(e);
+//					}
+//					solver.firstPossibleInitFPIUS();
+//					
+//					solver.timeLimit = 3600000;
+//					solver.nIter = 100000;
+//					
+//					solver.nRemovalOperators = 8;
+//					solver.nInsertionOperators = 8;
+//					
+//					solver.lower_removal = (int) 0.01*nRequest;
+//					solver.upper_removal = (int) 0.15*nRequest;
+//					solver.sigma1 = 10;
+//					solver.sigma2 = -1;
+//					solver.sigma3 = -3;
+//					
+//					solver.rp = 0.1;
+//					solver.nw = 1;
+//					solver.shaw1st = 0.5;
+//					solver.shaw2nd = 0.2;
+//					solver.	shaw3rd = 0.1;
+//			
+//					solver.temperature = 200;
+//					solver.cooling_rate = 0.9995;
+//					solver.nTabu = 5;
+//			
+//					solver.initParamsForALNS();
+//					solver.adaptiveSearchOperators(outputALNSfileTxt);
+//					solver.printSolution(outputALNSfileTxt);
+//					
+//					Gson g = new Gson();
+//					TruckMoocContainerOutputJson solution = solver.createFormatedSolution();
+//					try{
+//						String out = g.toJson(solution);
+//						BufferedWriter writer = new BufferedWriter(new FileWriter(outputALNSfileJson));
+//					    writer.write(out);
+//					     
+//					    writer.close();
+//					}catch(Exception e){
+//						System.out.println(e);
+//					}
+//					
+//					String outputHASfileTxt = dir + "output/newOutput/It-" + k +"-HASBPIUS-" + fileName + ".txt";
+//					String outputHASfileJson = dir + "output/newOutput/It-" + k +"-HASBPIUS-" + fileName + ".json";
+//					
+//					TruckContainerSolver solver2 = new TruckContainerSolver();
+//					solver2.readData(dataFileName);
+//					solver2.init();
+//					solver2.stateModel();
+//					
+//					try{
+//						FileOutputStream write = new FileOutputStream(outputHASfileTxt);
+//						PrintWriter fo = new PrintWriter(write);
+//						fo.println("Starting time = " + DateTimeUtils.unixTimeStamp2DateTime(System.currentTimeMillis()/1000) 
+//								+ ", total reqs = " + nRequest
+//								+ ", total truck = " + nVehicle);
+//						
+//						fo.close();
+//					}catch(Exception e){
+//						System.out.println(e);
+//					}
+//					
+//					solver2.timeLimit = 3600000;
+//					solver2.nIter = 100000;
+//					solver2.heuristicBPIUS(outputHASfileTxt);
+//					solver2.printSolution(outputHASfileTxt);
+//					
+//					TruckMoocContainerOutputJson solution2 = solver2.createFormatedSolution();
+//					try{
+//						String out = g.toJson(solution2);
+//						BufferedWriter writer = new BufferedWriter(new FileWriter(outputHASfileJson));
+//					    writer.write(out);
+//					     
+//					    writer.close();
+//					}catch(Exception e){
+//						System.out.println(e);
+//					}
+//				}
+//					
+//			}
+//		}
+//	}
 }

@@ -7,13 +7,17 @@ public class DistanceElement {
 	private int[] drivers;
 	private double distance;
 	private double travelTime;
+	private double d;
+	private double t;
 	
 	
 	public DistanceElement(String srcCode, String destCode, 
 			boolean isDriverBalance,
 			int[] drivers,
 			double distance,
-			double travelTime) {
+			double travelTime,
+			double d,
+			double t) {
 		super();
 		this.srcCode = srcCode;
 		this.destCode = destCode;
@@ -21,6 +25,8 @@ public class DistanceElement {
 		this.drivers = drivers;
 		this.distance = distance;
 		this.travelTime = travelTime;
+		this.d = d;
+		this.t = t;
 	}
 	public double getTravelTime() {
 		return travelTime;
@@ -60,6 +66,18 @@ public class DistanceElement {
 	}
 	public void setDrivers(int[] drivers){
 		this.drivers = drivers;
+	}
+	public double getD() {
+		return d;
+	}
+	public void setD(double d) {
+		this.d = d;
+	}
+	public double getT() {
+		return t;
+	}
+	public void setT(double t) {
+		this.t = t;
 	}
 	public DistanceElement(String srcCode, String destCode, double distance) {
 		super();

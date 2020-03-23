@@ -5,13 +5,13 @@ public class RouteElement {
 	private String locationCode;
 	private String action;
 	
-	private String arrivalTime;
-	private String departureTime;
+	private int arrivalTime;
+	private int departureTime;
 	private int travelTime;
 	
 	
 	public RouteElement(String locationCode, String action,
-			String arrivalTime, String departureTime, int travelTime){
+			int arrivalTime, int departureTime, int travelTime){
 		super();
 		this.locationCode = locationCode;
 		this.action = action;
@@ -36,17 +36,16 @@ public class RouteElement {
 	public void setAction(String action){
 		this.action = action;
 	}
-	
-	public String getArrivalTime() {
-		return arrivalTime;
+	public int getArrivalTime(){
+		return this.arrivalTime;
 	}
-	public void setArrivalTime(String arrivalTime) {
+	public void setArrivalTime(int arrivalTime){
 		this.arrivalTime = arrivalTime;
 	}
-	public String getDepartureTime() {
-		return departureTime;
+	public int getDepartureTime(){
+		return this.departureTime;
 	}
-	public void setDepartureTime(String departureTime) {
+	public void setDepartureTime(int departureTime){
 		this.departureTime = departureTime;
 	}
 	public int getTravelTime() {
