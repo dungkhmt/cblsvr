@@ -1,1 +1,0 @@
-Ins & avg_reject_HAS & avg_truck_HAS & avg_cost_HAS & std_HAS & avg_time_HAS & avg_reject_ALNS & avg_truck_ALNS & avg_cost_ALNS & std_ALNS & avg_time_ALNS & nuy1 \\

@@ -1,4 +1,0 @@
-Starting time = 51647-07-07 18:40:03, total reqs = 8, total truck = 1
-route[1] = 1  -> 3  -> 29  -> 30  -> 55  -> 33  -> 56  -> 34  -> 31  -> 32  -> 53  -> 5  -> 54  -> 6  -> 17  -> 18  -> 43  -> 44  -> 4  -> 2
-
-end time = 51647-07-07 18:41:07, total runtime = 0.065, #RejectedReqs = 0, nb Trucks = 1, cost = 38660.0
